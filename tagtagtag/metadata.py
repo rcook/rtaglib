@@ -17,10 +17,6 @@ MISSING_ARG = object()
 class Metadata(ABC):
     ALBUM_ID_KEY = "rcook_album_id"
     TRACK_ID_KEY = "rcook_track_id"
-    KEYS = [
-        (ALBUM_ID_KEY, "RCOOK_ALBUM_ID"),
-        (TRACK_ID_KEY, "RCOOK_TRACK_ID"),
-    ]
     _first_instance = True
 
     class Accessor:
@@ -39,26 +35,25 @@ class Metadata(ABC):
 
     @staticmethod
     def load(path):
-        tags = mutagen.File(path, easy=True)
-        match tags:
-            case mutagen.mp3.EasyMP3(): return ID3Metadata(path, tags)
-            case mutagen.easymp4.EasyMP4(): return MP4Metadata(path, tags)
-            case mutagen.flac.FLAC(): return FLACMetadata(path, tags)
-            case mutagen.asf.ASF(): return WMAMetadata(path, tags)
+        inner = mutagen.File(path, easy=True)
+        match inner:
+            case mutagen.mp3.EasyMP3(): return ID3Metadata(path, inner)
+            case mutagen.easymp4.EasyMP4(): return MP4Metadata(path, inner)
+            case mutagen.flac.FLAC(): return FLACMetadata(path, inner)
+            case mutagen.asf.ASF(): return WMAMetadata(path, inner)
             case _: raise NotImplementedError(f"Unsupported metadata type {type(tags)}")
 
-    def __init__(self, path, tags):
-        self._path = path
-        self._tags = tags
-        return
+    @classmethod
+    @abstractmethod
+    def _init_once(cls): raise NotImplementedError()
+
+    def __init__(self, path, inner):
         if self.__class__._first_instance:
             self.__class__._first_instance = False
-            for key, id in self.__class__.KEYS:
-                EasyID3.RegisterTXXXKey(key, id)
-                EasyMP4Tags.RegisterFreeformKey(key, id, mean="org.rcook")
+            self.__class__._init_once(self.__class__)
 
         self._path = path
-        self._m = mutagen.File(self._path, easy=True)
+        self._inner = inner
         self._saved_tags = deepcopy(self._tags_as_dict())
         self.album_id = self.__class__.Accessor(
             self,
@@ -68,73 +63,94 @@ class Metadata(ABC):
             self.__class__.TRACK_ID_KEY)
 
     @property
-    def tags(self): return self._tags
+    def inner(self): return self._inner
 
     @property
     def dirty(self):
-        d = {} if self._m.tags is None else self._m.tags.__dict__
-        return d != self._saved_tags
+        return self._tags_as_dict() != self._saved_tags
 
     @abstractmethod
     def _tags_as_dict(self): raise NotImplementedError()
 
     def save(self):
         if self.dirty:
-            if len(self._m.tags) == 0:
-                self._m.delete()
+            if len(self._inner.tags) == 0:
+                self._inner.delete()
             else:
-                self._m.save()
+                self._inner.save()
         self._m = None
 
     def pprint(self):
-        return self._tags.pprint()
+        return self._inner.pprint()
 
     def delete(self):
-        self._m.delete()
+        self._inner.delete()
         self._m = None
 
     def get(self, key, default=MISSING_ARG):
         if default is MISSING_ARG:
-            if self._m.tags is None:
+            if self._inner.tags is None:
                 raise KeyError(key)
         else:
-            if self._m.tags is None or key not in self._m.tags:
+            if self._inner.tags is None or key not in self._inner.tags:
                 return default
-        value = self._m.tags[key]
+        value = self._inner.tags[key]
         assert isinstance(value, list) and len(value) == 1
         return value[0]
 
     def set(self, key, value):
-        if self._m.tags is None:
-            self._m.add_tags()
-        self._m.tags[key] = value
+        if self._inner.tags is None:
+            self._inner.add_tags()
+        self._inner.tags[key] = value
 
     def pop(self, key, default=MISSING_ARG):
         if default is MISSING_ARG:
-            if self._m.tags is None:
+            if self._inner.tags is None:
                 raise KeyError(key)
-            return self._m.tags.pop(key)
+            return self._inner.tags.pop(key)
         else:
-            if self._m.tags is None:
+            if self._inner.tags is None:
                 return default
-            return self._m.tags.pop(key, default)
+            return self._inner.tags.pop(key, default)
 
 
 class FLACMetadata(Metadata):
+    def _init_once(cls): pass
+
     def _tags_as_dict(self):
-        return self.tags.__dict__
+        return self._inner.tags.as_dict()
 
 
 class ID3Metadata(Metadata):
+    KEYS = [
+        (Metadata.ALBUM_ID_KEY, "RCOOK_ALBUM_ID"),
+        (Metadata.TRACK_ID_KEY, "RCOOK_TRACK_ID"),
+    ]
+
+    def _init_once(cls):
+        for key, id in cls.KEYS:
+            EasyID3.RegisterTXXXKey(key, id)
+
     def _tags_as_dict(self):
-        return self.tags.__dict__
+        return {} if self._inner.tags is None else dict(self._inner.tags)
 
 
 class MP4Metadata(Metadata):
+    KEYS = [
+        (Metadata.ALBUM_ID_KEY, "RCOOK_ALBUM_ID"),
+        (Metadata.TRACK_ID_KEY, "RCOOK_TRACK_ID"),
+    ]
+
+    def _init_once(cls):
+        for key, id in cls.KEYS:
+            EasyMP4Tags.RegisterFreeformKey(key, id, mean="org.rcook")
+
     def _tags_as_dict(self):
-        return self.tags.__dict__
+        return dict(self._inner.tags)
 
 
 class WMAMetadata(Metadata):
+    def _init_once(cls): pass
+
     def _tags_as_dict(self):
-        return self.tags.__dict__
+        return dict(self._inner.tags)

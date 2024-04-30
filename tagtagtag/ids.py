@@ -4,8 +4,7 @@ from uuid import UUID, uuid4
 
 def do_ids(path):
     print(f"Adding track and album IDs to {path}")
-
-    m = Metadata(path)
+    m = Metadata.load(path)
 
     current_album_id = None \
         if (temp := m.album_id.get(None)) is None \
@@ -26,3 +25,5 @@ def do_ids(path):
     if m.dirty:
         print("Saving changes")
         m.save()
+    else:
+        print("No changes")
