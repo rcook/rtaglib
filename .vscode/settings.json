@@ -3,9 +3,15 @@
   "files.exclude": {
     "**/.vscode/": true,
     "**/__pycache__/": true,
-    "*.mp3.bak": true,
-    "*.mp3": true,
     "*.pyc": true,
+    "*.flac": true,
+    "*.flac.bak": true,
+    "*.m4a": true,
+    "*.m4a.bak": true,
+    "*.mp3": true,
+    "*.mp3.bak": true,
+    "*.wma": true,
+    "*.wma.bak": true,
   },
   "rust-analyzer.showUnlinkedFileNotification": false,
 }
