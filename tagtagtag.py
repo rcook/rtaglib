@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 from pathlib import Path
+from tagtagtag.dump import do_dump
 from tagtagtag.ids import do_ids
 import os
 import sys
@@ -12,6 +13,10 @@ def main(cwd, argv):
     parser = ArgumentParser(prog="tagtagtag", description="Tag Tool")
 
     subparsers = parser.add_subparsers(required=True)
+
+    p = subparsers.add_parser(name="dump")
+    p.set_defaults(func=lambda args: do_dump(path=args.path))
+    p.add_argument("path", type=path_type, help="Path")
 
     p = subparsers.add_parser(name="ids")
     p.set_defaults(func=lambda args: do_ids(path=args.path))

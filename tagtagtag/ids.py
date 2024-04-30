@@ -3,6 +3,8 @@ from uuid import UUID, uuid4
 
 
 def do_ids(path):
+    print(f"Adding track and album IDs to {path}")
+
     m = Metadata(path)
 
     current_album_id = None \

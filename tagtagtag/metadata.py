@@ -1,5 +1,6 @@
 from copy import deepcopy
 from mutagen.easyid3 import EasyID3
+from mutagen.easymp4 import EasyMP4Tags
 import mutagen
 import mutagen.id3
 
@@ -35,6 +36,7 @@ class Metadata:
             self.__class__._first_instance = False
             for key, id in self.__class__.KEYS:
                 EasyID3.RegisterTXXXKey(key, id)
+                EasyMP4Tags.RegisterFreeformKey(key, id, mean="org.rcook")
 
         self._path = path
         self._m = mutagen.File(self._path, easy=True)
@@ -60,6 +62,9 @@ class Metadata:
             else:
                 self._m.save()
         self._m = None
+
+    def pprint(self):
+        return self._m.pprint()
 
     def delete(self):
         self._m.delete()
