@@ -3,6 +3,5 @@ from tagtagtag.metadata import Metadata
 
 def do_dump(path):
     print(f"Dumping tags for {path}")
-
-    m = Metadata(path)
-    print(m.pprint())
+    for line in Metadata.load(path).pprint().splitlines():
+        print(f"  {line}")

@@ -1,14 +1,20 @@
+from abc import ABC, abstractmethod
 from copy import deepcopy
 from mutagen.easyid3 import EasyID3
+import mutagen.easyid3
 from mutagen.easymp4 import EasyMP4Tags
 import mutagen
+import mutagen.asf
+import mutagen.easymp4
+import mutagen.flac
 import mutagen.id3
+import mutagen.mp3
 
 
 MISSING_ARG = object()
 
 
-class Metadata:
+class Metadata(ABC):
     ALBUM_ID_KEY = "rcook_album_id"
     TRACK_ID_KEY = "rcook_track_id"
     KEYS = [
@@ -31,7 +37,20 @@ class Metadata:
         def pop(self, default=MISSING_ARG):
             self._metadata.pop(key=self._key, default=default)
 
-    def __init__(self, path):
+    @staticmethod
+    def load(path):
+        tags = mutagen.File(path, easy=True)
+        match tags:
+            case mutagen.mp3.EasyMP3(): return ID3Metadata(path, tags)
+            case mutagen.easymp4.EasyMP4(): return MP4Metadata(path, tags)
+            case mutagen.flac.FLAC(): return FLACMetadata(path, tags)
+            case mutagen.asf.ASF(): return WMAMetadata(path, tags)
+            case _: raise NotImplementedError(f"Unsupported metadata type {type(tags)}")
+
+    def __init__(self, path, tags):
+        self._path = path
+        self._tags = tags
+        return
         if self.__class__._first_instance:
             self.__class__._first_instance = False
             for key, id in self.__class__.KEYS:
@@ -40,9 +59,7 @@ class Metadata:
 
         self._path = path
         self._m = mutagen.File(self._path, easy=True)
-        self._saved_tags = {} \
-            if self._m.tags is None \
-            else deepcopy(self._m.tags.__dict__)
+        self._saved_tags = deepcopy(self._tags_as_dict())
         self.album_id = self.__class__.Accessor(
             self,
             self.__class__.ALBUM_ID_KEY)
@@ -51,9 +68,15 @@ class Metadata:
             self.__class__.TRACK_ID_KEY)
 
     @property
+    def tags(self): return self._tags
+
+    @property
     def dirty(self):
         d = {} if self._m.tags is None else self._m.tags.__dict__
         return d != self._saved_tags
+
+    @abstractmethod
+    def _tags_as_dict(self): raise NotImplementedError()
 
     def save(self):
         if self.dirty:
@@ -64,7 +87,7 @@ class Metadata:
         self._m = None
 
     def pprint(self):
-        return self._m.pprint()
+        return self._tags.pprint()
 
     def delete(self):
         self._m.delete()
@@ -95,3 +118,23 @@ class Metadata:
             if self._m.tags is None:
                 return default
             return self._m.tags.pop(key, default)
+
+
+class FLACMetadata(Metadata):
+    def _tags_as_dict(self):
+        return self.tags.__dict__
+
+
+class ID3Metadata(Metadata):
+    def _tags_as_dict(self):
+        return self.tags.__dict__
+
+
+class MP4Metadata(Metadata):
+    def _tags_as_dict(self):
+        return self.tags.__dict__
+
+
+class WMAMetadata(Metadata):
+    def _tags_as_dict(self):
+        return self.tags.__dict__
