@@ -1,5 +1,7 @@
+from argparse import ArgumentParser
 from copy import deepcopy
 from mutagen.easyid3 import EasyID3
+from pathlib import Path
 from uuid import UUID, uuid4
 import mutagen
 import mutagen.id3
@@ -8,7 +10,6 @@ import sys
 
 
 MISSING_ARG = object()
-FILE_NAME = "02_Wasted_Time-006.mp3"
 ALBUM_ID_KEY = "rcook_album_id"
 TRACK_ID_KEY = "rcook_track_id"
 KEYS = [
@@ -41,10 +42,13 @@ class Metadata:
         self.album_id = Metadata.Accessor(self, ALBUM_ID_KEY)
         self.track_id = Metadata.Accessor(self, TRACK_ID_KEY)
 
-    def save(self):
+    @property
+    def dirty(self):
         d = {} if self._m.tags is None else self._m.tags.__dict__
-        dirty = d != self._saved_tags
-        if dirty:
+        return d != self._saved_tags
+
+    def save(self):
+        if self.dirty:
             if len(self._m.tags) == 0:
                 self._m.delete()
             else:
@@ -83,7 +87,15 @@ class Metadata:
 
 
 def main(cwd, argv):
-    status = run()
+    def path_type(s):
+        return Path(cwd, s).resolve()
+
+    parser = ArgumentParser(prog="tagtagtag", description="Tag Tool")
+    parser.add_argument("path", type=path_type, help="Path")
+
+    args = parser.parse_args(argv)
+
+    status = run(path=args.path)
     if status is None:
         pass
     elif isinstance(status, bool):
@@ -96,22 +108,28 @@ def main(cwd, argv):
         raise NotImplementedError(f"Unsupported status {status}")
 
 
-def run():
-    m = Metadata(FILE_NAME)
+def run(path):
+    m = Metadata(path)
 
     current_album_id = None \
         if (temp := m.album_id.get(None)) is None \
         else UUID(temp)
     if current_album_id is None:
         m.album_id.set(str(uuid4()))
+    else:
+        print(f"Album ID: {current_album_id}")
 
     current_track_id = None \
         if (temp := m.track_id.get(None)) is None \
         else UUID(temp)
     if current_track_id is None:
         m.track_id.set(str(uuid4()))
+    else:
+        print(f"Track ID: {current_track_id}")
 
-    m.save()
+    if m.dirty:
+        print("Saving changes")
+        m.save()
 
 
 if __name__ == "__main__":
