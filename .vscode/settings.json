@@ -1,0 +1,11 @@
+{
+  "files.eol": "\n",
+  "files.exclude": {
+    "**/.vscode/": true,
+    "**/__pycache__/": true,
+    "*.mp3.bak": true,
+    "*.mp3": true,
+    "*.pyc": true,
+  },
+  "rust-analyzer.showUnlinkedFileNotification": false,
+}
