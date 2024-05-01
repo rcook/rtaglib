@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from mutagen.easyid3 import EasyID3
-import mutagen.easyid3
 from mutagen.easymp4 import EasyMP4Tags
 import mutagen
 import mutagen.asf
+import mutagen.easyid3
 import mutagen.easymp4
 import mutagen.flac
 import mutagen.id3
