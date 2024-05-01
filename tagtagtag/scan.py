@@ -1,6 +1,13 @@
 from dataclasses import dataclass
-from tagtagtag.metadata import Metadata
 import mutagen
+
+
+_EXTS = {
+    ".flac",
+    ".m4a",
+    ".mp3",
+    ".wma"
+}
 
 
 @dataclass
@@ -22,6 +29,9 @@ def do_scan(dir):
             p = root / f
 
             ext = p.suffix.lower()
+            if ext not in _EXTS:
+                continue
+
             ext_info = ext_infos.get(ext)
             if ext_info is None:
                 ext_info = ExtInfo(count=0, tag_infos={})
