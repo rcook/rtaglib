@@ -2,6 +2,12 @@ from dataclasses import dataclass
 import mutagen
 
 
+_IGNORE_DIRS = {
+    ".git",
+    ".vscode",
+    "__pycache__"
+}
+
 _EXTS = {
     ".flac",
     ".m4a",
@@ -21,32 +27,39 @@ class TagInfo:
     count: int
 
 
-def do_scan(dir):
-    ext_infos = {}
+def walk_dir(dir):
     for root, ds, fs in dir.walk():
+        for d in _IGNORE_DIRS:
+            if d in ds:
+                ds.remove(d)
         ds.sort()
         for f in fs:
             p = root / f
+            yield p
 
-            ext = p.suffix.lower()
-            if ext not in _EXTS:
-                continue
 
-            ext_info = ext_infos.get(ext)
-            if ext_info is None:
-                ext_info = ExtInfo(count=0, tag_infos={})
-                ext_infos[ext] = ext_info
+def do_scan(dir):
+    ext_infos = {}
+    for p in walk_dir(dir=dir):
+        ext = p.suffix.lower()
+        if ext not in _EXTS:
+            continue
 
-            ext_info.count += 1
+        ext_info = ext_infos.get(ext)
+        if ext_info is None:
+            ext_info = ExtInfo(count=0, tag_infos={})
+            ext_infos[ext] = ext_info
 
-            m = mutagen.File(p)
-            if m.tags is not None:
-                for k in m.tags.keys():
-                    tag_info = ext_info.tag_infos.get(k)
-                    if tag_info is None:
-                        tag_info = TagInfo(count=0)
-                        ext_info.tag_infos[k] = tag_info
-                    tag_info.count += 1
+        ext_info.count += 1
+
+        m = mutagen.File(p)
+        if m.tags is not None:
+            for k in m.tags.keys():
+                tag_info = ext_info.tag_infos.get(k)
+                if tag_info is None:
+                    tag_info = TagInfo(count=0)
+                    ext_info.tag_infos[k] = tag_info
+                tag_info.count += 1
 
     for ext in sorted(ext_infos.keys()):
         ext_info = ext_infos[ext]
