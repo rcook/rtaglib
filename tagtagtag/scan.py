@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from tagtagtag.fs import walk_dir
 import mutagen
 
 
@@ -8,7 +9,7 @@ _IGNORE_DIRS = {
     "__pycache__"
 }
 
-_EXTS = {
+_INCLUDE_EXTS = {
     ".flac",
     ".m4a",
     ".mp3",
@@ -27,24 +28,10 @@ class TagInfo:
     count: int
 
 
-def walk_dir(dir):
-    for root, ds, fs in dir.walk():
-        for d in _IGNORE_DIRS:
-            if d in ds:
-                ds.remove(d)
-        ds.sort()
-        for f in fs:
-            p = root / f
-            yield p
-
-
 def do_scan(dir):
     ext_infos = {}
-    for p in walk_dir(dir=dir):
+    for p in walk_dir(dir=dir, include_exts=_INCLUDE_EXTS, ignore_dirs=_IGNORE_DIRS):
         ext = p.suffix.lower()
-        if ext not in _EXTS:
-            continue
-
         ext_info = ext_infos.get(ext)
         if ext_info is None:
             ext_info = ExtInfo(count=0, tag_infos={})
