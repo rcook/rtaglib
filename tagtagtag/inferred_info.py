@@ -17,7 +17,7 @@ class InferredInfo:
     track_number: int
 
     _TRACK_DISC_NUMBER_RE = re.compile(
-        "^(?P<disc>\\d+)[ \\-_](?P<number>\\d+)[ \\-_](?P<rest>.+)$")
+        "^(?P<disc>\\d+)\\-(?P<number>\\d+)[ \\-_](?P<rest>.+)$")
     _TRACK_NUMBER_RE = re.compile("^(?P<number>\\d+)[ \\-_](?P<rest>.+)$")
 
     @classmethod
