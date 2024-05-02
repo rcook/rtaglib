@@ -69,11 +69,11 @@ class InferredInfo:
 
         return cls(
             artist_title=humanize_str(artist_safe_title),
-            artist_safe_title=artist_safe_title,
+            artist_safe_title=make_safe_str(artist_safe_title),
             album_title=humanize_str(album_safe_title),
-            album_safe_title=album_safe_title,
+            album_safe_title=make_safe_str(album_safe_title),
             track_title=humanize_str(track_safe_title),
-            track_safe_title=track_safe_title,
+            track_safe_title=make_safe_str(track_safe_title),
             track_number=track_number)
 
 
