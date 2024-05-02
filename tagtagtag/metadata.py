@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
+from dataclasses import dataclass
 from mutagen.easyid3 import EasyID3
 from mutagen.easymp4 import EasyMP4Tags
 import mutagen
@@ -12,6 +13,26 @@ import mutagen.mp3
 
 
 _MISSING = object()
+_ATTRIBUTE_TYPES = {
+    "title": str,
+    "number": int,
+    "artist": str,
+    "album": str,
+    "musicbrainz_artist_id": str,
+    "musicbrainz_album_id": str,
+    "musicbrainz_track_id": str
+}
+
+
+@dataclass(frozen=True)
+class CommonKeys:
+    title: str
+    number: str
+    artist: str
+    album: str
+    musicbrainz_artist_id: str
+    musicbrainz_album_id: str
+    musicbrainz_track_id: str
 
 
 class Metadata(ABC):
@@ -62,6 +83,15 @@ class Metadata(ABC):
             self,
             self.__class__.TRACK_ID_KEY)
 
+    def __getattr__(self, name):
+        key = getattr(self.__class__.COMMON_KEYS, name, None)
+        if key is None:
+            raise AttributeError(
+                "Undefined attribute "
+                f"{self.__class__.__name__}.{name}")
+
+        return self._scalar(key=key, required_type=_ATTRIBUTE_TYPES[name])
+
     @property
     def path(self): return self._path
 
@@ -72,24 +102,11 @@ class Metadata(ABC):
     def dirty(self):
         return self._tags_as_dict() != self._saved_tags
 
-    @property
-    @abstractmethod
-    def title(self): raise NotImplementedError()
-
-    @property
-    @abstractmethod
-    def number(self): raise NotImplementedError()
-
-    @property
-    @abstractmethod
-    def artist(self): raise NotImplementedError()
-
-    @property
-    @abstractmethod
-    def album(self): raise NotImplementedError()
-
     @abstractmethod
     def _tags_as_dict(self): raise NotImplementedError()
+
+    @abstractmethod
+    def _scalar(self, key, required_type): raise NotImplementedError()
 
     def save(self):
         if self.dirty:
@@ -134,19 +151,16 @@ class Metadata(ABC):
 
 
 class FLACMetadata(Metadata):
+    COMMON_KEYS = CommonKeys(
+        title="?",
+        number="?",
+        artist="?",
+        album="?",
+        musicbrainz_artist_id="?",
+        musicbrainz_album_id="?",
+        musicbrainz_track_id="?")
+
     def _init_once(cls): pass
-
-    @property
-    def title(self): return self._scalar("?", str)
-
-    @property
-    def number(self): return self._scalar("?", int)
-
-    @property
-    def artist(self): return self._scalar("?", str)
-
-    @property
-    def album(self): return self._scalar("?", str)
 
     def _tags_as_dict(self):
         return self._inner.tags.as_dict()
@@ -162,26 +176,21 @@ class FLACMetadata(Metadata):
 
 
 class ID3Metadata(Metadata):
-    KEYS = [
-        (Metadata.ALBUM_ID_KEY, "RCOOK_ALBUM_ID"),
-        (Metadata.TRACK_ID_KEY, "RCOOK_TRACK_ID"),
-    ]
+    COMMON_KEYS = CommonKeys(
+        title="title",
+        number="?",
+        artist="artist",
+        album="?",
+        musicbrainz_artist_id="?",
+        musicbrainz_album_id="?",
+        musicbrainz_track_id="?")
 
     def _init_once(cls):
-        for key, id in cls.KEYS:
+        for key, id in [
+            (cls.ALBUM_ID_KEY, "RCOOK_ALBUM_ID"),
+            (cls.TRACK_ID_KEY, "RCOOK_TRACK_ID"),
+        ]:
             EasyID3.RegisterTXXXKey(key, id)
-
-    @property
-    def title(self): return self._scalar("title", str)
-
-    @property
-    def number(self): return self._scalar("?", int)
-
-    @property
-    def artist(self): return self._scalar("artist", str)
-
-    @property
-    def album(self): return self._scalar("?", str)
 
     def _scalar(self, key, required_type):
         if self._inner.tags is None or key not in self._inner.tags:
@@ -197,13 +206,20 @@ class ID3Metadata(Metadata):
 
 
 class MP4Metadata(Metadata):
-    KEYS = [
-        (Metadata.ALBUM_ID_KEY, "RCOOK_ALBUM_ID"),
-        (Metadata.TRACK_ID_KEY, "RCOOK_TRACK_ID"),
-    ]
+    COMMON_KEYS = CommonKeys(
+        title="?",
+        number="?",
+        artist="?",
+        album="?",
+        musicbrainz_artist_id="?",
+        musicbrainz_album_id="?",
+        musicbrainz_track_id="?")
 
     def _init_once(cls):
-        for key, id in cls.KEYS:
+        for key, id in [
+            (cls.ALBUM_ID_KEY, "RCOOK_ALBUM_ID"),
+            (cls.TRACK_ID_KEY, "RCOOK_TRACK_ID"),
+        ]:
             EasyMP4Tags.RegisterFreeformKey(key, id, mean="org.rcook")
 
     def _tags_as_dict(self):
@@ -211,19 +227,16 @@ class MP4Metadata(Metadata):
 
 
 class WMAMetadata(Metadata):
+    COMMON_KEYS = CommonKeys(
+        title="Title",
+        number="WM/TrackNumber",
+        artist="WM/AlbumArtist",
+        album="WM/AlbumTitle",
+        musicbrainz_artist_id="MusicBrainz/Artist Id",
+        musicbrainz_album_id="MusicBrainz/Album Id",
+        musicbrainz_track_id="MusicBrainz/Track Id")
+
     def _init_once(cls): pass
-
-    @property
-    def title(self): return self._scalar("Title", str)
-
-    @property
-    def number(self): return self._scalar("WM/TrackNumber", int)
-
-    @property
-    def artist(self): return self._scalar("WM/AlbumArtist", str)
-
-    @property
-    def album(self): return self._scalar("WM/AlbumTitle", str)
 
     def _tags_as_dict(self):
         return dict(self._inner.tags)

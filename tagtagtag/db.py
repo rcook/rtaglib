@@ -14,12 +14,20 @@ _IGNORE_DIRS = {
     "__pycache__"
 }
 
+
 _INCLUDE_EXTS = {
     ".flac",
     ".m4a",
     ".mp3",
     ".wma"
 }
+
+
+_MUSICBRAINZ_ATTRS = [
+    ("musicbrainz_artist_id", "MusicBrainz artist ID"),
+    ("musicbrainz_album_id", "MusicBrainz album ID"),
+    ("musicbrainz_track_id", "MusicBrainz track ID")
+]
 
 
 def do_db(ctx, data_dir):
@@ -70,6 +78,9 @@ def do_db(ctx, data_dir):
             "Scratch.bak"
         for p in walk_dir(d, include_exts=_INCLUDE_EXTS, ignore_dirs=_IGNORE_DIRS):
             m = Metadata.load(p)
+            if m.musicbrainz_track_id is not None:
+                continue
+
             if m.title is None:
                 print(f"File: {p.relative_to(d)}")
             else:
@@ -78,7 +89,5 @@ def do_db(ctx, data_dir):
             print(f"Artist: {m.artist}")
             print(f"Album: {m.album}")
             print("-----")
-            # if p.name.endswith(".flac"):
-            #    exit(1)
 
     ctx.log_debug("do_db end")
