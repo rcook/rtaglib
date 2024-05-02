@@ -36,9 +36,8 @@ def choose_item(items, page_size):
 
         while True:
             result = input(
-                f"Choose (1)-({page_item_count}), (Enter) to go to next page, (Q) to quit: ").lower()
-
-            if result == "q":
+                f"Choose (1)-({page_item_count}), (Enter) to go to next page, (Q) to quit: ").strip()
+            if result == "Q" or result == "q":
                 return False
             if result == "":
                 page_number += 1
@@ -97,14 +96,14 @@ def edit_item(item):
             end="")
 
         while True:
-            result = input(f" {_EDIT_VALUE_PROMPT}: ")
+            result = input(f" {_EDIT_VALUE_PROMPT}: ").strip()
             if result == "Q" or result == "q":
                 return False
             if result == "" or result == current_value:
                 break
 
             try:
-                new_value = f.type(result.strip())
+                new_value = f.type(result)
             except ValueError:
                 continue
 

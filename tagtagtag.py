@@ -41,8 +41,13 @@ def main(cwd, argv, ctx):
     p.set_defaults(
         func=lambda args: do_edit(
             ctx=ctx,
-            data_dir=args.data_dir))
+            data_dir=args.data_dir,
+            mode=args.mode))
     add_common_args(parser=p)
+    p.add_argument(
+        "mode",
+        choices=["artist", "album", "track"],
+        help="edit artist, album or track (default: track)")
 
     p = subparsers.add_parser(name="import")
     p.set_defaults(
