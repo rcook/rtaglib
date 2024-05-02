@@ -2,7 +2,7 @@ from tagtagtag.metadata import Metadata
 from uuid import UUID, uuid4
 
 
-def do_ids(path):
+def do_ids(ctx, path):
     print(f"Adding track and album IDs to {path}")
     m = Metadata.load(path)
 

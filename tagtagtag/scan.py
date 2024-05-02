@@ -28,7 +28,7 @@ class TagInfo:
     count: int
 
 
-def do_scan(dir):
+def do_scan(ctx, dir):
     ext_infos = {}
     for p in walk_dir(dir=dir, include_exts=_INCLUDE_EXTS, ignore_dirs=_IGNORE_DIRS):
         ext = p.suffix.lower()
