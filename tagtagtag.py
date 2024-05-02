@@ -6,6 +6,7 @@ from tagtagtag.cprint import cprint
 from tagtagtag.dump import do_dump
 from tagtagtag.edit import do_edit
 from tagtagtag.error import ReportableError
+from tagtagtag.fs import home_dir
 from tagtagtag.ids import do_ids
 from tagtagtag._import import do_import
 from tagtagtag.scan import do_scan
@@ -15,7 +16,7 @@ import sys
 
 
 def default_data_dir():
-    return Path(os.getenv("USERPROFILE")) / ".tagtagtag"
+    return home_dir() / ".tagtagtag"
 
 
 def main(cwd, argv, ctx):

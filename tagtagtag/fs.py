@@ -1,3 +1,8 @@
+from pathlib import Path
+import os
+import platform
+
+
 def walk_dir(dir, include_exts=None, ignore_dirs={}):
     include_exts = None \
         if include_exts is None else \
@@ -14,3 +19,11 @@ def walk_dir(dir, include_exts=None, ignore_dirs={}):
             ext = p.suffix.lower()
             if include_exts is None or ext in include_exts:
                 yield p
+
+
+def home_dir():
+    s = platform.system()
+    match s.lower():
+        case "darwin": return Path(os.getenv("HOME")).resolve()
+        case "windows": return Path(os.getenv("USERPROFILE")).resolve()
+        case _: raise NotImplementedError(f"Unsupported platform \"{s}\"")
