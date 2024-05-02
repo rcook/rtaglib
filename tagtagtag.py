@@ -46,7 +46,7 @@ def main(cwd, argv, ctx):
     add_common_args(parser=p)
     p.add_argument(
         "mode",
-        choices=["artist", "album", "track"],
+        choices=["artist", "album", "track", "album-tracks"],
         help="edit artist, album or track (default: track)")
 
     p = subparsers.add_parser(name="import")

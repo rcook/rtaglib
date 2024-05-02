@@ -16,6 +16,7 @@ def do_edit(ctx, data_dir, mode):
                 case "artist": result = do_edit_artist(ctx=ctx, db=db)
                 case "album": result = do_edit_album(ctx=ctx, db=db)
                 case "track": result = do_edit_track(ctx=ctx, db=db)
+                case "album-tracks": result = do_edit_album_tracks(ctx=ctx, db=db)
                 case _: raise NotImplementedError(f"Unsupported mode {mode}")
             if result is not None and not result:
                 return
@@ -91,3 +92,33 @@ def do_edit_track(ctx, db):
 
     result.update(db=db)
     ctx.log_info(f"Updated track with ID {result.id}")
+
+
+def do_edit_album_tracks(ctx, db):
+    artist = choose_item(
+        items=list(Artist.list(db=db)),
+        page_size=_PAGE_SIZE)
+    if artist is None or not artist:
+        return artist
+
+    album = choose_item(
+        items=list(
+            Album.list(
+                db=db,
+                artist_id=artist.id)),
+        page_size=_PAGE_SIZE)
+    if album is None or not album:
+        return album
+
+    tracks = list(
+        Track.list(
+            db=db,
+            album_id=album.id))
+    for track in tracks:
+        result = edit_item(item=track)
+        if result is not None and not result:
+            return result
+
+        if result is not None:
+            result.update(db=db)
+            ctx.log_info(f"Updated track with ID {result.id}")
