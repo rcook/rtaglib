@@ -79,7 +79,7 @@ class InferredInfo:
             rest = name
         else:
             number = int(m.group("digits"))
-            rest = m.group("rest")
+            rest = m.group("rest").strip("_").strip()
 
         return cls(
             title=humanize(rest),
