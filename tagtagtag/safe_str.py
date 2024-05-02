@@ -11,7 +11,7 @@ KEEP_CHARS = {
 }
 
 
-def make_safe_name(s):
+def make_safe_str(s):
     output = ""
     replacing = False
     for c in s:
@@ -25,3 +25,7 @@ def make_safe_name(s):
             replacing = True
     output = output.strip(REPLACEMENT)
     return output
+
+
+def humanize_str(s):
+    return s.replace("_", " ").strip()

@@ -55,7 +55,7 @@ def do_show_album_tracks(ctx, db):
             Fore.LIGHTWHITE_EX,
             " [",
             Fore.LIGHTCYAN_EX,
-            track.fs_name,
+            track.safe_name,
             Fore.LIGHTWHITE_EX,
             "]",
             ""

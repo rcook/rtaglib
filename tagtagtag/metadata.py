@@ -15,10 +15,10 @@ import mutagen.mp3
 
 _MISSING = object()
 _ATTRIBUTE_TYPES = {
-    "title": str,
-    "number": int,
-    "artist": str,
-    "album": str,
+    "artist_title": str,
+    "album_title": str,
+    "track_title": str,
+    "track_number": int,
     "musicbrainz_artist_id": str,
     "musicbrainz_album_id": str,
     "musicbrainz_track_id": str
@@ -33,10 +33,10 @@ class Key:
 
 @dataclass(frozen=True)
 class CommonKeys:
-    title: str
-    number: str
-    artist: str
-    album: str
+    artist_title: str
+    album_title: str
+    track_title: str
+    track_number: str
     musicbrainz_artist_id: str
     musicbrainz_album_id: str
     musicbrainz_track_id: str
@@ -159,10 +159,10 @@ class Metadata(ABC):
 
 class FLACMetadata(Metadata):
     COMMON_KEYS = CommonKeys(
-        title="?",
-        number="?",
-        artist="?",
-        album="?",
+        artist_title="?",
+        album_title="?",
+        track_title="?",
+        track_number="?",
         musicbrainz_artist_id="?",
         musicbrainz_album_id="?",
         musicbrainz_track_id="?")
@@ -184,10 +184,10 @@ class FLACMetadata(Metadata):
 
 class ID3Metadata(Metadata):
     COMMON_KEYS = CommonKeys(
-        title="title",
-        number="?",
-        artist="artist",
-        album="?",
+        artist_title="artist",
+        album_title="?",
+        track_title="title",
+        track_number="?",
         musicbrainz_artist_id="?",
         musicbrainz_album_id="?",
         musicbrainz_track_id="?")
@@ -219,10 +219,10 @@ def parse_number(s):
 
 class MP4Metadata(Metadata):
     COMMON_KEYS = CommonKeys(
-        title="title",
-        number=Key(key="tracknumber", func=parse_number),
-        artist="artist",
-        album="album",
+        artist_title="artist",
+        album_title="album",
+        track_title="title",
+        track_number=Key(key="tracknumber", func=parse_number),
         musicbrainz_artist_id="?",
         musicbrainz_album_id="?",
         musicbrainz_track_id="?")
@@ -252,10 +252,10 @@ class MP4Metadata(Metadata):
 
 class WMAMetadata(Metadata):
     COMMON_KEYS = CommonKeys(
-        title="Title",
-        number="WM/TrackNumber",
-        artist="WM/AlbumArtist",
-        album="WM/AlbumTitle",
+        artist_title="WM/AlbumArtist",
+        album_title="WM/AlbumTitle",
+        track_title="Title",
+        track_number="WM/TrackNumber",
         musicbrainz_artist_id="MusicBrainz/Artist Id",
         musicbrainz_album_id="MusicBrainz/Album Id",
         musicbrainz_track_id="MusicBrainz/Track Id")

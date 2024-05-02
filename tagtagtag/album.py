@@ -12,10 +12,10 @@ class Album(Entity):
     id: int
     artist_id: int
     uuid: UUID
-    name: str
-    fs_name: str
+    title: str
+    safe_title: str
     disambiguator: str
-    sort_name: str
+    sort_title: str
 
     @staticmethod
     def create_schema(db):
@@ -26,12 +26,12 @@ class Album(Entity):
                 id INTEGER PRIMARY KEY NOT NULL,
                 artist_id INTEGER NOT NULL,
                 uuid TEXT NOT NULL UNIQUE,
-                name TEXT NOT NULL,
-                fs_name TEXT NOT NULL,
+                title TEXT NOT NULL,
+                safe_title TEXT NOT NULL,
                 disambiguator TEXT NULL,
-                sort_name TEXT NULL,
-                UNIQUE(artist_id, name, disambiguator)
-                UNIQUE(artist_id, fs_name)
+                sort_title TEXT NULL,
+                UNIQUE(artist_id, title, disambiguator)
+                UNIQUE(artist_id, safe_title)
                 FOREIGN KEY(artist_id) REFERENCES artists(id)
             )
             """)
@@ -40,29 +40,29 @@ class Album(Entity):
     def list(cls, db, artist_id):
         cursor = db.cursor()
         cursor.execute(
-            "SELECT id, uuid, name, fs_name, disambiguator, sort_name FROM albums WHERE artist_id = ? ORDER BY sort_name",
+            "SELECT id, uuid, title, safe_title, disambiguator, sort_title FROM albums WHERE artist_id = ? ORDER BY sort_title",
             (artist_id, ))
         for row in cursor.fetchall():
             yield cls(
                 id=row[0],
                 artist_id=artist_id,
                 uuid=UUID(row[1]),
-                name=row[2],
-                fs_name=row[3],
+                title=row[2],
+                safe_title=row[3],
                 disambiguator=row[4],
-                sort_name=row[5])
+                sort_title=row[5])
 
     @classmethod
-    def create(cls, db, artist_id, name, fs_name, disambiguator=None, sort_name=None):
+    def create(cls, db, artist_id, title, safe_title, disambiguator=None, sort_title=None):
         uuid = uuid4()
         cursor = db.cursor()
         cursor.execute(
             """
-            INSERT OR IGNORE INTO albums (artist_id, uuid, name, fs_name, disambiguator, sort_name)
+            INSERT OR IGNORE INTO albums (artist_id, uuid, title, safe_title, disambiguator, sort_title)
             VALUES (?, ?, ?, ?, ?, ?)
             RETURNING id
             """,
-            (artist_id, str(uuid), name, fs_name, disambiguator, sort_name))
+            (artist_id, str(uuid), title, safe_title, disambiguator, sort_title))
         row = cursor.fetchone()
         db.commit()
         if row is not None:
@@ -70,16 +70,16 @@ class Album(Entity):
                 id=row[0],
                 artist_id=artist_id,
                 uuid=uuid,
-                name=name,
-                fs_name=fs_name,
+                title=title,
+                safe_title=safe_title,
                 disambiguator=disambiguator,
-                sort_name=sort_name)
+                sort_title=sort_title)
 
         if disambiguator is None:
-            m = f"Album \"{name}\" for artist ID {artist_id} is not unique: " \
+            m = f"Album \"{title}\" for artist ID {artist_id} is not unique: " \
                 "specify a unique disambiguator"
         else:
-            m = f"Album \"{name}\" with disambiguator " \
+            m = f"Album \"{title}\" with disambiguator " \
                 f"\"{disambiguator}\" for artist ID {artist_id} is not unique: " \
                 "specify a different disambiguator"
         raise ReportableError(m)
@@ -89,7 +89,7 @@ class Album(Entity):
         cursor = db.cursor()
         cursor.execute(
             """
-            SELECT artist_id, uuid, name, fs_name, disambiguator, sort_name FROM albums WHERE id = ?
+            SELECT artist_id, uuid, title, safe_title, disambiguator, sort_title FROM albums WHERE id = ?
             """,
             (id, ))
         row = cursor.fetchone()
@@ -98,10 +98,10 @@ class Album(Entity):
                 id=id,
                 artist_id=row[0],
                 uuid=UUID(row[1]),
-                name=row[2],
-                fs_name=row[3],
+                title=row[2],
+                safe_title=row[3],
                 disambiguator=row[4],
-                sort_name=row[5])
+                sort_title=row[5])
 
         if default is not _MISSING:
             return default
@@ -113,7 +113,7 @@ class Album(Entity):
         cursor = db.cursor()
         cursor.execute(
             """
-            SELECT id, artist_id, name, fs_name, disambiguator, sort_name FROM albums WHERE uuid = ?
+            SELECT id, artist_id, title, safe_title, disambiguator, sort_title FROM albums WHERE uuid = ?
             """,
             (str(uuid), ))
         row = cursor.fetchone()
@@ -122,10 +122,10 @@ class Album(Entity):
                 id=row[0],
                 artist_id=row[1],
                 uuid=uuid,
-                name=row[2],
-                fs_name=row[3],
+                title=row[2],
+                safe_title=row[3],
                 disambiguator=row[4],
-                sort_name=row[5])
+                sort_title=row[5])
 
         if default is not _MISSING:
             return default
@@ -133,46 +133,46 @@ class Album(Entity):
         raise RuntimeError(f"Could not retrieve album with UUID {uuid}")
 
     @classmethod
-    def query(cls, db, artist_id, name, disambiguator=None, default=_MISSING):
+    def query(cls, db, artist_id, title, disambiguator=None, default=_MISSING):
         cursor = db.cursor()
         if disambiguator is None:
             cursor.execute(
                 """
-                SELECT id, uuid, fs_name, sort_name FROM albums WHERE artist_id = ? AND name = ? AND disambiguator IS NULL
+                SELECT id, uuid, safe_title, sort_title FROM albums WHERE artist_id = ? AND title = ? AND disambiguator IS NULL
                 """,
-                (artist_id, name))
+                (artist_id, title))
         else:
             cursor.execute(
                 """
-                SELECT id, uuid, fs_name, sort_name FROM albums WHERE artist_id = ? AND name = ? AND disambiguator = ?
+                SELECT id, uuid, safe_title, sort_title FROM albums WHERE artist_id = ? AND title = ? AND disambiguator = ?
                 """,
-                (artist_id, name, disambiguator))
+                (artist_id, title, disambiguator))
         row = cursor.fetchone()
         if row is not None:
             return cls(
                 id=row[0],
                 artist_id=artist_id,
                 uuid=UUID(row[1]),
-                name=name,
-                fs_name=row[2],
+                title=title,
+                safe_title=row[2],
                 disambiguator=disambiguator,
-                sort_name=row[3])
+                sort_title=row[3])
 
         if default is not _MISSING:
             return default
 
         raise RuntimeError(
-            f"Could not retrieve album ({name}, {disambiguator}) for artist ID {artist_id}")
+            f"Could not retrieve album ({title}, {disambiguator}) for artist ID {artist_id}")
 
     def update(self, db):
         cursor = db.cursor()
         cursor.execute(
             """
             UPDATE albums
-            SET name = ?, fs_name = ?, disambiguator = ?, sort_name = ?
+            SET title = ?, safe_title = ?, disambiguator = ?, sort_title = ?
             WHERE id = ?
             """,
-            (self.name, self.fs_name, self.disambiguator, self.sort_name, self.id))
+            (self.title, self.safe_title, self.disambiguator, self.sort_title, self.id))
         if cursor.rowcount != 1:
             raise RuntimeError(f"Failed to update album with ID {self.id}")
         db.commit()

@@ -4,7 +4,7 @@ from tagtagtag.artist import Artist
 from tagtagtag.constants import MUSIC_IGNORE_DIRS, MUSIC_INCLUDE_EXTS
 from tagtagtag.error import ReportableError
 from tagtagtag.fs import walk_dir
-from tagtagtag.safe_name import make_safe_name
+from tagtagtag.safe_str import humanize_str, make_safe_str
 from tagtagtag.track import Track
 from tagtagtag.metadata import Metadata
 from tagtagtag.metadata_db import MetadataDB
@@ -39,45 +39,42 @@ class DBResult:
 
 @dataclass(frozen=True)
 class InferredInfo:
-    title: str
-    title_fs: str
-    number: int
-    artist: str
-    artist_fs: str
-    album: str
-    album_fs: str
+    artist_title: str
+    artist_safe_title: str
+    album_title: str
+    album_safe_title: str
+    track_title: str
+    track_safe_title: str
+    track_number: int
 
     _FILE_NAME_RE = re.compile("^(?P<digits>\\d+)(?P<rest>.+)$")
 
     @classmethod
     def parse(cls, rel_path):
-        def humanize(s):
-            return s.replace("_", " ").strip()
-
         parts = rel_path.parts
         if len(parts) < 3:
             raise ReportableError(
                 f"File path \"{rel_path}\" does not match expected structure")
 
-        artist_fs, album_fs, file_name = parts[-3:]
+        artist_safe_title, album_safe_title, file_name = parts[-3:]
 
-        name, _ = os.path.splitext(file_name)
-        m = cls._FILE_NAME_RE.match(name)
+        base_file_name, _ = os.path.splitext(file_name)
+        m = cls._FILE_NAME_RE.match(base_file_name)
         if m is None:
-            number = None
-            rest = name
+            track_number = None
+            track_safe_title = base_file_name
         else:
-            number = int(m.group("digits"))
-            rest = m.group("rest").strip("_").strip()
+            track_number = int(m.group("digits"))
+            track_safe_title = m.group("rest").lstrip("_").lstrip(" ")
 
         return cls(
-            title=humanize(rest),
-            title_fs=rest,
-            number=number,
-            artist=humanize(artist_fs),
-            artist_fs=artist_fs,
-            album=humanize(album_fs),
-            album_fs=album_fs)
+            artist_title=humanize_str(artist_safe_title),
+            artist_safe_title=artist_safe_title,
+            album_title=humanize_str(album_safe_title),
+            album_safe_title=album_safe_title,
+            track_title=humanize_str(track_safe_title),
+            track_safe_title=track_safe_title,
+            track_number=track_number)
 
 
 def do_import(ctx, data_dir, music_dir, init=False):
@@ -89,6 +86,7 @@ def do_import(ctx, data_dir, music_dir, init=False):
         db_path.unlink()
 
     result = DBResult.default()
+
     with MetadataDB(db_path) as db:
         for p in walk_dir(music_dir, include_exts=MUSIC_INCLUDE_EXTS, ignore_dirs=MUSIC_IGNORE_DIRS):
             result.total += 1
@@ -114,32 +112,25 @@ def process_file(ctx, result, dir, path, m, db):
     rel_path = path.relative_to(dir)
     inferred = InferredInfo.parse(rel_path)
 
-    if m.artist is None:
-        artist_title = inferred.artist
-        artist_fs = inferred.artist_fs
-    else:
-        artist_title = m.artist
-        artist_fs = make_safe_name(artist_title)
+    def get_titles(key):
+        temp = getattr(m, key)
+        if temp is None:
+            return getattr(inferred, key), getattr(inferred, key.replace("title", "safe_title"))
+        else:
+            return temp, make_safe_str(temp)
 
-    if m.album is None:
-        album_title = inferred.album
-        album_fs = inferred.album_fs
-    else:
-        album_title = m.album
-        album_fs = make_safe_name(album_title)
+    artist_title, artist_safe_title = get_titles("artist_title")
+    album_title, album_safe_title = get_titles("album_title")
+    track_title, track_safe_title = get_titles("track_title")
+    track_number = inferred.track_number if m.track_number is None else m.track_number
 
-    title = inferred.title if m.title is None else m.title
-    assert title is not None and len(title) > 0
-
-    number = inferred.number if m.number is None else m.number
-
-    artist = Artist.query(db=db, name=artist_title, default=None)
+    artist = Artist.query(db=db, title=artist_title, default=None)
     if artist is None:
         artist = Artist.create(
             db=db,
-            name=artist_title,
-            fs_name=artist_fs)
-        ctx.log_info(f"New artist: {artist.name} ({artist.uuid})")
+            title=artist_title,
+            safe_title=artist_safe_title)
+        ctx.log_info(f"New artist: {artist.title} ({artist.uuid})")
         result.new_artist_count += 1
     else:
         result.existing_artist_count += 1
@@ -147,15 +138,15 @@ def process_file(ctx, result, dir, path, m, db):
     album = Album.query(
         db=db,
         artist_id=artist.id,
-        name=album_title,
+        title=album_title,
         default=None)
     if album is None:
         album = Album.create(
             db=db,
             artist_id=artist.id,
-            name=album_title,
-            fs_name=album_fs)
-        ctx.log_info(f"New album: {album.name} ({album.uuid})")
+            title=album_title,
+            safe_title=album_safe_title)
+        ctx.log_info(f"New album: {album.title} ({album.uuid})")
         result.new_album_count += 1
     else:
         result.existing_album_count += 1
@@ -163,17 +154,17 @@ def process_file(ctx, result, dir, path, m, db):
     track = Track.query(
         db=db,
         album_id=album.id,
-        name=title,
-        number=number,
+        title=track_title,
+        number=track_number,
         default=None)
     if track is None:
         track = Track.create(
             db=db,
             album_id=album.id,
-            name=title,
-            fs_name=inferred.title_fs,
-            number=number)
-        ctx.log_info(f"New track: {track.name} ({track.uuid})")
+            title=track_title,
+            safe_title=track_safe_title,
+            number=track_number)
+        ctx.log_info(f"New track: {track.title} ({track.uuid})")
         result.new_track_count += 1
     else:
         result.existing_track_count += 1
