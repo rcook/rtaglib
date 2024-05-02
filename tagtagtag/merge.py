@@ -82,4 +82,29 @@ def do_merge_albums(ctx, db):
             if result == "M" or result == "m":
                 break
 
-    print("DO MERGE")
+    album, *other_albums = selected_albums
+
+    album_ids = tuple(x.id for x in selected_albums)
+    placeholders = ", ".join("?" * len(other_albums))
+
+    cursor = db.cursor()
+
+    cursor.execute(
+        f"""
+        UPDATE tracks
+        SET album_id = ?
+        WHERE album_id IN ({placeholders})
+        """,
+        album_ids)
+    ctx.log_info(
+        f"Merged albums {', '.join(str(x) for x in album_ids)} "
+        f"({cursor.rowcount} tracks updated)")
+
+    cursor.execute(
+        f"""
+        DELETE FROM albums WHERE id IN ({placeholders})
+        """,
+        tuple(x.id for x in other_albums))
+    ctx.log_info(f"Delete merged albums ({cursor.rowcount} albums deleted)")
+
+    db.commit()
