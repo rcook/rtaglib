@@ -22,7 +22,18 @@ def do_edit(ctx, data_dir, mode):
 
 
 def do_edit_artist(ctx, db):
-    pass
+    artist = choose_item(
+        items=list(Artist.list(db=db)),
+        page_size=_PAGE_SIZE)
+    if artist is None or not artist:
+        return artist
+
+    result = edit_item(item=artist)
+    if result is None or not result:
+        return result
+
+    result.update(db=db)
+    ctx.log_info(f"Updated artist with ID {artist.id}")
 
 
 def do_edit_album(ctx, db):

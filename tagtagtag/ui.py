@@ -3,7 +3,9 @@ from dataclasses import fields, replace
 from tagtagtag.cprint import cprint
 
 
-_EDIT_VALUE_PROMPT = "[Type new value, empty to leave unchanged or (Q) to quit]"
+_EMPTY_PLACEHOLDER = "(empty)"
+_EDIT_VALUE_PROMPT = f"[Type new value, empty to leave unchanged, " \
+    f"{_EMPTY_PLACEHOLDER} to set to NULL or (Q) to quit]"
 
 
 def choose_item(items, page_size):
@@ -99,13 +101,16 @@ def edit_item(item):
             result = input(f" {_EDIT_VALUE_PROMPT}: ").strip()
             if result == "Q" or result == "q":
                 return False
-            if result == "" or result == current_value:
+            if result == "" or result != _EMPTY_PLACEHOLDER and result == current_value:
                 break
 
-            try:
-                new_value = f.type(result)
-            except ValueError:
-                continue
+            if result == _EMPTY_PLACEHOLDER:
+                new_value = None
+            else:
+                try:
+                    new_value = f.type(result)
+                except ValueError:
+                    continue
 
             new_values[f.name] = new_value
             break

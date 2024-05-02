@@ -163,3 +163,16 @@ class Album(Entity):
 
         raise RuntimeError(
             f"Could not retrieve album ({name}, {disambiguator}) for artist ID {artist_id}")
+
+    def update(self, db):
+        cursor = db.cursor()
+        cursor.execute(
+            """
+            UPDATE albums
+            SET name = ?, fs_name = ?, disambiguator = ?, sort_name = ?
+            WHERE id = ?
+            """,
+            (self.name, self.fs_name, self.disambiguator, self.sort_name, self.id))
+        if cursor.rowcount != 1:
+            raise RuntimeError(f"Failed to update album with ID {self.id}")
+        db.commit()
