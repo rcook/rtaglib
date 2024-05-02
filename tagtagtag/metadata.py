@@ -49,7 +49,9 @@ class MetadataMeta(ABCMeta):
                 key = getattr(self.__class__.COMMON_KEYS, name)
 
                 if key is _NOT_IMPLEMENTED:
-                    raise NotImplementedError()
+                    raise NotImplementedError(
+                        f"Attribute \"{name}\" not implemented for "
+                        f"{self.__class__.__name__}")
 
                 if isinstance(key, str):
                     value = self._scalar(key)
