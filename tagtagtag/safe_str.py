@@ -7,7 +7,8 @@ REPLACEMENT = "_"
 
 
 KEEP_CHARS = {
-    "_"
+    "_",
+    "-"
 }
 
 
