@@ -1,7 +1,25 @@
-from tagtagtag.album import Album
-from tagtagtag.artist import Artist
-from tagtagtag.track import Track
+from pathlib import Path
+# from tagtagtag.album import Album
+# from tagtagtag.artist import Artist
+from tagtagtag.fs import walk_dir
+# from tagtagtag.track import Track
+from tagtagtag.metadata import Metadata
 from tagtagtag.metadata_db import MetadataDB
+import os
+
+
+_IGNORE_DIRS = {
+    ".git",
+    ".vscode",
+    "__pycache__"
+}
+
+_INCLUDE_EXTS = {
+    ".flac",
+    ".m4a",
+    ".mp3",
+    ".wma"
+}
 
 
 def do_db(ctx, data_dir):
@@ -10,6 +28,7 @@ def do_db(ctx, data_dir):
     ctx.log_debug(f"db_path={db_path}")
 
     with MetadataDB(db_path) as db:
+        """
         artist = Artist.query(db=db, name="From the Fall", default=None)
         if artist is None:
             artist = Artist.create(
@@ -44,5 +63,20 @@ def do_db(ctx, data_dir):
                 fs_name="Armed_and_Hammered",
                 number=1)
         ctx.log_info(track)
+        """
+        d = Path(os.getenv("USERPROFILE")) / \
+            "Desktop" / \
+            "Beets" / \
+            "Scratch.bak"
+        for p in walk_dir(d, include_exts=_INCLUDE_EXTS, ignore_dirs=_IGNORE_DIRS):
+            m = Metadata.load(p)
+            print(f"Title: {m.title}")
+            print(f"Number: {m.number}")
+            print(f"Artist: {m.artist}")
+            print(f"Album: {m.album}")
+            print("-----")
+            # if p.name.endswith(".mp3"):
+            #    print("DONE")
+            #    exit(1)
 
     ctx.log_debug("do_db end")

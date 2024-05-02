@@ -11,7 +11,7 @@ import mutagen.id3
 import mutagen.mp3
 
 
-MISSING_ARG = object()
+_MISSING = object()
 
 
 class Metadata(ABC):
@@ -24,24 +24,24 @@ class Metadata(ABC):
             self._metadata = metadata
             self._key = key
 
-        def get(self, default=MISSING_ARG):
+        def get(self, default=_MISSING):
             return self._metadata.get(key=self._key, default=default)
 
         def set(self, value):
             self._metadata.set(key=self._key, value=value)
 
-        def pop(self, default=MISSING_ARG):
+        def pop(self, default=_MISSING):
             self._metadata.pop(key=self._key, default=default)
 
     @staticmethod
     def load(path):
         inner = mutagen.File(path, easy=True)
         match inner:
-            case mutagen.mp3.EasyMP3(): return ID3Metadata(path, inner)
-            case mutagen.easymp4.EasyMP4(): return MP4Metadata(path, inner)
-            case mutagen.flac.FLAC(): return FLACMetadata(path, inner)
-            case mutagen.asf.ASF(): return WMAMetadata(path, inner)
-            case _: raise NotImplementedError(f"Unsupported metadata type {type(tags)}")
+            case mutagen.mp3.EasyMP3(): return ID3Metadata(path=path, inner=inner)
+            case mutagen.easymp4.EasyMP4(): return MP4Metadata(path=path, inner=inner)
+            case mutagen.flac.FLAC(): return FLACMetadata(path=path, inner=inner)
+            case mutagen.asf.ASF(): return WMAMetadata(path=path, inner=inner)
+            case _: raise NotImplementedError(f"Unsupported metadata type {type(inner)}")
 
     @classmethod
     @abstractmethod
@@ -72,6 +72,22 @@ class Metadata(ABC):
     def dirty(self):
         return self._tags_as_dict() != self._saved_tags
 
+    @property
+    @abstractmethod
+    def title(self): raise NotImplementedError()
+
+    @property
+    @abstractmethod
+    def number(self): raise NotImplementedError()
+
+    @property
+    @abstractmethod
+    def artist(self): raise NotImplementedError()
+
+    @property
+    @abstractmethod
+    def album(self): raise NotImplementedError()
+
     @abstractmethod
     def _tags_as_dict(self): raise NotImplementedError()
 
@@ -90,8 +106,8 @@ class Metadata(ABC):
         self._inner.delete()
         self._m = None
 
-    def get(self, key, default=MISSING_ARG):
-        if default is MISSING_ARG:
+    def get(self, key, default=_MISSING):
+        if default is _MISSING:
             if self._inner.tags is None:
                 raise KeyError(key)
         else:
@@ -106,8 +122,8 @@ class Metadata(ABC):
             self._inner.add_tags()
         self._inner.tags[key] = value
 
-    def pop(self, key, default=MISSING_ARG):
-        if default is MISSING_ARG:
+    def pop(self, key, default=_MISSING):
+        if default is _MISSING:
             if self._inner.tags is None:
                 raise KeyError(key)
             return self._inner.tags.pop(key)
@@ -134,6 +150,27 @@ class ID3Metadata(Metadata):
         for key, id in cls.KEYS:
             EasyID3.RegisterTXXXKey(key, id)
 
+    @property
+    def title(self): return self._scalar("title", str)
+
+    @property
+    def number(self): return self._scalar("?", int)
+
+    @property
+    def artist(self): return self._scalar("artist", str)
+
+    @property
+    def album(self): return self._scalar("?", str)
+
+    def _scalar(self, key, required_type):
+        if self._inner.tags is None or key not in self._inner.tags:
+            return None
+        values = self._inner.tags[key]
+        assert isinstance(values, list) and len(values) == 1
+        value = values[0]
+        assert isinstance(value, required_type)
+        return value
+
     def _tags_as_dict(self):
         return {} if self._inner.tags is None else dict(self._inner.tags)
 
@@ -155,5 +192,26 @@ class MP4Metadata(Metadata):
 class WMAMetadata(Metadata):
     def _init_once(cls): pass
 
+    @property
+    def title(self): return self._scalar("Title", str)
+
+    @property
+    def number(self): return self._scalar("WM/TrackNumber", int)
+
+    @property
+    def artist(self): return self._scalar("WM/AlbumArtist", str)
+
+    @property
+    def album(self): return self._scalar("WM/AlbumTitle", str)
+
     def _tags_as_dict(self):
         return dict(self._inner.tags)
+
+    def _scalar(self, key, required_type):
+        values = self._inner.tags.get(key + "X", None)
+        if values is None:
+            return None
+        assert isinstance(values, list) and len(values) == 1
+        value = values[0].value
+        assert isinstance(value, required_type)
+        return value
