@@ -4,6 +4,7 @@ from tagtagtag.artist import Artist
 from tagtagtag.constants import MUSIC_IGNORE_DIRS, MUSIC_INCLUDE_EXTS
 from tagtagtag.error import ReportableError
 from tagtagtag.fs import walk_dir
+from tagtagtag.safe_name import make_safe_name
 from tagtagtag.track import Track
 from tagtagtag.metadata import Metadata
 from tagtagtag.metadata_db import MetadataDB
@@ -113,11 +114,19 @@ def process_file(ctx, result, dir, path, m, db):
     rel_path = path.relative_to(dir)
     inferred = InferredInfo.parse(rel_path)
 
-    artist_title = inferred.artist if m.artist is None else m.artist
-    assert artist_title is not None and len(artist_title) > 0
+    if m.artist is None:
+        artist_title = inferred.artist
+        artist_fs = inferred.artist_fs
+    else:
+        artist_title = m.artist
+        artist_fs = make_safe_name(artist_title)
 
-    album_title = inferred.album if m.album is None else m.album
-    assert album_title is not None and len(album_title) > 0
+    if m.album is None:
+        album_title = inferred.album
+        album_fs = inferred.album_fs
+    else:
+        album_title = m.album
+        album_fs = make_safe_name(album_title)
 
     title = inferred.title if m.title is None else m.title
     assert title is not None and len(title) > 0
@@ -129,7 +138,7 @@ def process_file(ctx, result, dir, path, m, db):
         artist = Artist.create(
             db=db,
             name=artist_title,
-            fs_name=inferred.artist_fs)
+            fs_name=artist_fs)
         ctx.log_info(f"New artist: {artist.name} ({artist.uuid})")
         result.new_artist_count += 1
     else:
@@ -145,7 +154,7 @@ def process_file(ctx, result, dir, path, m, db):
             db=db,
             artist_id=artist.id,
             name=album_title,
-            fs_name=inferred.album_fs)
+            fs_name=album_fs)
         ctx.log_info(f"New album: {album.name} ({album.uuid})")
         result.new_album_count += 1
     else:

@@ -69,10 +69,10 @@ class Artist(Entity):
                 sort_name=sort_name)
 
         if disambiguator is None:
-            m = f"Artist \"{name}\" is not unique: " \
+            m = f"Artist \"{name}\" with safe name \"{fs_name}\" is not unique: " \
                 "specify a unique disambiguator"
         else:
-            m = f"Artist \"{name}\" with disambiguator " \
+            m = f"Artist \"{name}\" with safe name \"{fs_name}\" and disambiguator " \
                 f"\"{disambiguator}\" is not unique: " \
                 "specify a different disambiguator"
         raise ReportableError(m)

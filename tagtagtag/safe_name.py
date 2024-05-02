@@ -1,0 +1,27 @@
+REPLACE_CHARS = {
+    ".",
+}
+
+
+REPLACEMENT = "_"
+
+
+KEEP_CHARS = {
+    "_"
+}
+
+
+def make_safe_name(s):
+    output = ""
+    replacing = False
+    for c in s:
+        c: str = c
+        if c.isalnum() or c in KEEP_CHARS:
+            output += c
+            replacing = False
+        elif c.isspace() or c in REPLACE_CHARS:
+            if not replacing:
+                output += REPLACEMENT
+            replacing = True
+    output = output.strip(REPLACEMENT)
+    return output
