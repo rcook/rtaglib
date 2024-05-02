@@ -1,6 +1,7 @@
-from abc import ABC, abstractmethod
+from abc import ABCMeta, abstractmethod
 from copy import deepcopy
-from dataclasses import dataclass
+from dataclasses import dataclass, make_dataclass
+from functools import partial
 from mutagen.easyid3 import EasyID3
 from mutagen.easymp4 import EasyMP4Tags
 from typing import Callable
@@ -14,15 +15,16 @@ import mutagen.mp3
 
 
 _MISSING = object()
-_ATTRIBUTE_TYPES = {
-    "artist_title": str,
-    "album_title": str,
-    "track_title": str,
-    "track_number": int,
-    "musicbrainz_artist_id": str,
-    "musicbrainz_album_id": str,
-    "musicbrainz_track_id": str
-}
+_ATTRS = [
+    ("artist_title", str),
+    ("album_title", str),
+    ("track_title", str),
+    ("track_disc", str),
+    ("track_number", int),
+    ("musicbrainz_artist_id", str),
+    ("musicbrainz_album_id", str),
+    ("musicbrainz_track_id", str)
+]
 
 
 @dataclass(frozen=True)
@@ -31,18 +33,34 @@ class Key:
     func: Callable
 
 
-@dataclass(frozen=True)
-class CommonKeys:
-    artist_title: str
-    album_title: str
-    track_title: str
-    track_number: str
-    musicbrainz_artist_id: str
-    musicbrainz_album_id: str
-    musicbrainz_track_id: str
+CommonKeys = make_dataclass("CommonKeys", [
+    (attr[0], str | Key)
+    for attr in _ATTRS
+], frozen=True)
 
 
-class Metadata(ABC):
+class MetadataMeta(ABCMeta):
+    def __new__(cls, name, bases, dct):
+        t = super().__new__(cls, name, bases, dct)
+
+        for attr in _ATTRS:
+            def get_tag(name, required_type, self):
+                key = getattr(self.__class__.COMMON_KEYS, name)
+                if isinstance(key, str):
+                    value = self._scalar(key)
+                else:
+                    value = key.func(self._scalar(key.key))
+                return None if value is None else required_type(value)
+
+            setattr(
+                t,
+                attr[0],
+                property(partial(get_tag, attr[0], attr[1])))
+
+        return t
+
+
+class Metadata(metaclass=MetadataMeta):
     ALBUM_ID_KEY = "rcook_album_id"
     TRACK_ID_KEY = "rcook_track_id"
     _first_instance = True
@@ -90,15 +108,6 @@ class Metadata(ABC):
             self,
             self.__class__.TRACK_ID_KEY)
 
-    def __getattr__(self, name):
-        key = getattr(self.__class__.COMMON_KEYS, name, None)
-        if key is None:
-            raise AttributeError(
-                "Undefined attribute "
-                f"{self.__class__.__name__}.{name}")
-
-        return self._scalar(key=key, required_type=_ATTRIBUTE_TYPES[name])
-
     @property
     def path(self): return self._path
 
@@ -113,7 +122,7 @@ class Metadata(ABC):
     def _tags_as_dict(self): raise NotImplementedError()
 
     @abstractmethod
-    def _scalar(self, key, required_type): raise NotImplementedError()
+    def _scalar(self, key): raise NotImplementedError()
 
     def save(self):
         if self.dirty:
@@ -159,26 +168,26 @@ class Metadata(ABC):
 
 class FLACMetadata(Metadata):
     COMMON_KEYS = CommonKeys(
-        artist_title="?",
-        album_title="?",
-        track_title="?",
-        track_number="?",
-        musicbrainz_artist_id="?",
-        musicbrainz_album_id="?",
-        musicbrainz_track_id="?")
+        artist_title="albumartist",
+        album_title="album",
+        track_disc="discnumber",
+        track_title="title",
+        track_number="tracknumber",
+        musicbrainz_artist_id="musicbrainz_artistid",
+        musicbrainz_album_id="musicbrainz_albumid",
+        musicbrainz_track_id="musicbrainz_trackid")
 
     def _init_once(cls): pass
 
     def _tags_as_dict(self):
         return self._inner.tags.as_dict()
 
-    def _scalar(self, key, required_type):
+    def _scalar(self, key):
         values = self._inner.tags.get(key, None)
         if values is None:
             return None
         assert isinstance(values, list) and len(values) == 1
-        value = values[0].value
-        assert isinstance(value, required_type)
+        value = values[0]
         return value
 
 
@@ -187,6 +196,7 @@ class ID3Metadata(Metadata):
         artist_title="artist",
         album_title="?",
         track_title="title",
+        track_disc="?",
         track_number="?",
         musicbrainz_artist_id="?",
         musicbrainz_album_id="?",
@@ -199,30 +209,38 @@ class ID3Metadata(Metadata):
         ]:
             EasyID3.RegisterTXXXKey(key, id)
 
-    def _scalar(self, key, required_type):
+    def _scalar(self, key):
         if self._inner.tags is None or key not in self._inner.tags:
             return None
         values = self._inner.tags[key]
         assert isinstance(values, list) and len(values) == 1
         value = values[0]
-        assert isinstance(value, required_type)
         return value
 
     def _tags_as_dict(self):
         return {} if self._inner.tags is None else dict(self._inner.tags)
 
 
-def parse_number(s):
-    value, _ = s.split("/", maxsplit=1)
-    return value
-
-
 class MP4Metadata(Metadata):
+    def parse_track_disc(s):
+        # if s = "1/1":
+        #    return None
+        print(f"s={s}")
+        value, _ = s.split("/", maxsplit=1)
+        print(value)
+        exit(1)
+        return value
+
+    def parse_track_number(s):
+        value, _ = s.split("/", maxsplit=1)
+        return value
+
     COMMON_KEYS = CommonKeys(
         artist_title="artist",
         album_title="album",
         track_title="title",
-        track_number=Key(key="tracknumber", func=parse_number),
+        track_disc=Key(key="discnumber", func=parse_track_disc),
+        track_number=Key(key="tracknumber", func=parse_track_number),
         musicbrainz_artist_id="?",
         musicbrainz_album_id="?",
         musicbrainz_track_id="?")
@@ -237,17 +255,13 @@ class MP4Metadata(Metadata):
     def _tags_as_dict(self):
         return dict(self._inner.tags)
 
-    def _scalar(self, key, required_type):
-        k = key if isinstance(key, str) else key.key
-        values = self._inner.tags.get(k, None)
+    def _scalar(self, key):
+        values = self._inner.tags.get(key, None)
         if values is None:
             return None
         assert isinstance(values, list) and len(values) == 1
         value = values[0]
-        if isinstance(key, Key):
-            return required_type(key.func(value))
-        else:
-            return required_type(value)
+        return value
 
 
 class WMAMetadata(Metadata):
@@ -255,6 +269,7 @@ class WMAMetadata(Metadata):
         artist_title="WM/AlbumArtist",
         album_title="WM/AlbumTitle",
         track_title="Title",
+        track_disc="?",
         track_number="WM/TrackNumber",
         musicbrainz_artist_id="MusicBrainz/Artist Id",
         musicbrainz_album_id="MusicBrainz/Album Id",
@@ -265,10 +280,10 @@ class WMAMetadata(Metadata):
     def _tags_as_dict(self):
         return dict(self._inner.tags)
 
-    def _scalar(self, key, required_type):
+    def _scalar(self, key):
         values = self._inner.tags.get(key, None)
         if values is None:
             return None
         assert isinstance(values, list) and len(values) == 1
         value = values[0].value
-        return required_type(value)
+        return value

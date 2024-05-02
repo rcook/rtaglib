@@ -10,15 +10,6 @@ from tagtagtag.metadata import Metadata
 from tagtagtag.metadata_db import MetadataDB
 
 
-"""
-_MUSICBRAINZ_ATTRS = [
-    ("musicbrainz_artist_id", "MusicBrainz artist ID"),
-    ("musicbrainz_album_id", "MusicBrainz album ID"),
-    ("musicbrainz_track_id", "MusicBrainz track ID")
-]
-"""
-
-
 @dataclass
 class DBResult:
     total: int
