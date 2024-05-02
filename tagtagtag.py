@@ -20,12 +20,25 @@ def main(cwd, argv, ctx):
     def path_type(s):
         return Path(cwd, s).resolve()
 
+    def add_common_args(parser):
+        default = default_data_dir()
+        parser.add_argument(
+            "--dir",
+            "-d",
+            dest="data_dir",
+            metavar="DATA_DIR",
+            type=path_type,
+            required=False,
+            default=default,
+            help=f"path to data directory (default: {default})")
+
     parser = ArgumentParser(prog="tagtagtag", description="Tag Tool")
 
     subparsers = parser.add_subparsers(required=True)
 
     p = subparsers.add_parser(name="db")
-    p.set_defaults(func=lambda args: do_db(ctx=ctx))
+    p.set_defaults(func=lambda args: do_db(ctx=ctx, data_dir=args.data_dir))
+    add_common_args(parser=p)
 
     p = subparsers.add_parser(name="dump")
     p.set_defaults(func=lambda args: do_dump(ctx=ctx, path=args.path))
