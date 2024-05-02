@@ -9,6 +9,7 @@ from tagtagtag.error import ReportableError
 from tagtagtag.ids import do_ids
 from tagtagtag._import import do_import
 from tagtagtag.scan import do_scan
+from tagtagtag.show import do_show
 import os
 import sys
 
@@ -47,7 +48,7 @@ def main(cwd, argv, ctx):
     p.add_argument(
         "mode",
         choices=["artist", "album", "track", "album-tracks"],
-        help="edit artist, album or track (default: track)")
+        help="edit artist, album or track")
 
     p = subparsers.add_parser(name="import")
     p.set_defaults(
@@ -73,6 +74,18 @@ def main(cwd, argv, ctx):
     p = subparsers.add_parser(name="scan")
     p.set_defaults(func=lambda args: do_scan(ctx=ctx, dir=args.dir))
     p.add_argument("dir", metavar="DIR", type=path_type, help="directory")
+
+    p = subparsers.add_parser(name="show")
+    p.set_defaults(
+        func=lambda args: do_show(
+            ctx=ctx,
+            data_dir=args.data_dir,
+            mode=args.mode))
+    add_common_args(parser=p)
+    p.add_argument(
+        "mode",
+        choices=["album-tracks"],
+        help="show artist, album or track")
 
     args = parser.parse_args(argv)
 
