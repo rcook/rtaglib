@@ -27,7 +27,7 @@ class Track(Entity):
                 uuid TEXT NOT NULL UNIQUE,
                 name TEXT NOT NULL,
                 fs_name TEXT NOT NULL,
-                number INTEGER NOT NULL,
+                number INTEGER NULL,
                 UNIQUE(album_id, number)
                 UNIQUE(album_id, fs_name)
                 FOREIGN KEY(album_id) REFERENCES albums(id)
