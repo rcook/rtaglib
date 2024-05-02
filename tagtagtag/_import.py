@@ -83,7 +83,7 @@ class InferredInfo:
 
         return cls(
             title=humanize(rest),
-            title_fs=file_name,
+            title_fs=rest,
             number=number,
             artist=humanize(artist_fs),
             artist_fs=artist_fs,

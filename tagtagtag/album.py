@@ -27,10 +27,11 @@ class Album(Entity):
                 artist_id INTEGER NOT NULL,
                 uuid TEXT NOT NULL UNIQUE,
                 name TEXT NOT NULL,
-                fs_name TEXT NOT NULL UNIQUE,
+                fs_name TEXT NOT NULL,
                 disambiguator TEXT NULL,
                 sort_name TEXT NULL,
                 UNIQUE(artist_id, name, disambiguator)
+                UNIQUE(artist_id, fs_name)
                 FOREIGN KEY(artist_id) REFERENCES artists(id)
             )
             """)

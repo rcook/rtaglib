@@ -26,9 +26,10 @@ class Track(Entity):
                 album_id INTEGER NOT NULL,
                 uuid TEXT NOT NULL UNIQUE,
                 name TEXT NOT NULL,
-                fs_name TEXT NOT NULL UNIQUE,
+                fs_name TEXT NOT NULL,
                 number INTEGER NOT NULL,
                 UNIQUE(album_id, number)
+                UNIQUE(album_id, fs_name)
                 FOREIGN KEY(album_id) REFERENCES albums(id)
             )
             """)
@@ -59,6 +60,7 @@ class Track(Entity):
             RETURNING id
             """,
             (album_id, str(uuid), name, fs_name, number))
+        print((album_id, str(uuid), name, fs_name, number))
         row = cursor.fetchone()
         db.commit()
         if row is not None:
