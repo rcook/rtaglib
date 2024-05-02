@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass, fields
 from pathlib import Path
 from tagtagtag.album import Album
 from tagtagtag.artist import Artist
@@ -33,6 +33,22 @@ _MUSICBRAINZ_ATTRS = [
 ]
 
 
+@dataclass
+class DBResult:
+    total: int
+    skipped_count: int
+    new_artist_count: int
+    existing_artist_count: int
+    new_album_count: int
+    existing_album_count: int
+    new_track_count: int
+    existing_track_count: int
+
+    @classmethod
+    def default(cls):
+        return cls(**{f.name: 0 for f in fields(cls)})
+
+
 @dataclass(frozen=True)
 class InferredInfo:
     title: str
@@ -43,7 +59,7 @@ class InferredInfo:
     album: str
     album_fs: str
 
-    _FILE_NAME_RE = re.compile("^(?P<digits>\d+)(?P<rest>.+)$")
+    _FILE_NAME_RE = re.compile("^(?P<digits>\\d+)(?P<rest>.+)$")
 
     @classmethod
     def parse(cls, rel_path):
@@ -81,20 +97,25 @@ def do_db(ctx, data_dir):
     ctx.log_debug("do_db begin")
     ctx.log_debug(f"db_path={db_path}")
 
+    result = DBResult.default()
     with MetadataDB(db_path) as db:
         d = Path(os.getenv("USERPROFILE")) / \
             "Desktop" / \
             "Beets" / \
             "Scratch.bak"
         for p in walk_dir(d, include_exts=_INCLUDE_EXTS, ignore_dirs=_IGNORE_DIRS):
+            result.total += 1
             m = Metadata.load(p)
             if m.musicbrainz_track_id is None:
-                process_file(ctx=ctx, dir=d, path=p, m=m, db=db)
+                process_file(result=result, ctx=ctx, dir=d, path=p, m=m, db=db)
+            else:
+                result.skipped_count += 1
 
+    ctx.log_info(", ".join(f"{k}={v}" for k, v in asdict(result).items()))
     ctx.log_debug("do_db end")
 
 
-def process_file(ctx, dir, path, m, db):
+def process_file(result, ctx, dir, path, m, db):
     rel_path = path.relative_to(dir)
     inferred = InferredInfo.parse(rel_path)
 
@@ -116,8 +137,9 @@ def process_file(ctx, dir, path, m, db):
             name=artist_title,
             fs_name=inferred.artist_fs)
         ctx.log_info(f"New artist: {artist.name} ({artist.uuid})")
+        result.new_artist_count += 1
     else:
-        ctx.log_info(f"Existing artist: {artist.name} ({artist.uuid})")
+        result.existing_artist_count += 1
 
     album = Album.query(
         db=db,
@@ -131,8 +153,9 @@ def process_file(ctx, dir, path, m, db):
             name=album_title,
             fs_name=inferred.album_fs)
         ctx.log_info(f"New album: {album.name} ({album.uuid})")
+        result.new_album_count += 1
     else:
-        ctx.log_info(f"Existing album: {album.name} ({album.uuid})")
+        result.existing_album_count += 1
 
     track = Track.query(
         db=db,
@@ -148,5 +171,6 @@ def process_file(ctx, dir, path, m, db):
             fs_name=inferred.title_fs,
             number=number)
         ctx.log_info(f"New track: {track.name} ({track.uuid})")
+        result.new_track_count += 1
     else:
-        ctx.log_info(f"Existing track: {track.name} ({track.uuid})")
+        result.existing_track_count += 1
