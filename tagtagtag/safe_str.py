@@ -1,18 +1,9 @@
 from unidecode import unidecode
 
 
-REPLACE_CHARS = {
-    ".",
-}
-
-
-REPLACEMENT = "_"
-
-
-KEEP_CHARS = {
-    "_",
-    "-"
-}
+KEEP_CHARS = {"-"}
+REPLACE_CHARS = {"."}
+PLACEHOLDER = "_"
 
 
 def make_safe_str(s):
@@ -22,11 +13,11 @@ def make_safe_str(s):
         if c.isalnum() or c in KEEP_CHARS:
             output += c
             replacing = False
-        elif c.isspace() or c in REPLACE_CHARS:
+        elif c.isspace() or c == PLACEHOLDER or c in REPLACE_CHARS:
             if not replacing:
-                output += REPLACEMENT
-            replacing = True
-    output = output.strip(REPLACEMENT)
+                output += PLACEHOLDER
+                replacing = True
+    output = output.strip(PLACEHOLDER)
     return output
 
 
