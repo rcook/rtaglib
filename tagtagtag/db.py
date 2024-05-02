@@ -82,73 +82,71 @@ def do_db(ctx, data_dir):
     ctx.log_debug(f"db_path={db_path}")
 
     with MetadataDB(db_path) as db:
-        """
-        artist = Artist.query(db=db, name="From the Fall", default=None)
-        if artist is None:
-            artist = Artist.create(
-                db=db,
-                name="From the Fall",
-                fs_name="From_the_Fall")
-        ctx.log_info(artist)
-
-        album = Album.query(
-            db=db,
-            artist_id=artist.id,
-            name="Entropy",
-            default=None)
-        if album is None:
-            album = Album.create(
-                db=db,
-                artist_id=artist.id,
-                name="Entropy",
-                fs_name="Entropy")
-        ctx.log_info(album)
-
-        track = Track.query(
-            db=db,
-            album_id=album.id,
-            name="Armed and Hammered",
-            number=1)
-        if track is None:
-            track = Track.create(
-                db=db,
-                album_id=album.id,
-                name="Armed and Hammered",
-                fs_name="Armed_and_Hammered",
-                number=1)
-        ctx.log_info(track)
-        """
         d = Path(os.getenv("USERPROFILE")) / \
             "Desktop" / \
             "Beets" / \
             "Scratch.bak"
         for p in walk_dir(d, include_exts=_INCLUDE_EXTS, ignore_dirs=_IGNORE_DIRS):
             m = Metadata.load(p)
-            if m.musicbrainz_track_id is not None:
-                continue
-
-            rel_path = p.relative_to(d)
-            inferred = InferredInfo.parse(rel_path)
-
-            artist_name = inferred.artist if m.artist is None else m.artist
-            assert artist_name is not None and len(artist_name) > 0
-
-            album_name = inferred.artist if m.album is None else m.album
-            assert album_name is not None and len(album_name) > 0
-
-            title = inferred.title if m.title is None else m.title
-            assert title is not None and len(title) > 0
-
-            number = inferred.number if m.number is None else m.number
-
-            artist = Artist.query(db=db, name=artist_name, default=None)
-            if artist is None:
-                artist = Artist.create(
-                    db=db,
-                    name=artist_name,
-                    fs_name=inferred.artist_fs)
-                ctx.log_info(f"New artist: {artist.name} ({artist.uuid})")
-            else:
-                ctx.log_info(f"Existing artist: {artist.name} ({artist.uuid})")
+            if m.musicbrainz_track_id is None:
+                process_file(ctx=ctx, dir=d, path=p, m=m, db=db)
 
     ctx.log_debug("do_db end")
+
+
+def process_file(ctx, dir, path, m, db):
+    rel_path = path.relative_to(dir)
+    inferred = InferredInfo.parse(rel_path)
+
+    artist_title = inferred.artist if m.artist is None else m.artist
+    assert artist_title is not None and len(artist_title) > 0
+
+    album_title = inferred.album if m.album is None else m.album
+    assert album_title is not None and len(album_title) > 0
+
+    title = inferred.title if m.title is None else m.title
+    assert title is not None and len(title) > 0
+
+    number = inferred.number if m.number is None else m.number
+
+    artist = Artist.query(db=db, name=artist_title, default=None)
+    if artist is None:
+        artist = Artist.create(
+            db=db,
+            name=artist_title,
+            fs_name=inferred.artist_fs)
+        ctx.log_info(f"New artist: {artist.name} ({artist.uuid})")
+    else:
+        ctx.log_info(f"Existing artist: {artist.name} ({artist.uuid})")
+
+    album = Album.query(
+        db=db,
+        artist_id=artist.id,
+        name=album_title,
+        default=None)
+    if album is None:
+        album = Album.create(
+            db=db,
+            artist_id=artist.id,
+            name=album_title,
+            fs_name=inferred.album_fs)
+        ctx.log_info(f"New album: {album.name} ({album.uuid})")
+    else:
+        ctx.log_info(f"Existing album: {album.name} ({album.uuid})")
+
+    track = Track.query(
+        db=db,
+        album_id=album.id,
+        name=title,
+        number=number,
+        default=None)
+    if track is None:
+        track = Track.create(
+            db=db,
+            album_id=album.id,
+            name=title,
+            fs_name=inferred.title_fs,
+            number=number)
+        ctx.log_info(f"New track: {track.name} ({track.uuid})")
+    else:
+        ctx.log_info(f"Existing track: {track.name} ({track.uuid})")
