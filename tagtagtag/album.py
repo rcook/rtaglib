@@ -31,7 +31,7 @@ class Album(Entity):
                 disambiguator TEXT NULL,
                 sort_name TEXT NULL,
                 UNIQUE(artist_id, name, disambiguator)
-                FOREIGN KEY(artist_id) REFERENCES artist(id)
+                FOREIGN KEY(artist_id) REFERENCES artists(id)
             )
             """)
 

@@ -1,5 +1,6 @@
 from tagtagtag.album import Album
 from tagtagtag.artist import Artist
+from tagtagtag.track import Track
 from tagtagtag.metadata_db import MetadataDB
 
 
@@ -29,5 +30,19 @@ def do_db(ctx, data_dir):
                 name="Entropy",
                 fs_name="Entropy")
         ctx.log_info(album)
+
+        track = Track.query(
+            db=db,
+            album_id=album.id,
+            name="Armed and Hammered",
+            number=1)
+        if track is None:
+            track = Track.create(
+                db=db,
+                album_id=album.id,
+                name="Armed and Hammered",
+                fs_name="Armed_and_Hammered",
+                number=1)
+        ctx.log_info(track)
 
     ctx.log_debug("do_db end")
