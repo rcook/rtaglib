@@ -111,7 +111,9 @@ def do_db(ctx, data_dir):
             else:
                 result.skipped_count += 1
 
-    ctx.log_info(", ".join(f"{k}={v}" for k, v in asdict(result).items()))
+    for k, v in asdict(result).items():
+        ctx.log_info(f"{k}={v}")
+
     ctx.log_debug("do_db end")
 
 
