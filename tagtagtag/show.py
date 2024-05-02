@@ -37,7 +37,7 @@ def do_show_album_tracks(ctx, db):
     if album is None or not album:
         return album
 
-    cprint(Fore.LIGHTCYAN_EX, f"{artist.name}: {album.name}")
+    cprint(Fore.LIGHTCYAN_EX, f"{artist.title}: {album.title}")
     tracks = list(
         Track.list(
             db=db,
@@ -51,11 +51,11 @@ def do_show_album_tracks(ctx, db):
             Fore.LIGHTWHITE_EX,
             ") ",
             Fore.LIGHTGREEN_EX,
-            track.name,
+            track.title,
             Fore.LIGHTWHITE_EX,
             " [",
             Fore.LIGHTCYAN_EX,
-            track.safe_name,
+            track.safe_title,
             Fore.LIGHTWHITE_EX,
             "]",
             ""

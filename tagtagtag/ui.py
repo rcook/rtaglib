@@ -33,7 +33,7 @@ def choose_item(items, page_size):
                 Fore.LIGHTWHITE_EX,
                 ") ",
                 Fore.LIGHTGREEN_EX,
-                item.name,
+                item.title,
                 sep="")
 
         while True:
