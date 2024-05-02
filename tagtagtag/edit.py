@@ -37,7 +37,27 @@ def do_edit_artist(ctx, db):
 
 
 def do_edit_album(ctx, db):
-    pass
+    artist = choose_item(
+        items=list(Artist.list(db=db)),
+        page_size=_PAGE_SIZE)
+    if artist is None or not artist:
+        return artist
+
+    album = choose_item(
+        items=list(
+            Album.list(
+                db=db,
+                artist_id=artist.id)),
+        page_size=_PAGE_SIZE)
+    if album is None or not album:
+        return album
+
+    result = edit_item(item=album)
+    if result is None or not result:
+        return result
+
+    result.update(db=db)
+    ctx.log_info(f"Updated album with ID {album.id}")
 
 
 def do_edit_track(ctx, db):
