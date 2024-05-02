@@ -59,7 +59,7 @@ def do_show_album_tracks(ctx, db):
             Fore.LIGHTWHITE_EX,
             "]",
             ""
-            if track.number == i + 2
+            if track.number == i + 1
             else Fore.LIGHTRED_EX + f" invalid track number: {track.number}",
             sep="")
 
