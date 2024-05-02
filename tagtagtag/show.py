@@ -4,10 +4,10 @@ from tagtagtag.artist import Artist
 from tagtagtag.cprint import cprint
 from tagtagtag.metadata_db import MetadataDB
 from tagtagtag.track import Track
-from tagtagtag.ui import choose_item, edit_item
+from tagtagtag.ui import choose_item
 
 
-_PAGE_SIZE = 5
+_PAGE_SIZE = 20
 
 
 def do_show(ctx, data_dir, mode):
