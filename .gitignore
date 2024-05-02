@@ -1,11 +1,4 @@
 __pycache__/
 *.pyc
 
-/example.flac
-/example.flac.bak
-/example.m4a
-/example.m4a.bak
-/example.mp3
-/example.mp3.bak
-/example.wma
-/example.wma.bak
+/examples
