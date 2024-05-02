@@ -70,13 +70,15 @@ def do_db(ctx, data_dir):
             "Scratch.bak"
         for p in walk_dir(d, include_exts=_INCLUDE_EXTS, ignore_dirs=_IGNORE_DIRS):
             m = Metadata.load(p)
-            print(f"Title: {m.title}")
+            if m.title is None:
+                print(f"File: {p.relative_to(d)}")
+            else:
+                print(f"Title: {m.title}")
             print(f"Number: {m.number}")
             print(f"Artist: {m.artist}")
             print(f"Album: {m.album}")
             print("-----")
-            # if p.name.endswith(".mp3"):
-            #    print("DONE")
+            # if p.name.endswith(".flac"):
             #    exit(1)
 
     ctx.log_debug("do_db end")

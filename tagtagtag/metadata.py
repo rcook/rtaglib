@@ -136,8 +136,29 @@ class Metadata(ABC):
 class FLACMetadata(Metadata):
     def _init_once(cls): pass
 
+    @property
+    def title(self): return self._scalar("?", str)
+
+    @property
+    def number(self): return self._scalar("?", int)
+
+    @property
+    def artist(self): return self._scalar("?", str)
+
+    @property
+    def album(self): return self._scalar("?", str)
+
     def _tags_as_dict(self):
         return self._inner.tags.as_dict()
+
+    def _scalar(self, key, required_type):
+        values = self._inner.tags.get(key, None)
+        if values is None:
+            return None
+        assert isinstance(values, list) and len(values) == 1
+        value = values[0].value
+        assert isinstance(value, required_type)
+        return value
 
 
 class ID3Metadata(Metadata):
@@ -208,10 +229,9 @@ class WMAMetadata(Metadata):
         return dict(self._inner.tags)
 
     def _scalar(self, key, required_type):
-        values = self._inner.tags.get(key + "X", None)
+        values = self._inner.tags.get(key, None)
         if values is None:
             return None
         assert isinstance(values, list) and len(values) == 1
         value = values[0].value
-        assert isinstance(value, required_type)
-        return value
+        return required_type(value)
