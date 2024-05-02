@@ -29,7 +29,6 @@ class Track(Entity):
                 fs_name TEXT NOT NULL,
                 number INTEGER NULL,
                 UNIQUE(album_id, number)
-                UNIQUE(album_id, fs_name)
                 FOREIGN KEY(album_id) REFERENCES albums(id)
             )
             """)
@@ -72,8 +71,12 @@ class Track(Entity):
                 fs_name=fs_name,
                 number=number)
 
-        m = f"Track \"{name}\" with number {number} " \
-            f"for album ID {album_id} is not unique"
+        if number is None:
+            m = f"Track \"{name}\" " \
+                f"for album ID {album_id} is not unique"
+        else:
+            m = f"Track \"{name}\" with number {number} " \
+                f"for album ID {album_id} is not unique"
         raise ReportableError(m)
 
     @classmethod
