@@ -67,11 +67,11 @@ class InferredInfo:
             return s.replace("_", " ").strip()
 
         parts = rel_path.parts
-        if len(parts) != 3:
+        if len(parts) < 3:
             raise ReportableError(
                 f"File path \"{rel_path}\" does not match expected structure")
 
-        artist_fs, album_fs, file_name = parts
+        artist_fs, album_fs, file_name = parts[-3:]
 
         name, _ = os.path.splitext(file_name)
         m = cls._FILE_NAME_RE.match(name)
@@ -92,22 +92,24 @@ class InferredInfo:
             album_fs=album_fs)
 
 
-def do_db(ctx, data_dir):
+def do_db(ctx, data_dir, music_dir):
     db_path = data_dir / "metadata.db"
     ctx.log_debug("do_db begin")
     ctx.log_debug(f"db_path={db_path}")
 
     result = DBResult.default()
     with MetadataDB(db_path) as db:
-        d = Path(os.getenv("USERPROFILE")) / \
-            "Desktop" / \
-            "Beets" / \
-            "Scratch.bak"
-        for p in walk_dir(d, include_exts=_INCLUDE_EXTS, ignore_dirs=_IGNORE_DIRS):
+        for p in walk_dir(music_dir, include_exts=_INCLUDE_EXTS, ignore_dirs=_IGNORE_DIRS):
             result.total += 1
             m = Metadata.load(p)
             if m.musicbrainz_track_id is None:
-                process_file(result=result, ctx=ctx, dir=d, path=p, m=m, db=db)
+                process_file(
+                    ctx=ctx,
+                    result=result,
+                    dir=music_dir,
+                    path=p,
+                    m=m,
+                    db=db)
             else:
                 result.skipped_count += 1
 
@@ -117,7 +119,7 @@ def do_db(ctx, data_dir):
     ctx.log_debug("do_db end")
 
 
-def process_file(result, ctx, dir, path, m, db):
+def process_file(ctx, result, dir, path, m, db):
     rel_path = path.relative_to(dir)
     inferred = InferredInfo.parse(rel_path)
 

@@ -37,8 +37,17 @@ def main(cwd, argv, ctx):
     subparsers = parser.add_subparsers(required=True)
 
     p = subparsers.add_parser(name="db")
-    p.set_defaults(func=lambda args: do_db(ctx=ctx, data_dir=args.data_dir))
+    p.set_defaults(
+        func=lambda args: do_db(
+            ctx=ctx,
+            data_dir=args.data_dir,
+            music_dir=args.music_dir))
     add_common_args(parser=p)
+    p.add_argument(
+        "music_dir",
+        metavar="MUSIC_DIR",
+        type=path_type,
+        help="path to music files")
 
     p = subparsers.add_parser(name="dump")
     p.set_defaults(func=lambda args: do_dump(ctx=ctx, path=args.path))
