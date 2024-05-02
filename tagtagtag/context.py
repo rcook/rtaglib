@@ -24,7 +24,9 @@ class Context:
                     method = getattr(logger, log_level)
                     return method(*args, **kwargs)
                 return log
-        raise AttributeError
+        raise AttributeError(
+            "Undefined attribute "
+            f"{self.__class__.__name__}.{name}")
 
     @cache
     def _logger(self, name):
