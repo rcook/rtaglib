@@ -3,10 +3,10 @@ from colorama import Fore, just_fix_windows_console
 from pathlib import Path
 from tagtagtag.context import Context
 from tagtagtag.cprint import cprint
-from tagtagtag.db import do_db
 from tagtagtag.dump import do_dump
 from tagtagtag.error import ReportableError
 from tagtagtag.ids import do_ids
+from tagtagtag._import import do_import
 from tagtagtag.scan import do_scan
 import os
 import sys
@@ -36,9 +36,9 @@ def main(cwd, argv, ctx):
 
     subparsers = parser.add_subparsers(required=True)
 
-    p = subparsers.add_parser(name="db")
+    p = subparsers.add_parser(name="import")
     p.set_defaults(
-        func=lambda args: do_db(
+        func=lambda args: do_import(
             ctx=ctx,
             data_dir=args.data_dir,
             music_dir=args.music_dir))

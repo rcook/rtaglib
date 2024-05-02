@@ -92,7 +92,7 @@ class InferredInfo:
             album_fs=album_fs)
 
 
-def do_db(ctx, data_dir, music_dir):
+def do_import(ctx, data_dir, music_dir):
     db_path = data_dir / "metadata.db"
     ctx.log_debug("do_db begin")
     ctx.log_debug(f"db_path={db_path}")
