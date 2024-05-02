@@ -1,3 +1,6 @@
+from unidecode import unidecode
+
+
 REPLACE_CHARS = {
     ".",
 }
@@ -15,8 +18,7 @@ KEEP_CHARS = {
 def make_safe_str(s):
     output = ""
     replacing = False
-    for c in s:
-        c: str = c
+    for c in unidecode(s):
         if c.isalnum() or c in KEEP_CHARS:
             output += c
             replacing = False
