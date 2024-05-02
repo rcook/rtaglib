@@ -63,6 +63,9 @@ class Metadata(ABC):
             self.__class__.TRACK_ID_KEY)
 
     @property
+    def path(self): return self._path
+
+    @property
     def inner(self): return self._inner
 
     @property
