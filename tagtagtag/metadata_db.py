@@ -1,10 +1,11 @@
+from tagtagtag.album import Album
 from tagtagtag.artist import Artist
 from tagtagtag.entity import Entity
 import sqlite3
 
 
 class MetadataDB:
-    _ENTITIES: list[Entity] = [Artist]
+    _ENTITIES: list[Entity] = [Artist, Album]
 
     def __init__(self, db_path):
         db_path.parent.mkdir(parents=True, exist_ok=True)

@@ -8,8 +8,9 @@ _MISSING = object()
 
 
 @dataclass(frozen=True)
-class Artist(Entity):
+class Album(Entity):
     id: int
+    artist_id: int
     uuid: UUID
     name: str
     fs_name: str
@@ -20,34 +21,37 @@ class Artist(Entity):
     def create_schema(db):
         db.execute(
             """
-            CREATE TABLE IF NOT EXISTS artists
+            CREATE TABLE IF NOT EXISTS albums
             (
                 id INTEGER PRIMARY KEY NOT NULL,
+                artist_id INTEGER NOT NULL,
                 uuid TEXT NOT NULL UNIQUE,
                 name TEXT NOT NULL,
                 fs_name TEXT NOT NULL UNIQUE,
                 disambiguator TEXT NULL,
                 sort_name TEXT NULL,
-                UNIQUE(name, disambiguator)
+                UNIQUE(artist_id, name, disambiguator)
+                FOREIGN KEY(artist_id) REFERENCES artist(id)
             )
             """)
 
     @staticmethod
-    def create(db, name, fs_name, disambiguator=None, sort_name=None):
+    def create(db, artist_id, name, fs_name, disambiguator=None, sort_name=None):
         uuid = uuid4()
         cursor = db.cursor()
         cursor.execute(
             """
-            INSERT OR IGNORE INTO artists (uuid, name, fs_name, disambiguator, sort_name)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT OR IGNORE INTO albums (artist_id, uuid, name, fs_name, disambiguator, sort_name)
+            VALUES (?, ?, ?, ?, ?, ?)
             RETURNING id
             """,
-            (str(uuid), name, fs_name, disambiguator, sort_name))
+            (artist_id, str(uuid), name, fs_name, disambiguator, sort_name))
         row = cursor.fetchone()
         db.commit()
         if row is not None:
-            return Artist(
+            return Album(
                 id=row[0],
+                artist_id=artist_id,
                 uuid=uuid,
                 name=name,
                 fs_name=fs_name,
@@ -55,11 +59,11 @@ class Artist(Entity):
                 sort_name=sort_name)
 
         if disambiguator is None:
-            m = f"Artist \"{name}\" is not unique: " \
+            m = f"Album \"{name}\" for artist ID {artist_id} is not unique: " \
                 "specify a unique disambiguator"
         else:
-            m = f"Artist \"{name}\" with disambiguator " \
-                f"\"{disambiguator}\" is not unique: " \
+            m = f"Album \"{name}\" with disambiguator " \
+                f"\"{disambiguator}\" for artist ID {artist_id} is not unique: " \
                 "specify a different disambiguator"
         raise ReportableError(m)
 
@@ -68,66 +72,69 @@ class Artist(Entity):
         cursor = db.cursor()
         cursor.execute(
             """
-            SELECT uuid, name, fs_name, disambiguator, sort_name FROM artists WHERE id = ?
+            SELECT artist_id, uuid, name, fs_name, disambiguator, sort_name FROM albums WHERE id = ?
             """,
             (id, ))
         row = cursor.fetchone()
         if row is not None:
-            return Artist(
+            return Album(
                 id=id,
-                uuid=UUID(row[0]),
-                name=row[1],
-                fs_name=row[2],
-                disambiguator=row[3],
-                sort_name=row[4])
+                artist_id=row[0],
+                uuid=UUID(row[1]),
+                name=row[2],
+                fs_name=row[3],
+                disambiguator=row[4],
+                sort_name=row[5])
 
         if default is not _MISSING:
             return default
 
-        raise RuntimeError(f"Could not retrieve artist with ID {id}")
+        raise RuntimeError(f"Could not retrieve album with ID {id}")
 
     @staticmethod
     def get_by_uuid(db, uuid, default=_MISSING):
         cursor = db.cursor()
         cursor.execute(
             """
-            SELECT id, name, fs_name, disambiguator, sort_name FROM artists WHERE uuid = ?
+            SELECT id, artist_id, name, fs_name, disambiguator, sort_name FROM albums WHERE uuid = ?
             """,
             (str(uuid), ))
         row = cursor.fetchone()
         if row is not None:
-            return Artist(
+            return Album(
                 id=row[0],
+                artist_id=row[1],
                 uuid=uuid,
-                name=row[1],
-                fs_name=row[2],
-                disambiguator=row[3],
-                sort_name=row[4])
+                name=row[2],
+                fs_name=row[3],
+                disambiguator=row[4],
+                sort_name=row[5])
 
         if default is not _MISSING:
             return default
 
-        raise RuntimeError(f"Could not retrieve artist with UUID {uuid}")
+        raise RuntimeError(f"Could not retrieve album with UUID {uuid}")
 
     @staticmethod
-    def query(db, name, disambiguator=None, default=_MISSING):
+    def query(db, artist_id, name, disambiguator=None, default=_MISSING):
         cursor = db.cursor()
         if disambiguator is None:
             cursor.execute(
                 """
-                SELECT id, uuid, fs_name, sort_name FROM artists WHERE name = ? AND disambiguator IS NULL
+                SELECT id, uuid, fs_name, sort_name FROM albums WHERE artist_id = ? AND name = ? AND disambiguator IS NULL
                 """,
-                (name, ))
+                (artist_id, name))
         else:
             cursor.execute(
                 """
-                SELECT id, uuid, fs_name, sort_name FROM artists WHERE name = ? AND disambiguator = ?
+                SELECT id, uuid, fs_name, sort_name FROM albums WHERE artist_id = ? AND name = ? AND disambiguator = ?
                 """,
-                (name, disambiguator))
+                (artist_id, name, disambiguator))
         row = cursor.fetchone()
         if row is not None:
-            return Artist(
+            return Album(
                 id=row[0],
+                artist_id=artist_id,
                 uuid=UUID(row[1]),
                 name=name,
                 fs_name=row[2],
@@ -138,4 +145,4 @@ class Artist(Entity):
             return default
 
         raise RuntimeError(
-            f"Could not retrieve artist ({name}, {disambiguator})")
+            f"Could not retrieve album ({name}, {disambiguator}) for artist ID {artist_id}")
