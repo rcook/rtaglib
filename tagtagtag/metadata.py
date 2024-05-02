@@ -3,6 +3,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from mutagen.easyid3 import EasyID3
 from mutagen.easymp4 import EasyMP4Tags
+from typing import Callable
 import mutagen
 import mutagen.asf
 import mutagen.easyid3
@@ -22,6 +23,12 @@ _ATTRIBUTE_TYPES = {
     "musicbrainz_album_id": str,
     "musicbrainz_track_id": str
 }
+
+
+@dataclass(frozen=True)
+class Key:
+    key: str
+    func: Callable
 
 
 @dataclass(frozen=True)
@@ -205,12 +212,17 @@ class ID3Metadata(Metadata):
         return {} if self._inner.tags is None else dict(self._inner.tags)
 
 
+def parse_number(s):
+    value, _ = s.split("/", maxsplit=1)
+    return value
+
+
 class MP4Metadata(Metadata):
     COMMON_KEYS = CommonKeys(
-        title="?",
-        number="?",
-        artist="?",
-        album="?",
+        title="title",
+        number=Key(key="tracknumber", func=parse_number),
+        artist="artist",
+        album="album",
         musicbrainz_artist_id="?",
         musicbrainz_album_id="?",
         musicbrainz_track_id="?")
@@ -224,6 +236,18 @@ class MP4Metadata(Metadata):
 
     def _tags_as_dict(self):
         return dict(self._inner.tags)
+
+    def _scalar(self, key, required_type):
+        k = key if isinstance(key, str) else key.key
+        values = self._inner.tags.get(k, None)
+        if values is None:
+            return None
+        assert isinstance(values, list) and len(values) == 1
+        value = values[0]
+        if isinstance(key, Key):
+            return required_type(key.func(value))
+        else:
+            return required_type(value)
 
 
 class WMAMetadata(Metadata):
