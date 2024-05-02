@@ -50,6 +50,20 @@ class Track(Entity):
 
     @classmethod
     def create(cls, db, album_id, title, safe_title, number):
+        track = cls.try_create(db, album_id, title, safe_title, number)
+        if track is not None:
+            return track
+
+        if number is None:
+            m = f"Track \"{title}\" " \
+                f"for album ID {album_id} is not unique"
+        else:
+            m = f"Track \"{title}\" with number {number} " \
+                f"for album ID {album_id} is not unique"
+        raise ReportableError(m)
+
+    @classmethod
+    def try_create(cls, db, album_id, title, safe_title, number):
         uuid = uuid4()
         cursor = db.cursor()
         cursor.execute(
@@ -61,22 +75,16 @@ class Track(Entity):
             (album_id, str(uuid), title, safe_title, number))
         row = cursor.fetchone()
         db.commit()
-        if row is not None:
-            return cls(
-                id=row[0],
-                album_id=album_id,
-                uuid=uuid,
-                title=title,
-                safe_title=safe_title,
-                number=number)
+        if row is None:
+            return None
 
-        if number is None:
-            m = f"Track \"{title}\" " \
-                f"for album ID {album_id} is not unique"
-        else:
-            m = f"Track \"{title}\" with number {number} " \
-                f"for album ID {album_id} is not unique"
-        raise ReportableError(m)
+        return cls(
+            id=row[0],
+            album_id=album_id,
+            uuid=uuid,
+            title=title,
+            safe_title=safe_title,
+            number=number)
 
     @classmethod
     def get_by_id(cls, db, id, default=_MISSING):

@@ -116,13 +116,41 @@ def process_file(ctx, result, dir, path, m, db):
         number=track_number,
         default=None)
     if track is None:
-        track = Track.create(
+        create_track(
+            db=db,
+            inferred=inferred,
+            album=album,
+            track_title=track_title,
+            track_safe_title=track_safe_title,
+            track_number=track_number)
+        result.new_track_count += 1
+    else:
+        result.existing_track_count += 1
+
+
+def create_track(db, inferred, album, track_title, track_safe_title, track_number):
+    def do_create(track_number, fail_ok=False):
+        m = getattr(Track, "try_create" if fail_ok else "create")
+        return m(
             db=db,
             album_id=album.id,
             title=track_title,
             safe_title=track_safe_title,
             number=track_number)
-        ctx.log_info(f"New track: {track.title} ({track.uuid})")
-        result.new_track_count += 1
-    else:
-        result.existing_track_count += 1
+
+    if track_number is None:
+        return do_create(track_number=inferred.track_number)
+
+    if inferred.track_number is None:
+        return do_create(track_number=track_number)
+
+    if inferred.track_number == track_number:
+        return do_create(track_number=track_number)
+
+    print(track_title)
+
+    track = do_create(track_number=inferred.track_number, fail_ok=True)
+    if track is not None:
+        return track
+
+    return do_create(track_number=track_number)

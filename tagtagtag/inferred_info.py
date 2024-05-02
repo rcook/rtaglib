@@ -16,24 +16,26 @@ class InferredInfo:
     track_disc: int
     track_number: int
 
-    _FILE_NAME_RE = re.compile("^(?P<digits>\\d+)(?P<rest>.+)$")
+    _TRACK_DISC_NUMBER_RE = re.compile(
+        "^(?P<disc>\\d+)[ \\-_](?P<number>\\d+)[ \\-_](?P<rest>.+)$")
+    _TRACK_NUMBER_RE = re.compile("^(?P<number>\\d+)[ \\-_](?P<rest>.+)$")
 
     @classmethod
     def parse(cls, rel_path):
         def strip_track_disc_number(s):
-            def strip_number(s):
-                m = cls._FILE_NAME_RE.match(s)
-                if m is None:
-                    return None, s
-                else:
-                    return int(m.group("digits")), m.group("rest").lstrip("_-. ")
-
-            number0, track_safe_title = strip_number(base_file_name)
-            number1, track_safe_title = strip_number(track_safe_title)
-            if number1 is None:
-                return None, number0, track_safe_title
+            if m := cls._TRACK_DISC_NUMBER_RE.match(s):
+                track_disc = int(m.group("disc"))
+                track_number = int(m.group("number"))
+                track_safe_title = m.group("rest")
+            elif m := cls._TRACK_NUMBER_RE.match(s):
+                track_disc = None
+                track_number = int(m.group("number"))
+                track_safe_title = m.group("rest")
             else:
-                return number0, number1, track_safe_title
+                track_disc = None
+                track_number = None
+                track_safe_title = s
+            return track_disc, track_number, track_safe_title.lstrip("_-. ")
 
         parts = rel_path.parts
         if len(parts) < 3:
