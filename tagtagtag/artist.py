@@ -32,8 +32,22 @@ class Artist(Entity):
             )
             """)
 
-    @staticmethod
-    def create(db, name, fs_name, disambiguator=None, sort_name=None):
+    @classmethod
+    def list(cls, db):
+        cursor = db.cursor()
+        cursor.execute(
+            "SELECT id, uuid, name, fs_name, disambiguator, sort_name FROM artists ORDER BY sort_name")
+        for row in cursor.fetchall():
+            yield cls(
+                id=row[0],
+                uuid=UUID(row[1]),
+                name=row[2],
+                fs_name=row[3],
+                disambiguator=row[4],
+                sort_name=row[5])
+
+    @classmethod
+    def create(cls, db, name, fs_name, disambiguator=None, sort_name=None):
         uuid = uuid4()
         cursor = db.cursor()
         cursor.execute(
@@ -46,7 +60,7 @@ class Artist(Entity):
         row = cursor.fetchone()
         db.commit()
         if row is not None:
-            return Artist(
+            return cls(
                 id=row[0],
                 uuid=uuid,
                 name=name,
@@ -63,8 +77,8 @@ class Artist(Entity):
                 "specify a different disambiguator"
         raise ReportableError(m)
 
-    @staticmethod
-    def get_by_id(db, id, default=_MISSING):
+    @classmethod
+    def get_by_id(cls, db, id, default=_MISSING):
         cursor = db.cursor()
         cursor.execute(
             """
@@ -73,7 +87,7 @@ class Artist(Entity):
             (id, ))
         row = cursor.fetchone()
         if row is not None:
-            return Artist(
+            return cls(
                 id=id,
                 uuid=UUID(row[0]),
                 name=row[1],
@@ -86,8 +100,8 @@ class Artist(Entity):
 
         raise RuntimeError(f"Could not retrieve artist with ID {id}")
 
-    @staticmethod
-    def get_by_uuid(db, uuid, default=_MISSING):
+    @classmethod
+    def get_by_uuid(cls, db, uuid, default=_MISSING):
         cursor = db.cursor()
         cursor.execute(
             """
@@ -96,7 +110,7 @@ class Artist(Entity):
             (str(uuid), ))
         row = cursor.fetchone()
         if row is not None:
-            return Artist(
+            return cls(
                 id=row[0],
                 uuid=uuid,
                 name=row[1],
@@ -109,8 +123,8 @@ class Artist(Entity):
 
         raise RuntimeError(f"Could not retrieve artist with UUID {uuid}")
 
-    @staticmethod
-    def query(db, name, disambiguator=None, default=_MISSING):
+    @classmethod
+    def query(cls, db, name, disambiguator=None, default=_MISSING):
         cursor = db.cursor()
         if disambiguator is None:
             cursor.execute(
@@ -126,7 +140,7 @@ class Artist(Entity):
                 (name, disambiguator))
         row = cursor.fetchone()
         if row is not None:
-            return Artist(
+            return cls(
                 id=row[0],
                 uuid=UUID(row[1]),
                 name=name,

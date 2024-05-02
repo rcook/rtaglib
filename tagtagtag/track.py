@@ -33,8 +33,23 @@ class Track(Entity):
             )
             """)
 
-    @staticmethod
-    def create(db, album_id, name, fs_name, number):
+    @classmethod
+    def list(cls, db, album_id):
+        cursor = db.cursor()
+        cursor.execute(
+            "SELECT id, uuid, name, fs_name, number FROM tracks WHERE album_id = ? ORDER BY number",
+            (album_id, ))
+        for row in cursor.fetchall():
+            yield cls(
+                id=row[0],
+                album_id=album_id,
+                uuid=UUID(row[1]),
+                name=row[2],
+                fs_name=row[3],
+                number=row[4])
+
+    @classmethod
+    def create(cls, db, album_id, name, fs_name, number):
         uuid = uuid4()
         cursor = db.cursor()
         cursor.execute(
@@ -47,7 +62,7 @@ class Track(Entity):
         row = cursor.fetchone()
         db.commit()
         if row is not None:
-            return Track(
+            return cls(
                 id=row[0],
                 album_id=album_id,
                 uuid=uuid,
@@ -59,8 +74,8 @@ class Track(Entity):
             f"for album ID {album_id} is not unique"
         raise ReportableError(m)
 
-    @staticmethod
-    def get_by_id(db, id, default=_MISSING):
+    @classmethod
+    def get_by_id(cls, db, id, default=_MISSING):
         cursor = db.cursor()
         cursor.execute(
             """
@@ -69,7 +84,7 @@ class Track(Entity):
             (id, ))
         row = cursor.fetchone()
         if row is not None:
-            return Track(
+            return cls(
                 id=id,
                 album_id=row[0],
                 uuid=UUID(row[1]),
@@ -82,8 +97,8 @@ class Track(Entity):
 
         raise RuntimeError(f"Could not retrieve track with ID {id}")
 
-    @staticmethod
-    def get_by_uuid(db, uuid, default=_MISSING):
+    @classmethod
+    def get_by_uuid(cls, db, uuid, default=_MISSING):
         cursor = db.cursor()
         cursor.execute(
             """
@@ -92,7 +107,7 @@ class Track(Entity):
             (str(uuid), ))
         row = cursor.fetchone()
         if row is not None:
-            return Track(
+            return cls(
                 id=row[0],
                 album_id=row[1],
                 uuid=uuid,
@@ -105,8 +120,8 @@ class Track(Entity):
 
         raise RuntimeError(f"Could not retrieve track with UUID {uuid}")
 
-    @staticmethod
-    def query(db, album_id, name, number, default=_MISSING):
+    @classmethod
+    def query(cls, db, album_id, name, number, default=_MISSING):
         cursor = db.cursor()
         cursor.execute(
             """
@@ -115,7 +130,7 @@ class Track(Entity):
             (album_id, name, number))
         row = cursor.fetchone()
         if row is not None:
-            return Track(
+            return cls(
                 id=row[0],
                 album_id=album_id,
                 uuid=UUID(row[1]),

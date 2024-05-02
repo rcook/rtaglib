@@ -35,8 +35,24 @@ class Album(Entity):
             )
             """)
 
-    @staticmethod
-    def create(db, artist_id, name, fs_name, disambiguator=None, sort_name=None):
+    @classmethod
+    def list(cls, db, artist_id):
+        cursor = db.cursor()
+        cursor.execute(
+            "SELECT id, uuid, name, fs_name, disambiguator, sort_name FROM albums WHERE artist_id = ? ORDER BY sort_name",
+            (artist_id, ))
+        for row in cursor.fetchall():
+            yield cls(
+                id=row[0],
+                artist_id=artist_id,
+                uuid=UUID(row[1]),
+                name=row[2],
+                fs_name=row[3],
+                disambiguator=row[4],
+                sort_name=row[5])
+
+    @classmethod
+    def create(cls, db, artist_id, name, fs_name, disambiguator=None, sort_name=None):
         uuid = uuid4()
         cursor = db.cursor()
         cursor.execute(
@@ -49,7 +65,7 @@ class Album(Entity):
         row = cursor.fetchone()
         db.commit()
         if row is not None:
-            return Album(
+            return cls(
                 id=row[0],
                 artist_id=artist_id,
                 uuid=uuid,
@@ -67,8 +83,8 @@ class Album(Entity):
                 "specify a different disambiguator"
         raise ReportableError(m)
 
-    @staticmethod
-    def get_by_id(db, id, default=_MISSING):
+    @classmethod
+    def get_by_id(cls, db, id, default=_MISSING):
         cursor = db.cursor()
         cursor.execute(
             """
@@ -77,7 +93,7 @@ class Album(Entity):
             (id, ))
         row = cursor.fetchone()
         if row is not None:
-            return Album(
+            return cls(
                 id=id,
                 artist_id=row[0],
                 uuid=UUID(row[1]),
@@ -91,8 +107,8 @@ class Album(Entity):
 
         raise RuntimeError(f"Could not retrieve album with ID {id}")
 
-    @staticmethod
-    def get_by_uuid(db, uuid, default=_MISSING):
+    @classmethod
+    def get_by_uuid(cls, db, uuid, default=_MISSING):
         cursor = db.cursor()
         cursor.execute(
             """
@@ -101,7 +117,7 @@ class Album(Entity):
             (str(uuid), ))
         row = cursor.fetchone()
         if row is not None:
-            return Album(
+            return cls(
                 id=row[0],
                 artist_id=row[1],
                 uuid=uuid,
@@ -115,8 +131,8 @@ class Album(Entity):
 
         raise RuntimeError(f"Could not retrieve album with UUID {uuid}")
 
-    @staticmethod
-    def query(db, artist_id, name, disambiguator=None, default=_MISSING):
+    @classmethod
+    def query(cls, db, artist_id, name, disambiguator=None, default=_MISSING):
         cursor = db.cursor()
         if disambiguator is None:
             cursor.execute(
@@ -132,7 +148,7 @@ class Album(Entity):
                 (artist_id, name, disambiguator))
         row = cursor.fetchone()
         if row is not None:
-            return Album(
+            return cls(
                 id=row[0],
                 artist_id=artist_id,
                 uuid=UUID(row[1]),

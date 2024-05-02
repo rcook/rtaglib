@@ -4,6 +4,7 @@ from pathlib import Path
 from tagtagtag.context import Context
 from tagtagtag.cprint import cprint
 from tagtagtag.dump import do_dump
+from tagtagtag.edit import do_edit
 from tagtagtag.error import ReportableError
 from tagtagtag.ids import do_ids
 from tagtagtag._import import do_import
@@ -35,6 +36,13 @@ def main(cwd, argv, ctx):
     parser = ArgumentParser(prog="tagtagtag", description="Tag Tool")
 
     subparsers = parser.add_subparsers(required=True)
+
+    p = subparsers.add_parser(name="edit")
+    p.set_defaults(
+        func=lambda args: do_edit(
+            ctx=ctx,
+            data_dir=args.data_dir))
+    add_common_args(parser=p)
 
     p = subparsers.add_parser(name="import")
     p.set_defaults(

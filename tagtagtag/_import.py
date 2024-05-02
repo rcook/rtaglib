@@ -1,5 +1,4 @@
 from dataclasses import asdict, dataclass, fields
-from pathlib import Path
 from tagtagtag.album import Album
 from tagtagtag.artist import Artist
 from tagtagtag.error import ReportableError
@@ -94,7 +93,7 @@ class InferredInfo:
 
 def do_import(ctx, data_dir, music_dir):
     db_path = data_dir / "metadata.db"
-    ctx.log_debug("do_db begin")
+    ctx.log_debug("do_import begin")
     ctx.log_debug(f"db_path={db_path}")
 
     result = DBResult.default()
@@ -116,7 +115,7 @@ def do_import(ctx, data_dir, music_dir):
     for k, v in asdict(result).items():
         ctx.log_info(f"{k}={v}")
 
-    ctx.log_debug("do_db end")
+    ctx.log_debug("do_import end")
 
 
 def process_file(ctx, result, dir, path, m, db):
