@@ -1,31 +1,8 @@
 from dataclasses import dataclass
+from tagtagtag.collections import DictPlus
+from tagtagtag.constants import MUSIC_IGNORE_DIRS, MUSIC_INCLUDE_EXTS
 from tagtagtag.fs import walk_dir
 import mutagen
-
-
-_IGNORE_DIRS = {
-    ".git",
-    ".vscode",
-    "__pycache__"
-}
-
-_INCLUDE_EXTS = {
-    ".flac",
-    ".m4a",
-    ".mp3",
-    ".wma"
-}
-
-
-class DictPlus(dict):
-    _MISSING = object()
-
-    def get_or_add(self, key, func):
-        value = self.get(key, self.__class__._MISSING)
-        if value is self.__class__._MISSING:
-            value = func()
-            self[key] = value
-        return value
 
 
 @dataclass
@@ -41,7 +18,7 @@ class TagInfo:
 
 def do_scan(ctx, dir):
     ext_infos = DictPlus()
-    for p in walk_dir(dir=dir, include_exts=_INCLUDE_EXTS, ignore_dirs=_IGNORE_DIRS):
+    for p in walk_dir(dir=dir, include_exts=MUSIC_INCLUDE_EXTS, ignore_dirs=MUSIC_IGNORE_DIRS):
         ext = p.suffix.lower()
         ext_info = ext_infos.get_or_add(
             ext,

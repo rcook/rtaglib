@@ -1,6 +1,7 @@
 from dataclasses import asdict, dataclass, fields
 from tagtagtag.album import Album
 from tagtagtag.artist import Artist
+from tagtagtag.constants import MUSIC_IGNORE_DIRS, MUSIC_INCLUDE_EXTS
 from tagtagtag.error import ReportableError
 from tagtagtag.fs import walk_dir
 from tagtagtag.track import Track
@@ -10,26 +11,13 @@ import os
 import re
 
 
-_IGNORE_DIRS = {
-    ".git",
-    ".vscode",
-    "__pycache__"
-}
-
-
-_INCLUDE_EXTS = {
-    ".flac",
-    ".m4a",
-    ".mp3",
-    ".wma"
-}
-
-
+"""
 _MUSICBRAINZ_ATTRS = [
     ("musicbrainz_artist_id", "MusicBrainz artist ID"),
     ("musicbrainz_album_id", "MusicBrainz album ID"),
     ("musicbrainz_track_id", "MusicBrainz track ID")
 ]
+"""
 
 
 @dataclass
@@ -98,7 +86,7 @@ def do_import(ctx, data_dir, music_dir):
 
     result = DBResult.default()
     with MetadataDB(db_path) as db:
-        for p in walk_dir(music_dir, include_exts=_INCLUDE_EXTS, ignore_dirs=_IGNORE_DIRS):
+        for p in walk_dir(music_dir, include_exts=MUSIC_INCLUDE_EXTS, ignore_dirs=MUSIC_IGNORE_DIRS):
             result.total += 1
             m = Metadata.load(p)
             if m.musicbrainz_track_id is None:
