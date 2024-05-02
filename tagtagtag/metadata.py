@@ -15,6 +15,7 @@ import mutagen.mp3
 
 
 _MISSING = object()
+_NOT_IMPLEMENTED = object()
 _ATTRS = [
     ("artist_title", str),
     ("album_title", str),
@@ -46,6 +47,10 @@ class MetadataMeta(ABCMeta):
         for attr in _ATTRS:
             def get_tag(name, required_type, self):
                 key = getattr(self.__class__.COMMON_KEYS, name)
+
+                if key is _NOT_IMPLEMENTED:
+                    raise NotImplementedError()
+
                 if isinstance(key, str):
                     value = self._scalar(key)
                 else:
@@ -194,13 +199,13 @@ class FLACMetadata(Metadata):
 class ID3Metadata(Metadata):
     COMMON_KEYS = CommonKeys(
         artist_title="artist",
-        album_title="?",
+        album_title=_NOT_IMPLEMENTED,
         track_title="title",
-        track_disc="?",
-        track_number="?",
-        musicbrainz_artist_id="?",
-        musicbrainz_album_id="?",
-        musicbrainz_track_id="?")
+        track_disc=_NOT_IMPLEMENTED,
+        track_number=_NOT_IMPLEMENTED,
+        musicbrainz_artist_id=_NOT_IMPLEMENTED,
+        musicbrainz_album_id=_NOT_IMPLEMENTED,
+        musicbrainz_track_id=_NOT_IMPLEMENTED)
 
     def _init_once(cls):
         for key, id in [
@@ -232,9 +237,9 @@ class MP4Metadata(Metadata):
         track_title="title",
         track_disc=Key(key="discnumber", func=parse_number),
         track_number=Key(key="tracknumber", func=parse_number),
-        musicbrainz_artist_id="?",
-        musicbrainz_album_id="?",
-        musicbrainz_track_id="?")
+        musicbrainz_artist_id=_NOT_IMPLEMENTED,
+        musicbrainz_album_id=_NOT_IMPLEMENTED,
+        musicbrainz_track_id=_NOT_IMPLEMENTED)
 
     def _init_once(cls):
         for key, id in [
@@ -260,7 +265,7 @@ class WMAMetadata(Metadata):
         artist_title="WM/AlbumArtist",
         album_title="WM/AlbumTitle",
         track_title="Title",
-        track_disc="?",
+        track_disc=_NOT_IMPLEMENTED,
         track_number="WM/TrackNumber",
         musicbrainz_artist_id="MusicBrainz/Artist Id",
         musicbrainz_album_id="MusicBrainz/Album Id",
