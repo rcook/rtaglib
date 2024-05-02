@@ -222,16 +222,7 @@ class ID3Metadata(Metadata):
 
 
 class MP4Metadata(Metadata):
-    def parse_track_disc(s):
-        # if s = "1/1":
-        #    return None
-        print(f"s={s}")
-        value, _ = s.split("/", maxsplit=1)
-        print(value)
-        exit(1)
-        return value
-
-    def parse_track_number(s):
+    def parse_number(s):
         value, _ = s.split("/", maxsplit=1)
         return value
 
@@ -239,8 +230,8 @@ class MP4Metadata(Metadata):
         artist_title="artist",
         album_title="album",
         track_title="title",
-        track_disc=Key(key="discnumber", func=parse_track_disc),
-        track_number=Key(key="tracknumber", func=parse_track_number),
+        track_disc=Key(key="discnumber", func=parse_number),
+        track_number=Key(key="tracknumber", func=parse_number),
         musicbrainz_artist_id="?",
         musicbrainz_album_id="?",
         musicbrainz_track_id="?")
