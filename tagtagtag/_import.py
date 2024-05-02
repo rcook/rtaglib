@@ -79,10 +79,13 @@ class InferredInfo:
             album_fs=album_fs)
 
 
-def do_import(ctx, data_dir, music_dir):
+def do_import(ctx, data_dir, music_dir, init=False):
     db_path = data_dir / "metadata.db"
     ctx.log_debug("do_import begin")
     ctx.log_debug(f"db_path={db_path}")
+
+    if init and db_path.is_file():
+        db_path.unlink()
 
     result = DBResult.default()
     with MetadataDB(db_path) as db:

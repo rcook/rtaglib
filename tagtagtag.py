@@ -1,4 +1,4 @@
-from argparse import ArgumentParser
+from argparse import ArgumentParser, BooleanOptionalAction
 from colorama import Fore, just_fix_windows_console
 from pathlib import Path
 from tagtagtag.context import Context
@@ -56,8 +56,16 @@ def main(cwd, argv, ctx):
         func=lambda args: do_import(
             ctx=ctx,
             data_dir=args.data_dir,
-            music_dir=args.music_dir))
+            music_dir=args.music_dir,
+            init=args.init))
     add_common_args(parser=p)
+    p.add_argument(
+        "--init",
+        metavar="INIT",
+        action=BooleanOptionalAction,
+        required=False,
+        default=False,
+        help="clear/initialize database from scratch (default: False)")
     p.add_argument(
         "music_dir",
         metavar="MUSIC_DIR",
