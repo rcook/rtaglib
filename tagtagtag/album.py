@@ -37,6 +37,21 @@ class Album(Entity):
             """)
 
     @classmethod
+    def list_all(cls, db):
+        cursor = db.cursor()
+        cursor.execute(
+            "SELECT id, artist_id, uuid, title, safe_title, disambiguator, sort_title FROM albums ORDER BY sort_title")
+        for row in cursor.fetchall():
+            yield cls(
+                id=row[0],
+                artist_id=row[1],
+                uuid=UUID(row[2]),
+                title=row[3],
+                safe_title=row[4],
+                disambiguator=row[5],
+                sort_title=row[6])
+
+    @classmethod
     def list(cls, db, artist_id):
         cursor = db.cursor()
         cursor.execute(

@@ -9,6 +9,7 @@ from tagtagtag.error import ReportableError
 from tagtagtag.fs import home_dir
 from tagtagtag.ids import do_ids
 from tagtagtag._import import do_import
+from tagtagtag.merge import do_merge
 from tagtagtag.scan import do_scan
 from tagtagtag.show import do_show
 import os
@@ -79,6 +80,18 @@ def main(cwd, argv, ctx):
     p = subparsers.add_parser(name="ids")
     p.set_defaults(func=lambda args: do_ids(ctx=ctx, path=args.path))
     p.add_argument("path", metavar="PATH", type=path_type, help="path")
+
+    p = subparsers.add_parser(name="merge")
+    p.set_defaults(
+        func=lambda args: do_merge(
+            ctx=ctx,
+            data_dir=args.data_dir,
+            mode=args.mode))
+    add_common_args(parser=p)
+    p.add_argument(
+        "mode",
+        choices=["artists", "albums"],
+        help="merge artists or albums")
 
     p = subparsers.add_parser(name="scan")
     p.set_defaults(func=lambda args: do_scan(ctx=ctx, dir=args.dir))

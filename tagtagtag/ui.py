@@ -8,7 +8,7 @@ _EDIT_VALUE_PROMPT = f"[Type new value, empty to leave unchanged, " \
     f"{_EMPTY_PLACEHOLDER} to set to NULL or (Q) to quit]"
 
 
-def choose_item(items, page_size):
+def choose_item(items, page_size, detail_func=None):
     item_count = len(items)
     page_count = item_count // page_size
     if item_count % page_size > 0:
@@ -25,16 +25,35 @@ def choose_item(items, page_size):
         page_items = items[index:index + page_size]
         page_item_count = len(page_items)
         for i, item in enumerate(page_items):
-            cprint(
-                Fore.LIGHTWHITE_EX,
-                "  (",
-                Fore.LIGHTYELLOW_EX,
-                f"{i + 1}",
-                Fore.LIGHTWHITE_EX,
-                ") ",
-                Fore.LIGHTGREEN_EX,
-                item.title,
-                sep="")
+            if detail_func is None:
+                cprint(
+                    Fore.LIGHTWHITE_EX,
+                    "  (",
+                    Fore.LIGHTYELLOW_EX,
+                    f"{i + 1}",
+                    Fore.LIGHTWHITE_EX,
+                    ") ",
+                    Fore.LIGHTGREEN_EX,
+                    item.title,
+                    sep="")
+            else:
+                detail = detail_func(item)
+                cprint(
+                    Fore.LIGHTWHITE_EX,
+                    "  (",
+                    Fore.LIGHTYELLOW_EX,
+                    f"{i + 1}",
+                    Fore.LIGHTWHITE_EX,
+                    ") ",
+                    Fore.LIGHTGREEN_EX,
+                    item.title,
+                    Fore.LIGHTWHITE_EX,
+                    " (",
+                    Fore.LIGHTCYAN_EX,
+                    detail,
+                    Fore.LIGHTWHITE_EX,
+                    ")",
+                    sep="")
 
         while True:
             result = input(
