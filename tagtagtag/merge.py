@@ -4,7 +4,7 @@ from tagtagtag.artist import Artist
 from tagtagtag.collections import DictPlus
 from tagtagtag.cprint import cprint
 from tagtagtag.metadata_db import MetadataDB
-from tagtagtag.ui import choose_item, edit_item
+from tagtagtag.ui import choose_item
 
 
 _PAGE_SIZE = 20
@@ -20,18 +20,64 @@ def do_merge(ctx, data_dir, mode):
 
 
 def do_merge_artists(ctx, db):
-    artist = choose_item(
-        items=list(Artist.list(db=db)),
-        page_size=_PAGE_SIZE)
-    if artist is None or not artist:
-        return artist
+    selected_artists = []
 
-    result = edit_item(item=artist)
-    if result is None or not result:
-        return result
+    while True:
+        artist = choose_item(
+            items=list(Artist.list(db=db)),
+            page_size=_PAGE_SIZE)
+        if artist is not None and not artist:
+            return False
 
-    result.update(db=db)
-    ctx.log_info(f"Updated artist with ID {artist.id}")
+        selected_artists.append(artist)
+
+        cprint(Fore.LIGHTCYAN_EX, "Selected artist(s):")
+        for artist in selected_artists:
+            cprint(
+                Fore.LIGHTGREEN_EX,
+                "  ",
+                artist.title,
+                sep="")
+
+        if len(selected_artists) > 1:
+            while True:
+                result = input(
+                    "[Press Enter to add more artists, press (M) to merge these artists or (Q) to quit] ").strip()
+                if result == "Q" or result == "q":
+                    return False
+                if result == "":
+                    break
+                if result == "M" or result == "m":
+                    break
+            if result == "M" or result == "m":
+                break
+
+    artist, *other_artists = selected_artists
+
+    artist_ids = tuple(x.id for x in selected_artists)
+    placeholders = ", ".join("?" * len(other_artists))
+
+    cursor = db.cursor()
+
+    cursor.execute(
+        f"""
+        UPDATE albums
+        SET artist_id = ?
+        WHERE artist_id IN ({placeholders})
+        """,
+        artist_ids)
+    ctx.log_info(
+        f"Merged albums {', '.join(str(x) for x in artist_ids)} "
+        f"({cursor.rowcount} albums updated)")
+
+    cursor.execute(
+        f"""
+        DELETE FROM artists WHERE id IN ({placeholders})
+        """,
+        tuple(x.id for x in other_artists))
+    ctx.log_info(f"Delete merged artists ({cursor.rowcount} artists deleted)")
+
+    db.commit()
 
 
 def do_merge_albums(ctx, db):
