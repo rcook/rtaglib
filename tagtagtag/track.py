@@ -145,3 +145,16 @@ class Track(Entity):
 
         raise RuntimeError(
             f"Could not retrieve track ({name}, {number}) for album ID {album_id}")
+
+    def update(self, db):
+        cursor = db.cursor()
+        cursor.execute(
+            """
+            UPDATE tracks
+            SET name = ?, fs_name = ?, number = ?
+            WHERE id = ?
+            """,
+            (self.name, self.fs_name, self.number, self.id))
+        if cursor.rowcount != 1:
+            raise RuntimeError(f"Failed to update track with ID {self.id}")
+        db.commit()

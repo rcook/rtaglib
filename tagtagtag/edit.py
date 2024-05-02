@@ -40,4 +40,9 @@ def do_edit(ctx, data_dir):
         edit_item(item=track)
         """
 
-        edit_item(item=Track.get_by_id(db=db, id=1))
+        result = edit_item(item=Track.get_by_id(db=db, id=1))
+        if result is not None:
+            if not result:
+                return
+            result.update(db=db)
+            ctx.log_info(f"Updated track with ID {result.id}")

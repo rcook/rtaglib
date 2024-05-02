@@ -1,6 +1,9 @@
 from colorama import Fore
-from dataclasses import fields
+from dataclasses import fields, replace
 from tagtagtag.cprint import cprint
+
+
+_EDIT_VALUE_PROMPT = "[Type new value, empty to leave unchanged or (Q) to quit]"
 
 
 def choose_item(items, page_size):
@@ -36,7 +39,7 @@ def choose_item(items, page_size):
                 f"Choose (1)-({page_item_count}), (Enter) to go to next page, (Q) to quit: ").lower()
 
             if result == "q":
-                return
+                return False
             if result == "":
                 page_number += 1
                 break
@@ -77,26 +80,38 @@ def edit_item(item):
     fixed_fields = {"id", "uuid"}
     editable_fields = list(
         filter(
-            lambda x: x not in fixed_fields and not x.endswith("_id"),
-            [f.name for f in fields(item)]))
+            lambda x:
+            x.name not in fixed_fields and not x.name.endswith("_id"),
+            fields(item)))
 
-    for name in editable_fields:
-        current_value = getattr(item, name)
+    new_values = {}
+    for f in editable_fields:
+        current_value = getattr(item, f.name)
         cprint(
             Fore.LIGHTYELLOW_EX,
-            name,
+            f.name,
             " = ",
             Fore.LIGHTGREEN_EX,
             current_value,
             sep="",
             end="")
 
-        result = input(
-            " [type new value, empty to leave unchanged or (Q) to quit]: ")
-        if result == "Q" or result == "q":
-            return
-        if result == "":
-            continue
+        while True:
+            result = input(f" {_EDIT_VALUE_PROMPT}: ")
+            if result == "Q" or result == "q":
+                return False
+            if result == "" or result == current_value:
+                break
 
-        print("EDIT")
-        exit(1)
+            try:
+                new_value = f.type(result.strip())
+            except ValueError:
+                continue
+
+            new_values[f.name] = new_value
+            break
+
+    if len(new_values) == 0:
+        return
+
+    return replace(item, **new_values)
