@@ -139,6 +139,21 @@ def main(cwd, argv, ctx):
         raise NotImplementedError(f"Unsupported status {status}")
 
 
+def test():
+    from tagtagtag.new_metadata import Metadata
+    from uuid import uuid4
+
+    m = Metadata.load(
+        "C:\\Users\\rcook\\Desktop\\Beets\\samples.bak\\Pink_Floyd\\Dark_Side_of_the_Moon\\sample2.mp3")
+
+    print(m.pprint())
+    for tag in m.tags:
+        print(f"{tag} = {m.get_tag(tag, default=None)}")
+
+
 if __name__ == "__main__":
     just_fix_windows_console()
-    main(cwd=os.getcwd(), argv=sys.argv[1:], ctx=Context())
+    if len(sys.argv) == 2 and sys.argv[1] == "test":
+        test()
+    else:
+        main(cwd=os.getcwd(), argv=sys.argv[1:], ctx=Context())
