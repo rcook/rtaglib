@@ -23,15 +23,6 @@ class MP3Metadata(Metadata):
     }
     _NAMES = {key: name for name, key, _, _ in _MAPPINGS}
 
-    def __init__(self, m):
-        self._m = m
-
-    def save(self):
-        self._m.save()
-
-    def pprint(self):
-        return self._m.tags.pprint()
-
     def get_tag(self, name, default=MISSING):
         key, tag_type, _ = self.__class__._KEYS[name]
 

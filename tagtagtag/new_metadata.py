@@ -1,14 +1,15 @@
 from abc import ABCMeta, abstractmethod
 from functools import cached_property, partial
 from uuid import UUID
-import mutagen
-import mutagen.mp3
 
 
 MISSING = object()
 ARTIST_TITLE_ATTR = "artist_title"
 ALBUM_TITLE_ATTR = "album_title"
 TRACK_TITLE_ATTR = "track_title"
+MUSICBRAINZ_ARTIST_ID_ATTR = "musicbrainz_artist_id"
+MUSICBRAINZ_ALBUM_ID_ATTR = "musicbrainz_album_id"
+MUSICBRAINZ_TRACK_ID_ATTR = "musicbrainz_track_id"
 RCOOK_ARTIST_ID_ATTR = "rcook_artist_id"
 RCOOK_ALBUM_ID_ATTR = "rcook_album_id"
 RCOOK_TRACK_ID_ATTR = "rcook_track_id"
@@ -19,6 +20,9 @@ class MetadataMeta(ABCMeta):
         (ARTIST_TITLE_ATTR, str),
         (ALBUM_TITLE_ATTR, str),
         (TRACK_TITLE_ATTR, str),
+        (MUSICBRAINZ_ARTIST_ID_ATTR, UUID),
+        (MUSICBRAINZ_ALBUM_ID_ATTR, UUID),
+        (MUSICBRAINZ_TRACK_ID_ATTR, UUID),
         (RCOOK_ARTIST_ID_ATTR, UUID),
         (RCOOK_ALBUM_ID_ATTR, UUID),
         (RCOOK_TRACK_ID_ATTR, UUID)
@@ -51,20 +55,29 @@ class Metadata(metaclass=MetadataMeta):
     @staticmethod
     def load(path):
         from tagtagtag.mp3_metadata import MP3Metadata
+        from tagtagtag.wma_metadata import WMAMetadata
+        import mutagen
+        import mutagen.asf
+        import mutagen.mp3
+
         m = mutagen.File(path)
         match m:
             case mutagen.mp3.MP3(): return MP3Metadata(m=m)
+            case mutagen.asf.ASF(): return WMAMetadata(m=m)
             case _: raise NotImplementedError(f"Unsupported metadata type {type(m)}")
+
+    def __init__(self, m):
+        self._m = m
 
     @cached_property
     def tags(self):
         return [attr_name for attr_name, _ in self.__class__._ATTRS]
 
-    @abstractmethod
-    def save(self): raise NotImplementedError()
+    def save(self):
+        self._m.save()
 
-    @abstractmethod
-    def pprint(self): raise NotImplementedError()
+    def pprint(self):
+        return self._m.tags.pprint()
 
     @abstractmethod
     def get_tag(self, name, default=MISSING): raise NotImplementedError()
