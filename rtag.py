@@ -1,7 +1,6 @@
 from argparse import ArgumentParser, BooleanOptionalAction
 from colorama import Fore, just_fix_windows_console
 from pathlib import Path
-from rtag.config import Config
 from rtag.context import Context
 from rtag.cprint import cprint
 from rtag.dump import do_dump
