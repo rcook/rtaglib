@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
-class IndexOfTotal:
+class Position:
     index: int | None
     total: int | None
 

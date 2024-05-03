@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from functools import cached_property, partial
-from rtag.index_of_total import IndexOfTotal
+from rtag.position import Position
 from uuid import UUID
 
 
@@ -23,8 +23,8 @@ class MetadataMeta(ABCMeta):
         (ARTIST_TITLE_ATTR, str),
         (ALBUM_TITLE_ATTR, str),
         (TRACK_TITLE_ATTR, str),
-        (TRACK_DISC_ATTR, IndexOfTotal.convert),
-        (TRACK_NUMBER_ATTR, IndexOfTotal.convert),
+        (TRACK_DISC_ATTR, Position.convert),
+        (TRACK_NUMBER_ATTR, Position.convert),
         (MUSICBRAINZ_ARTIST_ID_ATTR, UUID),
         (MUSICBRAINZ_ALBUM_ID_ATTR, UUID),
         (MUSICBRAINZ_TRACK_ID_ATTR, UUID),
