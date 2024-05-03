@@ -40,8 +40,7 @@ CommonKeys = make_dataclass("CommonKeys", [
 
 
 def parse_slash_number(s):
-    value, _ = s.split("/", maxsplit=1)
-    return value
+    return None if s is None else s.split("/", maxsplit=1)[0]
 
 
 class MetadataMeta(ABCMeta):
