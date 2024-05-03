@@ -261,7 +261,7 @@ class WMAMetadata(Metadata):
         artist_title="WM/AlbumArtist",
         album_title="WM/AlbumTitle",
         track_title="Title",
-        track_disc="WM/PartOfSet",
+        track_disc=Key(key="WM/PartOfSet", func=parse_slash_number),
         track_number="WM/TrackNumber",
         musicbrainz_artist_id="MusicBrainz/Artist Id",
         musicbrainz_album_id="MusicBrainz/Album Id",
