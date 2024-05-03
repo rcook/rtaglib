@@ -182,7 +182,7 @@ class Track(Entity):
             SET title = ?, safe_title = ?, disc = ?, number = ?
             WHERE id = ?
             """,
-            (self.title, self.safe_name, self.disc, self.number, self.id))
+            (self.title, self.safe_title, self.disc, self.number, self.id))
         if cursor.rowcount != 1:
             raise RuntimeError(f"Failed to update track with ID {self.id}")
         db.commit()
