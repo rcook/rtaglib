@@ -65,9 +65,9 @@ class MetadataMeta(ABCMeta):
 
 
 class Metadata(metaclass=MetadataMeta):
-    ARTIST_ID_KEY = "rcook_artist_id"
-    ALBUM_ID_KEY = "rcook_album_id"
-    TRACK_ID_KEY = "rcook_track_id"
+    RCOOK_ARTIST_ID_KEY = "rcook_artist_id"
+    RCOOK_ALBUM_ID_KEY = "rcook_album_id"
+    RCOOK_TRACK_ID_KEY = "rcook_track_id"
     _first_instance = True
 
     class Accessor:
@@ -108,13 +108,13 @@ class Metadata(metaclass=MetadataMeta):
         self._saved_tags = deepcopy(self._tags_as_dict())
         self.artist_id = self.__class__.Accessor(
             self,
-            self.__class__.ARTIST_ID_KEY)
+            self.__class__.RCOOK_ARTIST_ID_KEY)
         self.album_id = self.__class__.Accessor(
             self,
-            self.__class__.ALBUM_ID_KEY)
+            self.__class__.RCOOK_ALBUM_ID_KEY)
         self.track_id = self.__class__.Accessor(
             self,
-            self.__class__.TRACK_ID_KEY)
+            self.__class__.RCOOK_TRACK_ID_KEY)
 
     @property
     def path(self): return self._path
@@ -212,9 +212,9 @@ class ID3Metadata(Metadata):
 
     def _init_once(cls):
         for key, id in [
-            (cls.ARTIST_ID_KEY, "RCOOK_ARTIST_ID"),
-            (cls.ALBUM_ID_KEY, "RCOOK_ALBUM_ID"),
-            (cls.TRACK_ID_KEY, "RCOOK_TRACK_ID"),
+            (cls.RCOOK_ARTIST_ID_KEY, "RCOOK_ARTIST_ID"),
+            (cls.RCOOK_ALBUM_ID_KEY, "RCOOK_ALBUM_ID"),
+            (cls.RCOOK_TRACK_ID_KEY, "RCOOK_TRACK_ID"),
         ]:
             EasyID3.RegisterTXXXKey(key, id)
 
@@ -243,9 +243,9 @@ class MP4Metadata(Metadata):
 
     def _init_once(cls):
         for key, id in [
-            (cls.ARTIST_ID_KEY, "RCOOK_ARTIST_ID"),
-            (cls.ALBUM_ID_KEY, "RCOOK_ALBUM_ID"),
-            (cls.TRACK_ID_KEY, "RCOOK_TRACK_ID"),
+            (cls.RCOOK_ARTIST_ID_KEY, "RCOOK_ARTIST_ID"),
+            (cls.RCOOK_ALBUM_ID_KEY, "RCOOK_ALBUM_ID"),
+            (cls.RCOOK_TRACK_ID_KEY, "RCOOK_TRACK_ID"),
         ]:
             EasyMP4Tags.RegisterFreeformKey(key, id, mean="org.rcook")
 
