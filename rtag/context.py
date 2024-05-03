@@ -1,4 +1,5 @@
-from functools import cache, partialmethod
+from functools import cache, cached_property, partialmethod
+from rtag.config import Config
 import inspect
 import logging
 
@@ -22,8 +23,13 @@ class ContextMeta(type):
 
 
 class Context(metaclass=ContextMeta):
-    def __init__(self, log_level=logging.DEBUG):
+    def __init__(self, args, log_level=logging.DEBUG):
+        self._args = args
         self._log_level = log_level
+
+    @cached_property
+    def config(self):
+        return Config.load(self._args.config_path)
 
     @cache
     def _logger(self, name):

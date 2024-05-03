@@ -4,7 +4,6 @@ from rtag.fs import walk_dir
 
 
 def do_list_dir(ctx, dir):
-    ctx.log_info("list-dir begin")
     exts = DictPlus()
     for p in walk_dir(dir, ignore_dirs=MUSIC_IGNORE_DIRS, include_exts=MUSIC_INCLUDE_EXTS):
         print("/".join(p.relative_to(dir).parts))
@@ -16,5 +15,3 @@ def do_list_dir(ctx, dir):
 
     total = sum(map(lambda x: x[0], exts.values()))
     print(f"Total: {total}")
-
-    ctx.log_info("list-dir end")

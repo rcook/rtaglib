@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from mutagen.id3 import TALB
-from retagger.error import ReportableError
+from rtag.error import ReportableError
 from uuid import UUID
 import mutagen
 import mutagen.asf

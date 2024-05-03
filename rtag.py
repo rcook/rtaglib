@@ -1,11 +1,13 @@
 from argparse import ArgumentParser, BooleanOptionalAction
 from colorama import Fore, just_fix_windows_console
 from pathlib import Path
+from rtag.config import Config
 from rtag.context import Context
 from rtag.cprint import cprint
 from rtag.dump import do_dump
 from rtag.edit import do_edit
 from rtag.error import ReportableError
+from rtag.picard_fixup import do_picard_fixup
 from rtag.fs import home_dir
 from rtag.ids import do_ids
 from rtag._import import do_import
@@ -13,6 +15,7 @@ from rtag.list_dir import do_list_dir
 from rtag.merge import do_merge
 from rtag.scan import do_scan
 from rtag.show import do_show
+from rtag.time import timing
 import os
 import sys
 
@@ -21,9 +24,18 @@ def default_data_dir():
     return home_dir() / ".rtag"
 
 
-def main(cwd, argv, ctx):
+def main(cwd, argv):
     def path_type(s):
         return Path(cwd, s).resolve()
+
+    def make_subparser(subparsers, *args, name, help, description=None, **kwargs):
+        if description is None:
+            description = help[0].upper() + help[1:]
+        p = subparsers.add_parser(
+            name=name,
+            help=help,
+            description=description)
+        return p
 
     def add_common_args(parser):
         default = default_data_dir()
@@ -38,18 +50,21 @@ def main(cwd, argv, ctx):
             help=f"path to data directory (default: {default})")
 
     def add_dump_command(subparsers):
-        p = subparsers.add_parser(
+        p = make_subparser(
+            subparsers,
             name="dump",
             help="dump out tags for file")
-        p.set_defaults(func=lambda args: do_dump(ctx=ctx, path=args.path))
+        p.set_defaults(func=lambda ctx, args: do_dump(ctx=ctx, path=args.path))
         p.add_argument("path", metavar="PATH", type=path_type, help="path")
 
     def add_edit_command(subparsers):
-        p = subparsers.add_parser(
+        p = make_subparser(
+            subparsers,
             name="edit",
             help="edit data in local metadata database")
         p.set_defaults(
-            func=lambda args: do_edit(
+            func=lambda ctx, args:
+            do_edit(
                 ctx=ctx,
                 data_dir=args.data_dir,
                 mode=args.mode))
@@ -60,11 +75,13 @@ def main(cwd, argv, ctx):
             help="edit artist, album or track")
 
     def add_import_command(subparsers):
-        p = subparsers.add_parser(
+        p = make_subparser(
+            subparsers,
             name="import",
             help="import data into local metadata database")
         p.set_defaults(
-            func=lambda args: do_import(
+            func=lambda ctx, args:
+            do_import(
                 ctx=ctx,
                 data_dir=args.data_dir,
                 music_dir=args.music_dir,
@@ -92,25 +109,33 @@ def main(cwd, argv, ctx):
             help="path to music files")
 
     def add_ids_command(subparsers):
-        p = subparsers.add_parser(
+        p = make_subparser(
+            subparsers,
             name="ids",
             help="add IDs to file")
-        p.set_defaults(func=lambda args: do_ids(ctx=ctx, path=args.path))
+        p.set_defaults(func=lambda ctx, args: do_ids(ctx=ctx, path=args.path))
         p.add_argument("path", metavar="PATH", type=path_type, help="path")
 
     def add_list_dir_command(subparsers):
-        p = subparsers.add_parser(
+        p = make_subparser(
+            subparsers,
             name="list-dir",
             help="list contents of directory")
-        p.set_defaults(func=lambda args: do_list_dir(ctx=ctx, dir=args.dir))
+        p.set_defaults(
+            func=lambda ctx, args:
+            do_list_dir(
+                ctx=ctx,
+                dir=args.dir))
         p.add_argument("dir", metavar="DIR", type=path_type, help="directory")
 
     def add_merge_command(subparsers):
-        p = subparsers.add_parser(
+        p = make_subparser(
+            subparsers,
             name="merge",
             help="merge artists or albums in local metadata database")
         p.set_defaults(
-            func=lambda args: do_merge(
+            func=lambda ctx, args:
+            do_merge(
                 ctx=ctx,
                 data_dir=args.data_dir,
                 mode=args.mode))
@@ -120,19 +145,56 @@ def main(cwd, argv, ctx):
             choices=["artists", "albums"],
             help="merge artists or albums")
 
+    def add_picard_fixup_command(subparsers):
+        p = make_subparser(
+            subparsers,
+            name="picard-fixup",
+            help="fix up tags post-Picard")
+        p.set_defaults(func=lambda ctx, args: do_picard_fixup(ctx=ctx))
+
+        default = Path(cwd, "config.yaml")
+        if default.is_file():
+            p.add_argument(
+                "--config",
+                "-c",
+                dest="config_path",
+                type=Path,
+                default=default,
+                required=False,
+                help=f"path to configuration file (default: {default})")
+        else:
+            p.add_argument(
+                "--config",
+                "-c",
+                dest="config_path",
+                type=Path,
+                required=True,
+                help="path to configuration file")
+
+        p.add_argument(
+            "--dry-run",
+            dest="dry_run",
+            action=BooleanOptionalAction,
+            default=True,
+            required=False,
+            help="dry run (default: True)")
+
     def add_scan_command(subparsers):
-        p = subparsers.add_parser(
+        p = make_subparser(
+            subparsers,
             name="scan",
             help="list files not in local metadata database")
-        p.set_defaults(func=lambda args: do_scan(ctx=ctx, dir=args.dir))
+        p.set_defaults(func=lambda ctx, args: do_scan(ctx=ctx, dir=args.dir))
         p.add_argument("dir", metavar="DIR", type=path_type, help="directory")
 
     def add_show_command(subparsers):
-        p = subparsers.add_parser(
+        p = make_subparser(
+            subparsers,
             name="show",
             help="show data from local metadata database")
         p.set_defaults(
-            func=lambda args: do_show(
+            func=lambda ctx, args:
+            do_show(
                 ctx=ctx,
                 data_dir=args.data_dir,
                 mode=args.mode))
@@ -142,26 +204,29 @@ def main(cwd, argv, ctx):
             choices=["album-tracks"],
             help="show artist, album or track")
 
-    parser = ArgumentParser(prog="rtag", description="Tag Tool")
-    subparsers = parser.add_subparsers(required=True)
+    parser = ArgumentParser(prog="rtag", description="Richard's Tagging Tool")
+    subparsers = parser.add_subparsers(required=True, dest="command")
     add_dump_command(subparsers=subparsers)
     add_edit_command(subparsers=subparsers)
     add_import_command(subparsers=subparsers)
     add_ids_command(subparsers=subparsers)
     add_list_dir_command(subparsers=subparsers)
     add_merge_command(subparsers=subparsers)
+    add_picard_fixup_command(subparsers=subparsers)
     add_scan_command(subparsers=subparsers)
     add_show_command(subparsers=subparsers)
 
     args = parser.parse_args(argv)
 
-    try:
-        status = args.func(args=args)
-    except ReportableError as e:
-        m = str(e)
-        m = "(No message)" if len(m) == 0 else m
-        cprint(Fore.LIGHTRED_EX, m, file=sys.stderr)
-        sys.exit(e.exit_code)
+    ctx = Context(args=args)
+    with timing(ctx=ctx, operation=args.command):
+        try:
+            status = args.func(ctx=ctx, args=args)
+        except ReportableError as e:
+            m = str(e)
+            m = "(No message)" if len(m) == 0 else m
+            cprint(Fore.LIGHTRED_EX, m, file=sys.stderr)
+            sys.exit(e.exit_code)
 
     if status is None:
         pass
@@ -177,4 +242,4 @@ def main(cwd, argv, ctx):
 
 if __name__ == "__main__":
     just_fix_windows_console()
-    main(cwd=os.getcwd(), argv=sys.argv[1:], ctx=Context())
+    main(cwd=os.getcwd(), argv=sys.argv[1:])

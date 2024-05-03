@@ -1,17 +1,17 @@
 from colorama import Fore
 from pathlib import Path
-from retagger.cprint import cprint
-from retagger.metadata import Metadata
+from rtag.cprint import cprint
+from rtag.old_metadata import Metadata
 import os
 
 
-def do_fixup(ctx, config):
+def do_picard_fixup(ctx):
     def perform_fixup(path):
         metadata = Metadata.from_file(path)
         if not metadata.has_musicbrainz_metadata:
             return False
 
-        fixup = config.fixups_by_album_id.get(metadata.album_id)
+        fixup = ctx.config.fixups_by_album_id.get(metadata.album_id)
         if not fixup:
             return False
 
@@ -50,15 +50,15 @@ def do_fixup(ctx, config):
 
     total = 0
     fixup_count = 0
-    for d0, dir_names, fs in os.walk(config.root_dir):
+    for d0, dir_names, fs in os.walk(ctx.config.root_dir):
         dir_names.sort()
         fs.sort()
         d1 = Path(d0)
         for f in fs:
-            if os.path.splitext(f)[1].lower() not in config.skips and f not in config.skips:
+            if os.path.splitext(f)[1].lower() not in ctx.config.skips and f not in ctx.config.skips:
                 p = d1.joinpath(f)
                 total += 1
-                path_pretty = str(p.relative_to(config.root_dir)).replace(
+                path_pretty = str(p.relative_to(ctx.config.root_dir)).replace(
                     "\\",
                     "/")
                 cprint(
