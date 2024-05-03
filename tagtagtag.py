@@ -58,7 +58,8 @@ def main(cwd, argv, ctx):
             ctx=ctx,
             data_dir=args.data_dir,
             music_dir=args.music_dir,
-            init=args.init))
+            init=args.init,
+            new_ids=args.new_ids))
     add_common_args(parser=p)
     p.add_argument(
         "--init",
@@ -67,6 +68,13 @@ def main(cwd, argv, ctx):
         required=False,
         default=False,
         help="clear/initialize database from scratch (default: False)")
+    p.add_argument(
+        "--new-ids",
+        metavar="NEW_IDS",
+        action=BooleanOptionalAction,
+        required=False,
+        default=False,
+        help="force generation of new RCOOK_xxx IDs (default: False)")
     p.add_argument(
         "music_dir",
         metavar="MUSIC_DIR",

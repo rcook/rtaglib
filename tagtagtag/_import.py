@@ -26,7 +26,7 @@ class DBResult:
         return cls(**{f.name: 0 for f in fields(cls)})
 
 
-def do_import(ctx, data_dir, music_dir, init=False):
+def do_import(ctx, data_dir, music_dir, init=False, new_ids=False):
     db_path = data_dir / "metadata.db"
     ctx.log_debug("do_import begin")
     ctx.log_debug(f"db_path={db_path}")
@@ -40,16 +40,22 @@ def do_import(ctx, data_dir, music_dir, init=False):
         for p in walk_dir(music_dir, include_exts=MUSIC_INCLUDE_EXTS, ignore_dirs=MUSIC_IGNORE_DIRS):
             result.total += 1
             m = Metadata.load(p)
-            if m.musicbrainz_track_id is None and m.rcook_track_id.get(default=None) is None:
-                process_file(
-                    ctx=ctx,
-                    result=result,
-                    dir=music_dir,
-                    path=p,
-                    m=m,
-                    db=db)
-            else:
+
+            if m.musicbrainz_track_id is not None:
                 result.skipped_count += 1
+                continue
+
+            if not new_ids and m.rcook_track_id.get(default=None) is not None:
+                result.skipped_count += 1
+                continue
+
+            process_file(
+                ctx=ctx,
+                result=result,
+                dir=music_dir,
+                path=p,
+                m=m,
+                db=db)
 
     for k, v in asdict(result).items():
         ctx.log_info(f"{k}={v}")
