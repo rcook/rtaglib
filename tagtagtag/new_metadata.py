@@ -54,14 +54,17 @@ class MetadataMeta(ABCMeta):
 class Metadata(metaclass=MetadataMeta):
     @staticmethod
     def load(path):
+        from tagtagtag.flac_metadata import FLACMetadata
         from tagtagtag.mp3_metadata import MP3Metadata
         from tagtagtag.wma_metadata import WMAMetadata
         import mutagen
         import mutagen.asf
+        import mutagen.flac
         import mutagen.mp3
 
         m = mutagen.File(path)
         match m:
+            case mutagen.flac.FLAC(): return FLACMetadata(m=m)
             case mutagen.mp3.MP3(): return MP3Metadata(m=m)
             case mutagen.asf.ASF(): return WMAMetadata(m=m)
             case _: raise NotImplementedError(f"Unsupported metadata type {type(m)}")

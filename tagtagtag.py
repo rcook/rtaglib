@@ -144,7 +144,7 @@ def test():
     from uuid import uuid4
 
     m = Metadata.load(
-        "C:\\Users\\rcook\\Desktop\\Beets\\samples.bak\\Pink_Floyd\\Dark_Side_of_the_Moon\\sample1.wma")
+        "C:\\Users\\rcook\\Desktop\\Beets\\samples.bak\\Pink_Floyd\\Dark_Side_of_the_Moon\\sample1.flac")
 
     for tag in m.tags:
         print(f"{tag} = {m.get_tag(tag, default=None)}")
