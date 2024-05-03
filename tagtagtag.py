@@ -139,19 +139,6 @@ def main(cwd, argv, ctx):
         raise NotImplementedError(f"Unsupported status {status}")
 
 
-def test():
-    from tagtagtag.fs import walk_dir
-    from tagtagtag.new_metadata import Metadata
-    from uuid import uuid4
-
-    for p in walk_dir(Path("C:\\Users\\rcook\\Desktop\\Beets"), include_exts={".flac"}):
-        m = Metadata.load(p)
-        print(f"{p.name}: {m.musicbrainz_track_id}")
-
-
 if __name__ == "__main__":
     just_fix_windows_console()
-    if len(sys.argv) == 2 and sys.argv[1] == "test":
-        test()
-    else:
-        main(cwd=os.getcwd(), argv=sys.argv[1:], ctx=Context())
+    main(cwd=os.getcwd(), argv=sys.argv[1:], ctx=Context())

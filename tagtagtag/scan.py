@@ -1,42 +1,24 @@
-from dataclasses import dataclass
-from tagtagtag.collections import DictPlus
+from colorama import Fore
 from tagtagtag.constants import MUSIC_IGNORE_DIRS, MUSIC_INCLUDE_EXTS
+from tagtagtag.cprint import cprint
 from tagtagtag.fs import walk_dir
-import mutagen
-
-
-@dataclass
-class ExtInfo:
-    count: int
-    tag_infos: DictPlus
-
-
-@dataclass
-class TagInfo:
-    count: int
+from tagtagtag.new_metadata import Metadata
 
 
 def do_scan(ctx, dir):
-    ext_infos = DictPlus()
-    for p in walk_dir(dir=dir, include_exts=MUSIC_INCLUDE_EXTS, ignore_dirs=MUSIC_IGNORE_DIRS):
-        ext = p.suffix.lower()
-        ext_info = ext_infos.get_or_add(
-            ext,
-            lambda: ExtInfo(count=0, tag_infos=DictPlus()))
-
-        ext_info.count += 1
-
-        m = mutagen.File(p)
-        if m.tags is not None:
-            for k in m.tags.keys():
-                tag_info = ext_info.tag_infos.get_or_add(
-                    k,
-                    lambda: TagInfo(count=0))
-                tag_info.count += 1
-
-    for ext in sorted(ext_infos.keys()):
-        ext_info = ext_infos[ext]
-        print(f"{ext} ({ext_info.count})")
-        for k in sorted(ext_info.tag_infos.keys()):
-            tag_info = ext_info.tag_infos[k]
-            print(f"  {k}: {tag_info.count}")
+    for p in walk_dir(dir, ignore_dirs=MUSIC_IGNORE_DIRS, include_exts=MUSIC_INCLUDE_EXTS):
+        m = Metadata.load(p)
+        if m.musicbrainz_track_id is not None:
+            cprint(Fore.LIGHTCYAN_EX, f"{p.name}")
+            for k in m.tags:
+                value = m.get_tag(k, None)
+                if value is not None:
+                    cprint(
+                        Fore.LIGHTYELLOW_EX,
+                        "  ",
+                        k.ljust(25),
+                        Fore.LIGHTWHITE_EX,
+                        " : ",
+                        Fore.LIGHTGREEN_EX,
+                        value,
+                        sep="")
