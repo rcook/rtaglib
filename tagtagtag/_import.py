@@ -40,7 +40,7 @@ def do_import(ctx, data_dir, music_dir, init=False):
         for p in walk_dir(music_dir, include_exts=MUSIC_INCLUDE_EXTS, ignore_dirs=MUSIC_IGNORE_DIRS):
             result.total += 1
             m = Metadata.load(p)
-            if m.musicbrainz_track_id is None or True:
+            if m.musicbrainz_track_id is None:
                 process_file(
                     ctx=ctx,
                     result=result,
