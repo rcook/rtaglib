@@ -106,13 +106,13 @@ class Metadata(metaclass=MetadataMeta):
         self._path = path
         self._inner = inner
         self._saved_tags = deepcopy(self._tags_as_dict())
-        self.artist_id = self.__class__.Accessor(
+        self.rcook_artist_id = self.__class__.Accessor(
             self,
             self.__class__.RCOOK_ARTIST_ID_KEY)
-        self.album_id = self.__class__.Accessor(
+        self.rcook_album_id = self.__class__.Accessor(
             self,
             self.__class__.RCOOK_ALBUM_ID_KEY)
-        self.track_id = self.__class__.Accessor(
+        self.rcook_track_id = self.__class__.Accessor(
             self,
             self.__class__.RCOOK_TRACK_ID_KEY)
 

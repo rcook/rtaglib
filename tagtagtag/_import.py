@@ -40,7 +40,7 @@ def do_import(ctx, data_dir, music_dir, init=False):
         for p in walk_dir(music_dir, include_exts=MUSIC_INCLUDE_EXTS, ignore_dirs=MUSIC_IGNORE_DIRS):
             result.total += 1
             m = Metadata.load(p)
-            if m.musicbrainz_track_id is None:
+            if m.musicbrainz_track_id is None and m.rcook_track_id.get(default=None) is None:
                 process_file(
                     ctx=ctx,
                     result=result,
@@ -109,7 +109,7 @@ def process_file(ctx, result, dir, path, m, db):
         number=track_number,
         default=None)
     if track is None:
-        create_track(
+        track = create_track(
             db=db,
             inferred=inferred,
             album=album,
@@ -118,6 +118,11 @@ def process_file(ctx, result, dir, path, m, db):
             track_disc=track_disc,
             track_number=track_number)
         result.new_track_count += 1
+
+        m.rcook_artist_id.set(str(artist.uuid))
+        m.rcook_album_id.set(str(album.uuid))
+        m.rcook_track_id.set(str(track.uuid))
+        m.save()
     else:
         result.existing_track_count += 1
 
