@@ -1,3 +1,4 @@
 colorama
 mutagen
+pyyaml
 unidecode
