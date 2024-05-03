@@ -6,6 +6,8 @@ class MP4Metadata(Metadata):
         (ARTIST_TITLE_ATTR, "aART"),
         (ALBUM_TITLE_ATTR, "\xa9alb"),
         (TRACK_TITLE_ATTR, "\xa9nam"),
+        (TRACK_DISC_ATTR, "disk"),
+        (TRACK_NUMBER_ATTR, "trkn"),
         (MUSICBRAINZ_ARTIST_ID_ATTR, "musicbrainz_artistid"),
         (MUSICBRAINZ_ALBUM_ID_ATTR, "musicbrainz_albumid"),
         (MUSICBRAINZ_TRACK_ID_ATTR, "musicbrainz_trackid")
@@ -30,6 +32,9 @@ class MP4Metadata(Metadata):
 
         item = items[0]
         if isinstance(item, str):
+            return item
+
+        if isinstance(item, tuple):
             return item
 
         value = item.decode()

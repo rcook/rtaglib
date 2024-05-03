@@ -1,6 +1,6 @@
 from functools import partial
 from tagtagtag.new_metadata import *
-from mutagen.id3 import TALB, TIT2, TPE2, TXXX
+from mutagen.id3 import TALB, TIT2, TPE2, TPOS, TRCK, TXXX
 
 
 class MP3Metadata(Metadata):
@@ -8,14 +8,23 @@ class MP3Metadata(Metadata):
         (ARTIST_TITLE_ATTR, "TPE2", TPE2, partial(TPE2, encoding=3)),
         (ALBUM_TITLE_ATTR, "TALB", TALB, partial(TALB, encoding=2)),
         (TRACK_TITLE_ATTR, "TIT2", TIT2, partial(TIT2, encoding=3)),
+        (TRACK_DISC_ATTR, "TPOS", TPOS, partial(TPOS, encoding=3)),
+        (TRACK_NUMBER_ATTR, "TRCK", TRCK, partial(TRCK, encoding=3)),
     ] + [
         (
-            attr,
-            f"TXXX:{attr.upper()}",
+            attr_name,
+            f"TXXX:{key or attr_name.upper()}",
             TXXX,
-            partial(TXXX, encoding=3, desc=attr.upper())
+            partial(TXXX, encoding=3, desc=key or attr_name.upper())
         )
-        for attr in [RCOOK_ARTIST_ID_ATTR, RCOOK_ALBUM_ID_ATTR, RCOOK_TRACK_ID_ATTR]
+        for attr_name, key in [
+            (MUSICBRAINZ_ARTIST_ID_ATTR, "MusicBrainz Album Artist Id"),
+            (MUSICBRAINZ_ALBUM_ID_ATTR, "MusicBrainz Album Id"),
+            (MUSICBRAINZ_TRACK_ID_ATTR, "MusicBrainz Release Track Id"),
+            (RCOOK_ARTIST_ID_ATTR, None),
+            (RCOOK_ALBUM_ID_ATTR, None),
+            (RCOOK_TRACK_ID_ATTR, None)
+        ]
     ]
     _KEYS = {
         name: (key, tag_type, tag_ctor)

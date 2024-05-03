@@ -140,14 +140,13 @@ def main(cwd, argv, ctx):
 
 
 def test():
+    from tagtagtag.fs import walk_dir
     from tagtagtag.new_metadata import Metadata
     from uuid import uuid4
 
-    m = Metadata.load(
-        "C:\\Users\\rcook\\Desktop\\Beets\\samples.bak\\Pink_Floyd\\Dark_Side_of_the_Moon\\sample1.m4a")
-
-    for tag in m.tags:
-        print(f"{tag} = {m.get_tag(tag, default=None)}")
+    for p in walk_dir(Path("C:\\Users\\rcook\\Desktop\\Beets"), include_exts={".flac"}):
+        m = Metadata.load(p)
+        print(f"{p.name}: {m.musicbrainz_track_id}")
 
 
 if __name__ == "__main__":

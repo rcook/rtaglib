@@ -6,6 +6,8 @@ class FLACMetadata(Metadata):
         (ARTIST_TITLE_ATTR, "albumartist"),
         (ALBUM_TITLE_ATTR, "album"),
         (TRACK_TITLE_ATTR, "title"),
+        (TRACK_DISC_ATTR, "discnumber"),
+        (TRACK_NUMBER_ATTR, "tracknumber"),
         (MUSICBRAINZ_ARTIST_ID_ATTR, "musicbrainz_artistid"),
         (MUSICBRAINZ_ALBUM_ID_ATTR, "musicbrainz_albumid"),
         (MUSICBRAINZ_TRACK_ID_ATTR, "musicbrainz_trackid"),

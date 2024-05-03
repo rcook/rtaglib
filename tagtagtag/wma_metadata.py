@@ -6,6 +6,8 @@ class WMAMetadata(Metadata):
         (ARTIST_TITLE_ATTR, "WM/AlbumArtist"),
         (ALBUM_TITLE_ATTR, "WM/AlbumTitle"),
         (TRACK_TITLE_ATTR, "Title"),
+        (TRACK_DISC_ATTR, "WM/PartOfSet"),
+        (TRACK_NUMBER_ATTR, "WM/TrackNumber"),
         (MUSICBRAINZ_ARTIST_ID_ATTR, "MusicBrainz/Artist Id"),
         (MUSICBRAINZ_ALBUM_ID_ATTR, "MusicBrainz/Album Id"),
         (MUSICBRAINZ_TRACK_ID_ATTR, "MusicBrainz/Track Id"),
@@ -30,9 +32,11 @@ class WMAMetadata(Metadata):
 
         item = items[0]
         value = item.value
-        assert isinstance(value, str)
-
-        return value
+        if isinstance(value, int):
+            return value
+        else:
+            assert isinstance(value, str)
+            return value
 
     def set_tag(self, name, value):
         key = self.__class__._KEYS[name]
