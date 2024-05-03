@@ -112,7 +112,7 @@ def edit_item(item):
             f.name,
             " = ",
             Fore.LIGHTGREEN_EX,
-            current_value,
+            "(empty)" if current_value is None else current_value,
             sep="",
             end="")
 
