@@ -14,7 +14,6 @@ from rtag.list_dir import do_list_dir
 from rtag.merge import do_merge
 from rtag.scan import do_scan
 from rtag.show import do_show
-from rtag.time import timing
 import os
 import sys
 
@@ -218,7 +217,7 @@ def main(cwd, argv):
     args = parser.parse_args(argv)
 
     ctx = Context(args=args)
-    with timing(ctx=ctx, operation=args.command):
+    with ctx.timing(operation=args.command):
         try:
             status = args.func(ctx=ctx, args=args)
         except ReportableError as e:

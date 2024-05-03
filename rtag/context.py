@@ -1,5 +1,7 @@
+from contextlib import contextmanager
 from functools import cache, cached_property, partialmethod
 from rtag.config import Config
+from time import perf_counter
 import inspect
 import logging
 
@@ -30,6 +32,25 @@ class Context(metaclass=ContextMeta):
     @cached_property
     def config(self):
         return Config.load(self._args.config_path)
+
+    @contextmanager
+    def timing(self, operation):
+        self.log_info(f"{operation} started")
+        begin_time = perf_counter()
+
+        try:
+            yield
+        except:
+            end_time = perf_counter()
+            self.log_error(
+                f"{operation} failed after "
+                f"{end_time - begin_time:.02f} s")
+            raise
+
+        end_time = perf_counter()
+        self.log_info(
+            f"{operation} completed in "
+            f"{end_time - begin_time:.02f} s")
 
     @cache
     def _logger(self, name):
