@@ -9,6 +9,7 @@ from rtag.error import ReportableError
 from rtag.fs import home_dir
 from rtag.ids import do_ids
 from rtag._import import do_import
+from rtag.list_dir import do_list_dir
 from rtag.merge import do_merge
 from rtag.scan import do_scan
 from rtag.show import do_show
@@ -88,6 +89,12 @@ def main(cwd, argv, ctx):
     p = subparsers.add_parser(name="ids")
     p.set_defaults(func=lambda args: do_ids(ctx=ctx, path=args.path))
     p.add_argument("path", metavar="PATH", type=path_type, help="path")
+
+    p = subparsers.add_parser(
+        name="list-dir",
+        help="list contents of directory")
+    p.set_defaults(func=lambda args: do_list_dir(ctx=ctx, dir=args.dir))
+    p.add_argument("dir", metavar="DIR", type=path_type, help="directory")
 
     p = subparsers.add_parser(name="merge")
     p.set_defaults(
