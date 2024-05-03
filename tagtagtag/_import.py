@@ -40,7 +40,7 @@ def do_import(ctx, data_dir, music_dir, init=False):
         for p in walk_dir(music_dir, include_exts=MUSIC_INCLUDE_EXTS, ignore_dirs=MUSIC_IGNORE_DIRS):
             result.total += 1
             m = Metadata.load(p)
-            if m.musicbrainz_track_id is None:
+            if m.musicbrainz_track_id is None or True:
                 process_file(
                     ctx=ctx,
                     result=result,
@@ -71,6 +71,7 @@ def process_file(ctx, result, dir, path, m, db):
     artist_title, artist_safe_title = get_titles("artist_title")
     album_title, album_safe_title = get_titles("album_title")
     track_title, track_safe_title = get_titles("track_title")
+    track_disc = inferred.track_disc if m.track_disc is None else m.track_disc
     track_number = inferred.track_number if m.track_number is None else m.track_number
 
     artist = Artist.query(db=db, title=artist_title, default=None)
@@ -104,6 +105,7 @@ def process_file(ctx, result, dir, path, m, db):
         db=db,
         album_id=album.id,
         title=track_title,
+        disc=track_disc,
         number=track_number,
         default=None)
     if track is None:
@@ -113,35 +115,38 @@ def process_file(ctx, result, dir, path, m, db):
             album=album,
             track_title=track_title,
             track_safe_title=track_safe_title,
+            track_disc=track_disc,
             track_number=track_number)
         result.new_track_count += 1
     else:
         result.existing_track_count += 1
 
 
-def create_track(db, inferred, album, track_title, track_safe_title, track_number):
-    def do_create(track_number, fail_ok=False):
+def create_track(db, inferred, album, track_title, track_safe_title, track_disc, track_number):
+    def do_create(track_disc, track_number, fail_ok=False):
         m = getattr(Track, "try_create" if fail_ok else "create")
         return m(
             db=db,
             album_id=album.id,
             title=track_title,
             safe_title=track_safe_title,
+            disc=track_disc,
             number=track_number)
 
     if track_number is None:
-        return do_create(track_number=inferred.track_number)
+        return do_create(track_disc=inferred.track_disc, track_number=inferred.track_number)
 
     if inferred.track_number is None:
-        return do_create(track_number=track_number)
+        return do_create(track_disc=track_disc, track_number=track_number)
 
     if inferred.track_number == track_number:
-        return do_create(track_number=track_number)
+        return do_create(track_disc=track_disc, track_number=track_number)
 
-    print(track_title)
-
-    track = do_create(track_number=inferred.track_number, fail_ok=True)
+    track = do_create(
+        track_disc=inferred.track_disc,
+        track_number=inferred.track_number,
+        fail_ok=True)
     if track is not None:
         return track
 
-    return do_create(track_number=track_number)
+    return do_create(track_disc=track_disc, track_number=track_number)

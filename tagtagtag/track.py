@@ -14,6 +14,7 @@ class Track(Entity):
     uuid: UUID
     title: str
     safe_title: str
+    disc: int
     number: int
 
     @staticmethod
@@ -27,8 +28,9 @@ class Track(Entity):
                 uuid TEXT NOT NULL UNIQUE,
                 title TEXT NOT NULL,
                 safe_title TEXT NOT NULL,
+                disc INTEGER NULL,
                 number INTEGER NULL,
-                UNIQUE(album_id, number)
+                UNIQUE(album_id, disc, number)
                 FOREIGN KEY(album_id) REFERENCES albums(id)
             )
             """)
@@ -37,7 +39,7 @@ class Track(Entity):
     def list(cls, db, album_id):
         cursor = db.cursor()
         cursor.execute(
-            "SELECT id, uuid, title, safe_title, number FROM tracks WHERE album_id = ? ORDER BY number",
+            "SELECT id, uuid, title, safe_title, disc, number FROM tracks WHERE album_id = ? ORDER BY number",
             (album_id, ))
         for row in cursor.fetchall():
             yield cls(
@@ -46,33 +48,43 @@ class Track(Entity):
                 uuid=UUID(row[1]),
                 title=row[2],
                 safe_title=row[3],
-                number=row[4])
+                disc=row[4],
+                number=row[5])
 
     @classmethod
-    def create(cls, db, album_id, title, safe_title, number):
-        track = cls.try_create(db, album_id, title, safe_title, number)
+    def create(cls, db, album_id, title, safe_title, disc, number):
+        track = cls.try_create(
+            db=db,
+            album_id=album_id,
+            title=title,
+            safe_title=safe_title,
+            disc=disc,
+            number=number)
         if track is not None:
             return track
 
-        if number is None:
-            m = f"Track \"{title}\" " \
-                f"for album ID {album_id} is not unique"
-        else:
-            m = f"Track \"{title}\" with number {number} " \
-                f"for album ID {album_id} is not unique"
-        raise ReportableError(m)
+        parts = [f"Track \"{title}\""]
+
+        if disc is not None:
+            parts.append(f" (disc {disc})")
+
+        if number is not None:
+            parts.append(f"(number {number})")
+
+        raise ReportableError(
+            " ".join(parts) + f" for album ID {album_id} is not unique")
 
     @classmethod
-    def try_create(cls, db, album_id, title, safe_title, number):
+    def try_create(cls, db, album_id, title, safe_title, disc, number):
         uuid = uuid4()
         cursor = db.cursor()
         cursor.execute(
             """
-            INSERT OR IGNORE INTO tracks (album_id, uuid, title, safe_title, number)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT OR IGNORE INTO tracks (album_id, uuid, title, safe_title, disc, number)
+            VALUES (?, ?, ?, ?, ?, ?)
             RETURNING id
             """,
-            (album_id, str(uuid), title, safe_title, number))
+            (album_id, str(uuid), title, safe_title, disc, number))
         row = cursor.fetchone()
         db.commit()
         if row is None:
@@ -84,6 +96,7 @@ class Track(Entity):
             uuid=uuid,
             title=title,
             safe_title=safe_title,
+            disc=disc,
             number=number)
 
     @classmethod
@@ -91,7 +104,7 @@ class Track(Entity):
         cursor = db.cursor()
         cursor.execute(
             """
-            SELECT album_id, uuid, title, safe_title, number FROM tracks WHERE id = ?
+            SELECT album_id, uuid, title, safe_title, disc, number FROM tracks WHERE id = ?
             """,
             (id, ))
         row = cursor.fetchone()
@@ -102,7 +115,8 @@ class Track(Entity):
                 uuid=UUID(row[1]),
                 title=row[2],
                 safe_title=row[3],
-                number=row[4])
+                disc=row[4],
+                number=row[5])
 
         if default is not _MISSING:
             return default
@@ -114,7 +128,7 @@ class Track(Entity):
         cursor = db.cursor()
         cursor.execute(
             """
-            SELECT id, album_id, title, safe_title, number FROM tracks WHERE uuid = ?
+            SELECT id, album_id, title, safe_title, disc, number FROM tracks WHERE uuid = ?
             """,
             (str(uuid), ))
         row = cursor.fetchone()
@@ -125,7 +139,8 @@ class Track(Entity):
                 uuid=uuid,
                 title=row[2],
                 safe_title=row[3],
-                number=row[4])
+                disc=row[4],
+                number=row[5])
 
         if default is not _MISSING:
             return default
@@ -133,13 +148,15 @@ class Track(Entity):
         raise RuntimeError(f"Could not retrieve track with UUID {uuid}")
 
     @classmethod
-    def query(cls, db, album_id, title, number, default=_MISSING):
+    def query(cls, db, album_id, title, disc, number, default=_MISSING):
         cursor = db.cursor()
         cursor.execute(
             """
-            SELECT id, uuid, safe_title FROM tracks WHERE album_id = ? AND title = ? AND number = ?
+            SELECT id, uuid, safe_title
+            FROM tracks
+            WHERE album_id = ? AND title = ? AND disc = ? AND number = ?
             """,
-            (album_id, title, number))
+            (album_id, title, disc, number))
         row = cursor.fetchone()
         if row is not None:
             return cls(
@@ -148,6 +165,7 @@ class Track(Entity):
                 uuid=UUID(row[1]),
                 title=title,
                 safe_title=row[2],
+                disc=disc,
                 number=number)
 
         if default is not _MISSING:
@@ -161,10 +179,10 @@ class Track(Entity):
         cursor.execute(
             """
             UPDATE tracks
-            SET title = ?, safe_title = ?, number = ?
+            SET title = ?, safe_title = ?, disc = ?, number = ?
             WHERE id = ?
             """,
-            (self.title, self.safe_name, self.number, self.id))
+            (self.title, self.safe_name, self.disc, self.number, self.id))
         if cursor.rowcount != 1:
             raise RuntimeError(f"Failed to update track with ID {self.id}")
         db.commit()

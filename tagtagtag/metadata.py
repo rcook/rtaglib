@@ -15,7 +15,6 @@ import mutagen.mp3
 
 
 _MISSING = object()
-_NOT_IMPLEMENTED = object()
 _ATTRS = [
     ("artist_title", str),
     ("album_title", str),
@@ -40,6 +39,11 @@ CommonKeys = make_dataclass("CommonKeys", [
 ], frozen=True)
 
 
+def parse_slash_number(s):
+    value, _ = s.split("/", maxsplit=1)
+    return value
+
+
 class MetadataMeta(ABCMeta):
     def __new__(cls, name, bases, dct):
         t = super().__new__(cls, name, bases, dct)
@@ -47,12 +51,6 @@ class MetadataMeta(ABCMeta):
         for attr in _ATTRS:
             def get_tag(name, required_type, self):
                 key = getattr(self.__class__.COMMON_KEYS, name)
-
-                if key is _NOT_IMPLEMENTED:
-                    raise NotImplementedError(
-                        f"Attribute \"{name}\" not implemented for "
-                        f"{self.__class__.__name__}")
-
                 if isinstance(key, str):
                     value = self._scalar(key)
                 else:
@@ -201,13 +199,13 @@ class FLACMetadata(Metadata):
 class ID3Metadata(Metadata):
     COMMON_KEYS = CommonKeys(
         artist_title="artist",
-        album_title=_NOT_IMPLEMENTED,
+        album_title="album",
         track_title="title",
-        track_disc=_NOT_IMPLEMENTED,
-        track_number=_NOT_IMPLEMENTED,
-        musicbrainz_artist_id=_NOT_IMPLEMENTED,
-        musicbrainz_album_id=_NOT_IMPLEMENTED,
-        musicbrainz_track_id=_NOT_IMPLEMENTED)
+        track_disc=Key(key="discnumber", func=parse_slash_number),
+        track_number=Key(key="tracknumber", func=parse_slash_number),
+        musicbrainz_artist_id="musicbrainz_artistid",
+        musicbrainz_album_id="musicbrainz_albumid",
+        musicbrainz_track_id="musicbrainz_trackid")
 
     def _init_once(cls):
         for key, id in [
@@ -229,19 +227,15 @@ class ID3Metadata(Metadata):
 
 
 class MP4Metadata(Metadata):
-    def parse_number(s):
-        value, _ = s.split("/", maxsplit=1)
-        return value
-
     COMMON_KEYS = CommonKeys(
         artist_title="artist",
         album_title="album",
         track_title="title",
-        track_disc=Key(key="discnumber", func=parse_number),
-        track_number=Key(key="tracknumber", func=parse_number),
-        musicbrainz_artist_id=_NOT_IMPLEMENTED,
-        musicbrainz_album_id=_NOT_IMPLEMENTED,
-        musicbrainz_track_id=_NOT_IMPLEMENTED)
+        track_disc=Key(key="discnumber", func=parse_slash_number),
+        track_number=Key(key="tracknumber", func=parse_slash_number),
+        musicbrainz_artist_id="musicbrainz_artistid",
+        musicbrainz_album_id="musicbrainz_albumid",
+        musicbrainz_track_id="musicbrainz_trackid")
 
     def _init_once(cls):
         for key, id in [
@@ -267,7 +261,7 @@ class WMAMetadata(Metadata):
         artist_title="WM/AlbumArtist",
         album_title="WM/AlbumTitle",
         track_title="Title",
-        track_disc=_NOT_IMPLEMENTED,
+        track_disc="WM/PartOfSet",
         track_number="WM/TrackNumber",
         musicbrainz_artist_id="MusicBrainz/Artist Id",
         musicbrainz_album_id="MusicBrainz/Album Id",
