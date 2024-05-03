@@ -37,92 +37,121 @@ def main(cwd, argv, ctx):
             default=default,
             help=f"path to data directory (default: {default})")
 
+    def add_dump_command(subparsers):
+        p = subparsers.add_parser(
+            name="dump",
+            help="dump out tags for file")
+        p.set_defaults(func=lambda args: do_dump(ctx=ctx, path=args.path))
+        p.add_argument("path", metavar="PATH", type=path_type, help="path")
+
+    def add_edit_command(subparsers):
+        p = subparsers.add_parser(
+            name="edit",
+            help="edit data in local metadata database")
+        p.set_defaults(
+            func=lambda args: do_edit(
+                ctx=ctx,
+                data_dir=args.data_dir,
+                mode=args.mode))
+        add_common_args(parser=p)
+        p.add_argument(
+            "mode",
+            choices=["artist", "album", "track", "album-tracks"],
+            help="edit artist, album or track")
+
+    def add_import_command(subparsers):
+        p = subparsers.add_parser(
+            name="import",
+            help="import data into local metadata database")
+        p.set_defaults(
+            func=lambda args: do_import(
+                ctx=ctx,
+                data_dir=args.data_dir,
+                music_dir=args.music_dir,
+                init=args.init,
+                new_ids=args.new_ids))
+        add_common_args(parser=p)
+        p.add_argument(
+            "--init",
+            metavar="INIT",
+            action=BooleanOptionalAction,
+            required=False,
+            default=False,
+            help="clear/initialize database from scratch (default: False)")
+        p.add_argument(
+            "--new-ids",
+            metavar="NEW_IDS",
+            action=BooleanOptionalAction,
+            required=False,
+            default=False,
+            help="force generation of new RCOOK_xxx IDs (default: False)")
+        p.add_argument(
+            "music_dir",
+            metavar="MUSIC_DIR",
+            type=path_type,
+            help="path to music files")
+
+    def add_ids_command(subparsers):
+        p = subparsers.add_parser(
+            name="ids",
+            help="add IDs to file")
+        p.set_defaults(func=lambda args: do_ids(ctx=ctx, path=args.path))
+        p.add_argument("path", metavar="PATH", type=path_type, help="path")
+
+    def add_list_dir_command(subparsers):
+        p = subparsers.add_parser(
+            name="list-dir",
+            help="list contents of directory")
+        p.set_defaults(func=lambda args: do_list_dir(ctx=ctx, dir=args.dir))
+        p.add_argument("dir", metavar="DIR", type=path_type, help="directory")
+
+    def add_merge_command(subparsers):
+        p = subparsers.add_parser(
+            name="merge",
+            help="merge artists or albums in local metadata database")
+        p.set_defaults(
+            func=lambda args: do_merge(
+                ctx=ctx,
+                data_dir=args.data_dir,
+                mode=args.mode))
+        add_common_args(parser=p)
+        p.add_argument(
+            "mode",
+            choices=["artists", "albums"],
+            help="merge artists or albums")
+
+    def add_scan_command(subparsers):
+        p = subparsers.add_parser(
+            name="scan",
+            help="list files not in local metadata database")
+        p.set_defaults(func=lambda args: do_scan(ctx=ctx, dir=args.dir))
+        p.add_argument("dir", metavar="DIR", type=path_type, help="directory")
+
+    def add_show_command(subparsers):
+        p = subparsers.add_parser(
+            name="show",
+            help="show data from local metadata database")
+        p.set_defaults(
+            func=lambda args: do_show(
+                ctx=ctx,
+                data_dir=args.data_dir,
+                mode=args.mode))
+        add_common_args(parser=p)
+        p.add_argument(
+            "mode",
+            choices=["album-tracks"],
+            help="show artist, album or track")
+
     parser = ArgumentParser(prog="rtag", description="Tag Tool")
-
     subparsers = parser.add_subparsers(required=True)
-
-    p = subparsers.add_parser(name="edit")
-    p.set_defaults(
-        func=lambda args: do_edit(
-            ctx=ctx,
-            data_dir=args.data_dir,
-            mode=args.mode))
-    add_common_args(parser=p)
-    p.add_argument(
-        "mode",
-        choices=["artist", "album", "track", "album-tracks"],
-        help="edit artist, album or track")
-
-    p = subparsers.add_parser(name="import")
-    p.set_defaults(
-        func=lambda args: do_import(
-            ctx=ctx,
-            data_dir=args.data_dir,
-            music_dir=args.music_dir,
-            init=args.init,
-            new_ids=args.new_ids))
-    add_common_args(parser=p)
-    p.add_argument(
-        "--init",
-        metavar="INIT",
-        action=BooleanOptionalAction,
-        required=False,
-        default=False,
-        help="clear/initialize database from scratch (default: False)")
-    p.add_argument(
-        "--new-ids",
-        metavar="NEW_IDS",
-        action=BooleanOptionalAction,
-        required=False,
-        default=False,
-        help="force generation of new RCOOK_xxx IDs (default: False)")
-    p.add_argument(
-        "music_dir",
-        metavar="MUSIC_DIR",
-        type=path_type,
-        help="path to music files")
-
-    p = subparsers.add_parser(name="dump")
-    p.set_defaults(func=lambda args: do_dump(ctx=ctx, path=args.path))
-    p.add_argument("path", metavar="PATH", type=path_type, help="path")
-
-    p = subparsers.add_parser(name="ids")
-    p.set_defaults(func=lambda args: do_ids(ctx=ctx, path=args.path))
-    p.add_argument("path", metavar="PATH", type=path_type, help="path")
-
-    p = subparsers.add_parser(
-        name="list-dir",
-        help="list contents of directory")
-    p.set_defaults(func=lambda args: do_list_dir(ctx=ctx, dir=args.dir))
-    p.add_argument("dir", metavar="DIR", type=path_type, help="directory")
-
-    p = subparsers.add_parser(name="merge")
-    p.set_defaults(
-        func=lambda args: do_merge(
-            ctx=ctx,
-            data_dir=args.data_dir,
-            mode=args.mode))
-    add_common_args(parser=p)
-    p.add_argument(
-        "mode",
-        choices=["artists", "albums"],
-        help="merge artists or albums")
-
-    p = subparsers.add_parser(name="scan")
-    p.set_defaults(func=lambda args: do_scan(ctx=ctx, dir=args.dir))
-    p.add_argument("dir", metavar="DIR", type=path_type, help="directory")
-
-    p = subparsers.add_parser(name="show")
-    p.set_defaults(
-        func=lambda args: do_show(
-            ctx=ctx,
-            data_dir=args.data_dir,
-            mode=args.mode))
-    add_common_args(parser=p)
-    p.add_argument(
-        "mode",
-        choices=["album-tracks"],
-        help="show artist, album or track")
+    add_dump_command(subparsers=subparsers)
+    add_edit_command(subparsers=subparsers)
+    add_import_command(subparsers=subparsers)
+    add_ids_command(subparsers=subparsers)
+    add_list_dir_command(subparsers=subparsers)
+    add_merge_command(subparsers=subparsers)
+    add_scan_command(subparsers=subparsers)
+    add_show_command(subparsers=subparsers)
 
     args = parser.parse_args(argv)
 
