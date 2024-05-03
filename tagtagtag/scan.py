@@ -8,7 +8,7 @@ from tagtagtag.new_metadata import Metadata
 def do_scan(ctx, dir):
     for p in walk_dir(dir, ignore_dirs=MUSIC_IGNORE_DIRS, include_exts=MUSIC_INCLUDE_EXTS):
         m = Metadata.load(p)
-        if m.musicbrainz_track_id is not None:
+        if m.musicbrainz_track_id is not None or m.rcook_track_id is not None:
             cprint(Fore.LIGHTCYAN_EX, f"{p.name}")
             for k in m.tags:
                 value = m.get_tag(k, None)
