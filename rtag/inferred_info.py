@@ -1,6 +1,6 @@
 from dataclasses import dataclass
-from tagtagtag.error import ReportableError
-from tagtagtag.safe_str import humanize_str, make_safe_str
+from rtag.error import ReportableError
+from rtag.safe_str import humanize_str, make_safe_str
 import os
 import re
 

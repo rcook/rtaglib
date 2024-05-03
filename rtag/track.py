@@ -1,6 +1,6 @@
 from dataclasses import dataclass
-from tagtagtag.entity import Entity
-from tagtagtag.error import ReportableError
+from rtag.entity import Entity
+from rtag.error import ReportableError
 from uuid import UUID, uuid4
 
 

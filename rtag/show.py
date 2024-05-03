@@ -1,10 +1,10 @@
 from colorama import Fore
-from tagtagtag.album import Album
-from tagtagtag.artist import Artist
-from tagtagtag.cprint import cprint
-from tagtagtag.metadata_db import MetadataDB
-from tagtagtag.track import Track
-from tagtagtag.ui import choose_item
+from rtag.album import Album
+from rtag.artist import Artist
+from rtag.cprint import cprint
+from rtag.metadata_db import MetadataDB
+from rtag.track import Track
+from rtag.ui import choose_item
 
 
 _PAGE_SIZE = 20

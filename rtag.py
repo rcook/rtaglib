@@ -1,23 +1,23 @@
 from argparse import ArgumentParser, BooleanOptionalAction
 from colorama import Fore, just_fix_windows_console
 from pathlib import Path
-from tagtagtag.context import Context
-from tagtagtag.cprint import cprint
-from tagtagtag.dump import do_dump
-from tagtagtag.edit import do_edit
-from tagtagtag.error import ReportableError
-from tagtagtag.fs import home_dir
-from tagtagtag.ids import do_ids
-from tagtagtag._import import do_import
-from tagtagtag.merge import do_merge
-from tagtagtag.scan import do_scan
-from tagtagtag.show import do_show
+from rtag.context import Context
+from rtag.cprint import cprint
+from rtag.dump import do_dump
+from rtag.edit import do_edit
+from rtag.error import ReportableError
+from rtag.fs import home_dir
+from rtag.ids import do_ids
+from rtag._import import do_import
+from rtag.merge import do_merge
+from rtag.scan import do_scan
+from rtag.show import do_show
 import os
 import sys
 
 
 def default_data_dir():
-    return home_dir() / ".tagtagtag"
+    return home_dir() / ".rtag"
 
 
 def main(cwd, argv, ctx):
@@ -36,7 +36,7 @@ def main(cwd, argv, ctx):
             default=default,
             help=f"path to data directory (default: {default})")
 
-    parser = ArgumentParser(prog="tagtagtag", description="Tag Tool")
+    parser = ArgumentParser(prog="rtag", description="Tag Tool")
 
     subparsers = parser.add_subparsers(required=True)
 

@@ -1,13 +1,13 @@
 from dataclasses import asdict, dataclass, fields
-from tagtagtag.album import Album
-from tagtagtag.artist import Artist
-from tagtagtag.constants import MUSIC_IGNORE_DIRS, MUSIC_INCLUDE_EXTS
-from tagtagtag.fs import walk_dir
-from tagtagtag.inferred_info import InferredInfo
-from tagtagtag.safe_str import make_safe_str
-from tagtagtag.track import Track
-from tagtagtag.metadata import Metadata
-from tagtagtag.metadata_db import MetadataDB
+from rtag.album import Album
+from rtag.artist import Artist
+from rtag.constants import MUSIC_IGNORE_DIRS, MUSIC_INCLUDE_EXTS
+from rtag.fs import walk_dir
+from rtag.inferred_info import InferredInfo
+from rtag.safe_str import make_safe_str
+from rtag.track import Track
+from rtag.metadata import Metadata
+from rtag.metadata_db import MetadataDB
 
 
 @dataclass

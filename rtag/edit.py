@@ -1,8 +1,8 @@
-from tagtagtag.album import Album
-from tagtagtag.artist import Artist
-from tagtagtag.metadata_db import MetadataDB
-from tagtagtag.track import Track
-from tagtagtag.ui import choose_item, edit_item
+from rtag.album import Album
+from rtag.artist import Artist
+from rtag.metadata_db import MetadataDB
+from rtag.track import Track
+from rtag.ui import choose_item, edit_item
 
 
 _PAGE_SIZE = 20

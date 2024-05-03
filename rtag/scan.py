@@ -1,8 +1,8 @@
 from colorama import Fore
-from tagtagtag.constants import MUSIC_IGNORE_DIRS, MUSIC_INCLUDE_EXTS
-from tagtagtag.cprint import cprint
-from tagtagtag.fs import walk_dir
-from tagtagtag.new_metadata import Metadata
+from rtag.constants import MUSIC_IGNORE_DIRS, MUSIC_INCLUDE_EXTS
+from rtag.cprint import cprint
+from rtag.fs import walk_dir
+from rtag.new_metadata import Metadata
 
 
 def do_scan(ctx, dir):

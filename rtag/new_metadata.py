@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from functools import cached_property, partial
-from tagtagtag.index_of_total import IndexOfTotal
+from rtag.index_of_total import IndexOfTotal
 from uuid import UUID
 
 

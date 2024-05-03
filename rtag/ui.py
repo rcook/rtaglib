@@ -1,6 +1,6 @@
 from colorama import Fore
 from dataclasses import fields, replace
-from tagtagtag.cprint import cprint
+from rtag.cprint import cprint
 
 
 _EMPTY_PLACEHOLDER = "(empty)"

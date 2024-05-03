@@ -1,7 +1,7 @@
-from tagtagtag.album import Album
-from tagtagtag.artist import Artist
-from tagtagtag.entity import Entity
-from tagtagtag.track import Track
+from rtag.album import Album
+from rtag.artist import Artist
+from rtag.entity import Entity
+from rtag.track import Track
 import sqlite3
 
 
