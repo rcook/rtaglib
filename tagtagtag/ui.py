@@ -78,6 +78,10 @@ def choose_item(items, page_size, detail_func=None):
 
 def edit_item(item):
     def show_item(item):
+        def pretty(name):
+            value = getattr(item, name)
+            return "(empty)" if value is None else str(value)
+
         name_width = 0
         for f in fields(item):
             name_width = max(name_width, len(f.name))
@@ -91,7 +95,7 @@ def edit_item(item):
                 Fore.LIGHTWHITE_EX,
                 " : ",
                 Fore.LIGHTGREEN_EX,
-                str(getattr(item, f.name)),
+                pretty(f.name),
                 sep="")
         print("-----")
 
