@@ -1,4 +1,4 @@
-from rtag.new_metadata import *
+from rtag.metadata.new_metadata import *
 
 
 class MP4Metadata(Metadata):

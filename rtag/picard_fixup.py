@@ -1,7 +1,7 @@
 from colorama import Fore
 from pathlib import Path
 from rtag.cprint import cprint
-from rtag.old_metadata import Metadata
+from rtag.metadata.old_metadata import Metadata
 import os
 
 

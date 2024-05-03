@@ -1,4 +1,4 @@
-from rtag.metadata import Metadata
+from rtag.metadata.metadata import Metadata
 from uuid import UUID, uuid4
 
 

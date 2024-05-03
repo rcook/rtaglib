@@ -1,4 +1,4 @@
-from rtag.metadata import Metadata
+from rtag.metadata.metadata import Metadata
 
 
 def do_dump(ctx, path):
