@@ -13,4 +13,8 @@ def do_list_dir(ctx, dir):
 
     for ext in sorted(exts.keys()):
         print(f"{ext}: {exts[ext][0]}")
+
+    total = sum(map(lambda x: x[0], exts.values()))
+    print(f"Total: {total}")
+
     ctx.log_info("list-dir end")
