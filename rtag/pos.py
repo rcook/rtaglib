@@ -22,6 +22,6 @@ class Pos:
     @cache
     def __str__(self):
         if self.total is None:
-            return self(self.index)
+            return str(self.index)
         else:
             return f"{self.index}/{self.total}"

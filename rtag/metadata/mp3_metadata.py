@@ -69,7 +69,7 @@ class MP3Metadata(Metadata):
 
         return value
 
-    def _get_po(self, tag_type, default=UNSPECIFIED):
+    def _get_pos(self, tag_type, default=UNSPECIFIED):
         value = self._get_raw(
             key=tag_type.__name__,
             tag_type=tag_type,

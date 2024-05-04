@@ -57,6 +57,6 @@ class WMAMetadata(Metadata):
             default=default if default is UNSPECIFIED else None)
         match value:
             case None: return default
-            case int(): return Position(index=value, total=None)
-            case str(): return Position.parse(value)
+            case int(): return Pos(index=value, total=None)
+            case str(): return Pos.parse(value)
             case _: raise NotImplementedError()
