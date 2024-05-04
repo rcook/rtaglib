@@ -1,4 +1,4 @@
-from rtag.metadata.new_metadata import *
+from rtag.metadata.metadata import *
 
 
 class WMAMetadata(Metadata):

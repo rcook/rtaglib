@@ -1,286 +1,136 @@
 from abc import ABCMeta, abstractmethod
-from copy import deepcopy
-from dataclasses import dataclass, make_dataclass
-from functools import partial
-from mutagen.easyid3 import EasyID3
-from mutagen.easymp4 import EasyMP4Tags
-from typing import Callable
-import mutagen
-import mutagen.asf
-import mutagen.easyid3
-import mutagen.easymp4
-import mutagen.flac
-import mutagen.id3
-import mutagen.mp3
+from functools import cached_property, partial
+from rtag.pos import Pos
+from uuid import UUID
 
 
-_MISSING = object()
-_ATTRS = [
-    ("artist_title", str),
-    ("album_title", str),
-    ("track_title", str),
-    ("track_disc", str),
-    ("track_number", int),
-    ("musicbrainz_artist_id", str),
-    ("musicbrainz_album_id", str),
-    ("musicbrainz_track_id", str)
-]
-
-
-@dataclass(frozen=True)
-class Key:
-    key: str
-    func: Callable
-
-
-CommonKeys = make_dataclass("CommonKeys", [
-    (attr[0], str | Key)
-    for attr in _ATTRS
-], frozen=True)
-
-
-def parse_slash_number(s):
-    return None if s is None else s.split("/", maxsplit=1)[0]
+UNSPECIFIED = object()
+ARTIST_TITLE_ATTR = "artist_title"
+ALBUM_TITLE_ATTR = "album_title"
+TRACK_TITLE_ATTR = "track_title"
+TRACK_DISC_ATTR = "track_disc"
+TRACK_NUMBER_ATTR = "track_number"
+MUSICBRAINZ_ARTIST_ID_ATTR = "musicbrainz_artist_id"
+MUSICBRAINZ_ALBUM_ID_ATTR = "musicbrainz_album_id"
+MUSICBRAINZ_TRACK_ID_ATTR = "musicbrainz_track_id"
+RCOOK_ARTIST_ID_ATTR = "rcook_artist_id"
+RCOOK_ALBUM_ID_ATTR = "rcook_album_id"
+RCOOK_TRACK_ID_ATTR = "rcook_track_id"
 
 
 class MetadataMeta(ABCMeta):
+    _TAGS = [
+        (ARTIST_TITLE_ATTR, str),
+        (ALBUM_TITLE_ATTR, str),
+        (TRACK_TITLE_ATTR, str),
+        (TRACK_DISC_ATTR, Pos.check),
+        (TRACK_NUMBER_ATTR, Pos.check),
+        (MUSICBRAINZ_ARTIST_ID_ATTR, UUID),
+        (MUSICBRAINZ_ALBUM_ID_ATTR, UUID),
+        (MUSICBRAINZ_TRACK_ID_ATTR, UUID),
+        (RCOOK_ARTIST_ID_ATTR, UUID),
+        (RCOOK_ALBUM_ID_ATTR, UUID),
+        (RCOOK_TRACK_ID_ATTR, UUID)
+    ]
+    _TO_TYPES = {tag: tag_type for tag, tag_type in _TAGS}
+
     def __new__(cls, name, bases, dct):
+        def fget(tag, self):
+            return self.get_tag(tag, default=None)
+
+        def fset(tag, self, value):
+            return self.set_tag(tag, value)
+
+        def fdel(tag, self):
+            return self.del_tag(tag)
+
         t = super().__new__(cls, name, bases, dct)
-
-        for attr in _ATTRS:
-            def get_tag(name, required_type, self):
-                key = getattr(self.__class__.COMMON_KEYS, name)
-                if isinstance(key, str):
-                    value = self._scalar(key)
-                else:
-                    value = key.func(self._scalar(key.key))
-                return None if value is None else required_type(value)
-
+        for tag, _ in cls._TAGS:
             setattr(
                 t,
-                attr[0],
-                property(partial(get_tag, attr[0], attr[1])))
-
+                tag,
+                property(partial(fget, tag), partial(fset, tag), partial(fdel, tag)))
         return t
 
 
 class Metadata(metaclass=MetadataMeta):
-    RCOOK_ARTIST_ID_KEY = "rcook_artist_id"
-    RCOOK_ALBUM_ID_KEY = "rcook_album_id"
-    RCOOK_TRACK_ID_KEY = "rcook_track_id"
-    _first_instance = True
-
-    class Accessor:
-        def __init__(self, metadata, key):
-            self._metadata = metadata
-            self._key = key
-
-        def get(self, default=_MISSING):
-            return self._metadata.get(key=self._key, default=default)
-
-        def set(self, value):
-            self._metadata.set(key=self._key, value=value)
-
-        def pop(self, default=_MISSING):
-            self._metadata.pop(key=self._key, default=default)
-
     @staticmethod
     def load(path):
-        inner = mutagen.File(path, easy=True)
-        match inner:
-            case mutagen.mp3.EasyMP3(): return ID3Metadata(path=path, inner=inner)
-            case mutagen.easymp4.EasyMP4(): return MP4Metadata(path=path, inner=inner)
-            case mutagen.flac.FLAC(): return FLACMetadata(path=path, inner=inner)
-            case mutagen.asf.ASF(): return WMAMetadata(path=path, inner=inner)
-            case _: raise NotImplementedError(f"Unsupported metadata type {type(inner)}")
+        from rtag.metadata.flac_metadata import FLACMetadata
+        from rtag.metadata.mp3_metadata import MP3Metadata
+        from rtag.metadata.mp4_metadata import MP4Metadata
+        from rtag.metadata.wma_metadata import WMAMetadata
+        import mutagen
+        import mutagen.asf
+        import mutagen.flac
+        import mutagen.mp3
+        import mutagen.mp4
 
-    @classmethod
-    @abstractmethod
-    def _init_once(cls): raise NotImplementedError()
+        m = mutagen.File(path)
+        match m:
+            case mutagen.flac.FLAC(): return FLACMetadata(m=m)
+            case mutagen.mp3.MP3(): return MP3Metadata(m=m)
+            case mutagen.mp4.MP4(): return MP4Metadata(m=m)
+            case mutagen.asf.ASF(): return WMAMetadata(m=m)
+            case _: raise NotImplementedError(f"Unsupported metadata type {type(m)}")
 
-    def __init__(self, path, inner):
-        if self.__class__._first_instance:
-            self.__class__._first_instance = False
-            self.__class__._init_once(self.__class__)
+    def __init__(self, m):
+        self._m = m
 
-        self._path = path
-        self._inner = inner
-        self._saved_tags = deepcopy(self._tags_as_dict())
-        self.rcook_artist_id = self.__class__.Accessor(
-            self,
-            self.__class__.RCOOK_ARTIST_ID_KEY)
-        self.rcook_album_id = self.__class__.Accessor(
-            self,
-            self.__class__.RCOOK_ALBUM_ID_KEY)
-        self.rcook_track_id = self.__class__.Accessor(
-            self,
-            self.__class__.RCOOK_TRACK_ID_KEY)
+    def __str__(self):
+        tags = "; ".join(
+            f"{k}={v}"
+            for k, v in
+            [
+                (tag, self.get_tag(tag, default=None))
+                for tag in sorted(self.tags)
+            ]
+            if v is not None)
+        return f"<[{self.__class__.__name__}] {tags}>"
+
+    @cached_property
+    def tags(self):
+        return [tag for tag, _ in self.__class__._TAGS]
 
     @property
-    def path(self): return self._path
-
-    @property
-    def inner(self): return self._inner
-
-    @property
-    def dirty(self):
-        return self._tags_as_dict() != self._saved_tags
-
-    @abstractmethod
-    def _tags_as_dict(self): raise NotImplementedError()
-
-    @abstractmethod
-    def _scalar(self, key): raise NotImplementedError()
+    def raw_tags(self):
+        return self._m.tags.keys()
 
     def save(self):
-        if self.dirty:
-            if len(self._inner.tags) == 0:
-                self._inner.delete()
-            else:
-                self._inner.save()
-        self._m = None
+        self._m.save()
 
     def pprint(self):
-        return self._inner.pprint()
+        return self._m.tags.pprint()
 
-    def delete(self):
-        self._inner.delete()
-        self._m = None
-
-    def get(self, key, default=_MISSING):
-        if default is _MISSING:
-            if self._inner.tags is None:
-                raise KeyError(key)
+    def get_tag(self, tag, default=UNSPECIFIED):
+        getter = getattr(self, f"_get_{tag}", None)
+        if getter is None:
+            value = self._get_tag(tag, default=default)
         else:
-            if self._inner.tags is None or key not in self._inner.tags:
-                return default
-        value = self._inner.tags[key]
-        assert isinstance(value, list) and len(value) == 1
-        return value[0]
+            value = getter(default=default)
 
-    def set(self, key, value):
-        if self._inner.tags is None:
-            self._inner.add_tags()
-        self._inner.tags[key] = value
+        tag_type = self.__class__._TO_TYPES[tag]
+        return value if value is None else tag_type(value)
 
-    def pop(self, key, default=_MISSING):
-        if default is _MISSING:
-            if self._inner.tags is None:
-                raise KeyError(key)
-            return self._inner.tags.pop(key)
+    def set_tag(self, tag, value):
+        setter = getattr(self, f"_set_{tag}", None)
+        if setter is None:
+            self._set_tag(tag, value)
         else:
-            if self._inner.tags is None:
-                return default
-            return self._inner.tags.pop(key, default)
+            setter(value)
 
+    def del_tag(self, tag):
+        deleter = getattr(self, f"_del_{tag}", None)
+        if deleter is None:
+            self._del_tag(tag)
+        else:
+            deleter()
 
-class FLACMetadata(Metadata):
-    COMMON_KEYS = CommonKeys(
-        artist_title="albumartist",
-        album_title="album",
-        track_disc="discnumber",
-        track_title="title",
-        track_number="tracknumber",
-        musicbrainz_artist_id="musicbrainz_artistid",
-        musicbrainz_album_id="musicbrainz_albumid",
-        musicbrainz_track_id="musicbrainz_trackid")
+    @abstractmethod
+    def _get_tag(self, name, default=UNSPECIFIED): raise NotImplementedError()
 
-    def _init_once(cls): pass
+    @abstractmethod
+    def _set_tag(self, name, value): raise NotImplementedError()
 
-    def _tags_as_dict(self):
-        return self._inner.tags.as_dict()
-
-    def _scalar(self, key):
-        values = self._inner.tags.get(key, None)
-        if values is None:
-            return None
-        assert isinstance(values, list) and len(values) == 1
-        value = values[0]
-        return value
-
-
-class ID3Metadata(Metadata):
-    COMMON_KEYS = CommonKeys(
-        artist_title="artist",
-        album_title="album",
-        track_title="title",
-        track_disc=Key(key="discnumber", func=parse_slash_number),
-        track_number=Key(key="tracknumber", func=parse_slash_number),
-        musicbrainz_artist_id="musicbrainz_artistid",
-        musicbrainz_album_id="musicbrainz_albumid",
-        musicbrainz_track_id="musicbrainz_trackid")
-
-    def _init_once(cls):
-        for key, id in [
-            (cls.RCOOK_ARTIST_ID_KEY, "RCOOK_ARTIST_ID"),
-            (cls.RCOOK_ALBUM_ID_KEY, "RCOOK_ALBUM_ID"),
-            (cls.RCOOK_TRACK_ID_KEY, "RCOOK_TRACK_ID"),
-        ]:
-            EasyID3.RegisterTXXXKey(key, id)
-
-    def _scalar(self, key):
-        if self._inner.tags is None or key not in self._inner.tags:
-            return None
-        values = self._inner.tags[key]
-        assert isinstance(values, list) and len(values) == 1
-        value = values[0]
-        return value
-
-    def _tags_as_dict(self):
-        return {} if self._inner.tags is None else dict(self._inner.tags)
-
-
-class MP4Metadata(Metadata):
-    COMMON_KEYS = CommonKeys(
-        artist_title="artist",
-        album_title="album",
-        track_title="title",
-        track_disc=Key(key="discnumber", func=parse_slash_number),
-        track_number=Key(key="tracknumber", func=parse_slash_number),
-        musicbrainz_artist_id="musicbrainz_artistid",
-        musicbrainz_album_id="musicbrainz_albumid",
-        musicbrainz_track_id="musicbrainz_trackid")
-
-    def _init_once(cls):
-        for key, id in [
-            (cls.RCOOK_ARTIST_ID_KEY, "RCOOK_ARTIST_ID"),
-            (cls.RCOOK_ALBUM_ID_KEY, "RCOOK_ALBUM_ID"),
-            (cls.RCOOK_TRACK_ID_KEY, "RCOOK_TRACK_ID"),
-        ]:
-            EasyMP4Tags.RegisterFreeformKey(key, id, mean="org.rcook")
-
-    def _tags_as_dict(self):
-        return dict(self._inner.tags)
-
-    def _scalar(self, key):
-        values = self._inner.tags.get(key, None)
-        if values is None:
-            return None
-        assert isinstance(values, list) and len(values) == 1
-        value = values[0]
-        return value
-
-
-class WMAMetadata(Metadata):
-    COMMON_KEYS = CommonKeys(
-        artist_title="WM/AlbumArtist",
-        album_title="WM/AlbumTitle",
-        track_title="Title",
-        track_disc=Key(key="WM/PartOfSet", func=parse_slash_number),
-        track_number="WM/TrackNumber",
-        musicbrainz_artist_id="MusicBrainz/Artist Id",
-        musicbrainz_album_id="MusicBrainz/Album Id",
-        musicbrainz_track_id="MusicBrainz/Track Id")
-
-    def _init_once(cls): pass
-
-    def _tags_as_dict(self):
-        return dict(self._inner.tags)
-
-    def _scalar(self, key):
-        values = self._inner.tags.get(key, None)
-        if values is None:
-            return None
-        assert isinstance(values, list) and len(values) == 1
-        value = values[0].value
-        return value
+    @abstractmethod
+    def _del_tag(self, name): raise NotImplementedError()

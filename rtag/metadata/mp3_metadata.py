@@ -1,6 +1,6 @@
 from functools import partial
 from mutagen.id3 import TALB, TIT2, TPE2, TPOS, TRCK, TXXX
-from rtag.metadata.new_metadata import *
+from rtag.metadata.metadata import *
 
 
 class MP3Metadata(Metadata):

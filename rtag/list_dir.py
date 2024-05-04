@@ -3,7 +3,7 @@ from dataclasses import dataclass, replace
 from rtag.collections import DictPlus
 from rtag.constants import MUSIC_IGNORE_DIRS, MUSIC_INCLUDE_EXTS
 from rtag.cprint import cprint
-from rtag.metadata.new_metadata import Metadata
+from rtag.metadata.metadata import Metadata
 from rtag.fs import walk_dir
 
 
