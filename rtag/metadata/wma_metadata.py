@@ -6,8 +6,6 @@ class WMAMetadata(Metadata):
         (ARTIST_TITLE_ATTR, "WM/AlbumArtist"),
         (ALBUM_TITLE_ATTR, "WM/AlbumTitle"),
         (TRACK_TITLE_ATTR, "Title"),
-        (TRACK_DISC_ATTR, "WM/PartOfSet"),
-        (TRACK_NUMBER_ATTR, "WM/TrackNumber"),
         (MUSICBRAINZ_ARTIST_ID_ATTR, "MusicBrainz/Artist Id"),
         (MUSICBRAINZ_ALBUM_ID_ATTR, "MusicBrainz/Album Id"),
         (MUSICBRAINZ_TRACK_ID_ATTR, "MusicBrainz/Track Id"),
@@ -18,10 +16,19 @@ class WMAMetadata(Metadata):
     KEYS = {tag: key for tag, key in MAPPINGS}
     TAGS = {key: tag for tag, key in MAPPINGS}
 
-    def _get_tag(self, tag, default=MISSING):
-        key = self.__class__.KEYS[tag]
+    def _get_tag(self, tag, default=UNSPECIFIED):
+        return self._get_raw(key=self.__class__.KEYS[tag], default=default)
 
-        if default is MISSING:
+    def _set_tag(self, tag, value):
+        key = self.__class__.KEYS[tag]
+        self._m.tags[key] = value
+
+    def _del_tag(self, tag):
+        key = self.__class__.KEYS[tag]
+        del self._m.tags[key]
+
+    def _get_raw(self, key, default=UNSPECIFIED):
+        if default is UNSPECIFIED:
             items = self._m.tags[key]
         else:
             items = self._m.tags.get(key)
@@ -38,10 +45,18 @@ class WMAMetadata(Metadata):
             assert isinstance(value, str)
             return value
 
-    def _set_tag(self, tag, value):
-        key = self.__class__.KEYS[tag]
-        self._m.tags[key] = value
+    def _get_track_disc(self, default=UNSPECIFIED):
+        return self._get_position(key="WM/PartOfSet", default=default)
 
-    def _del_tag(self, tag):
-        key = self.__class__.KEYS[tag]
-        del self._m.tags[key]
+    def _get_track_number(self, default=UNSPECIFIED):
+        return self._get_position(key="WM/TrackNumber", default=default)
+
+    def _get_position(self, key, default=UNSPECIFIED):
+        value = self._get_raw(
+            key=key,
+            default=default if default is UNSPECIFIED else None)
+        match value:
+            case None: return default
+            case int(): return Position(index=value, total=None)
+            case str(): return Position.parse(value)
+            case _: raise NotImplementedError()

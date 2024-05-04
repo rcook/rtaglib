@@ -5,11 +5,12 @@ from rtag.metadata.new_metadata import *
 
 class MP3Metadata(Metadata):
     MAPPINGS = [
-        (ARTIST_TITLE_ATTR, "TPE2", TPE2, partial(TPE2, encoding=3)),
-        (ALBUM_TITLE_ATTR, "TALB", TALB, partial(TALB, encoding=2)),
-        (TRACK_TITLE_ATTR, "TIT2", TIT2, partial(TIT2, encoding=3)),
-        (TRACK_DISC_ATTR, "TPOS", TPOS, partial(TPOS, encoding=3)),
-        (TRACK_NUMBER_ATTR, "TRCK", TRCK, partial(TRCK, encoding=3)),
+        (tag, tag_type.__name__, tag_type, partial(tag_type, encoding=3))
+        for tag, tag_type in [
+            (ARTIST_TITLE_ATTR, TPE2),
+            (ALBUM_TITLE_ATTR, TALB),
+            (TRACK_TITLE_ATTR, TIT2),
+        ]
     ] + [
         (
             tag,
@@ -32,10 +33,26 @@ class MP3Metadata(Metadata):
     }
     TAGS = {key: tag for tag, key, _, _ in MAPPINGS}
 
-    def _get_tag(self, tag, default=MISSING):
+    def _get_tag(self, tag, default=UNSPECIFIED):
         key, tag_type, _ = self.__class__.KEYS[tag]
+        return self._get_raw(key=key, tag_type=tag_type, default=default)
 
-        if default is MISSING:
+    def _set_tag(self, tag, value):
+        key, _, tag_ctor = self.__class__.KEYS[tag]
+        self._m.tags[key] = tag_ctor(text=value)
+
+    def _del_tag(self, tag):
+        key, _, _ = self.__class__.KEYS[tag]
+        del self._m.tags[key]
+
+    def _get_track_disc(self, default=UNSPECIFIED):
+        return self._get_position(tag_type=TPOS, default=default)
+
+    def _get_track_number(self, default=UNSPECIFIED):
+        return self._get_position(tag_type=TRCK, default=default)
+
+    def _get_raw(self, key, tag_type, default=UNSPECIFIED):
+        if default is UNSPECIFIED:
             item = self._m.tags[key]
         else:
             item = self._m.tags.get(key)
@@ -52,10 +69,12 @@ class MP3Metadata(Metadata):
 
         return value
 
-    def _set_tag(self, tag, value):
-        key, _, tag_ctor = self.__class__.KEYS[tag]
-        self._m.tags[key] = tag_ctor(text=value)
-
-    def _del_tag(self, tag):
-        key, _, _ = self.__class__.KEYS[tag]
-        del self._m.tags[key]
+    def _get_position(self, tag_type, default=UNSPECIFIED):
+        value = self._get_raw(
+            key=tag_type.__name__,
+            tag_type=tag_type,
+            default=default if default is UNSPECIFIED else None)
+        match value:
+            case None: return default
+            case str(): return Position.parse(value)
+            case _: raise NotImplementedError()

@@ -4,7 +4,7 @@ from rtag.position import Position
 from uuid import UUID
 
 
-MISSING = object()
+UNSPECIFIED = object()
 ARTIST_TITLE_ATTR = "artist_title"
 ALBUM_TITLE_ATTR = "album_title"
 TRACK_TITLE_ATTR = "track_title"
@@ -23,8 +23,8 @@ class MetadataMeta(ABCMeta):
         (ARTIST_TITLE_ATTR, str),
         (ALBUM_TITLE_ATTR, str),
         (TRACK_TITLE_ATTR, str),
-        (TRACK_DISC_ATTR, Position.convert),
-        (TRACK_NUMBER_ATTR, Position.convert),
+        (TRACK_DISC_ATTR, Position.check),
+        (TRACK_NUMBER_ATTR, Position.check),
         (MUSICBRAINZ_ARTIST_ID_ATTR, UUID),
         (MUSICBRAINZ_ALBUM_ID_ATTR, UUID),
         (MUSICBRAINZ_TRACK_ID_ATTR, UUID),
@@ -49,10 +49,7 @@ class MetadataMeta(ABCMeta):
             setattr(
                 t,
                 tag,
-                property(
-                    partial(fget, tag),
-                    partial(fset, tag),
-                    partial(fdel, tag)))
+                property(partial(fget, tag), partial(fset, tag), partial(fdel, tag)))
         return t
 
 
@@ -94,10 +91,15 @@ class Metadata(metaclass=MetadataMeta):
     def pprint(self):
         return self._m.tags.pprint()
 
-    def get_tag(self, tag, default=MISSING):
+    def get_tag(self, tag, default=UNSPECIFIED):
+        getter = getattr(self, f"_get_{tag}", None)
+        if getter is None:
+            value = self._get_tag(tag, default=default)
+        else:
+            value = getter(default=default)
+
         tag_type = self.__class__._TO_TYPES[tag]
-        value = self._get_tag(tag, default=default)
-        return None if value is None else tag_type(value)
+        return value if value is None else tag_type(value)
 
     def set_tag(self, tag, value):
         return self._set_tag(tag, str(value))
@@ -106,7 +108,7 @@ class Metadata(metaclass=MetadataMeta):
         return self._del_tag(tag)
 
     @abstractmethod
-    def _get_tag(self, name, default=MISSING): raise NotImplementedError()
+    def _get_tag(self, name, default=UNSPECIFIED): raise NotImplementedError()
 
     @abstractmethod
     def _set_tag(self, name, value): raise NotImplementedError()
