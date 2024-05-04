@@ -20,7 +20,7 @@ class FLACMetadata(Metadata):
         return self._get_raw(key=self.__class__.KEYS[tag], default=default)
 
     def _set_tag(self, tag, value):
-        self._set_raw(key=self.__class__.KEYS[tag], value=value)
+        self._set_raw(key=self.__class__.KEYS[tag], value=str(value))
 
     def _del_tag(self, tag):
         self._del_raw(key=self.__class__.KEYS[tag])

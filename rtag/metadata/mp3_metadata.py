@@ -39,7 +39,7 @@ class MP3Metadata(Metadata):
 
     def _set_tag(self, tag, value):
         key, _, tag_ctor = self.__class__.KEYS[tag]
-        self._set_raw(key=key, tag_ctor=tag_ctor, value=value)
+        self._set_raw(key=key, tag_ctor=tag_ctor, value=str(value))
 
     def _del_tag(self, tag):
         self._del_raw(self.__class__.KEYS[tag][0])
