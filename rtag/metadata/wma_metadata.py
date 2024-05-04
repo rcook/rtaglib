@@ -46,12 +46,12 @@ class WMAMetadata(Metadata):
             return value
 
     def _get_track_disc(self, default=UNSPECIFIED):
-        return self._get_position(key="WM/PartOfSet", default=default)
+        return self._get_pos(key="WM/PartOfSet", default=default)
 
     def _get_track_number(self, default=UNSPECIFIED):
-        return self._get_position(key="WM/TrackNumber", default=default)
+        return self._get_pos(key="WM/TrackNumber", default=default)
 
-    def _get_position(self, key, default=UNSPECIFIED):
+    def _get_pos(self, key, default=UNSPECIFIED):
         value = self._get_raw(
             key=key,
             default=default if default is UNSPECIFIED else None)
