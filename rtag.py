@@ -3,12 +3,10 @@ from colorama import Fore, just_fix_windows_console
 from pathlib import Path
 from rtag.context import Context
 from rtag.cprint import cprint
-from rtag.dump import do_dump
 from rtag.edit import do_edit
 from rtag.error import ReportableError
 from rtag.picard_fixup import do_picard_fixup
 from rtag.fs import home_dir
-from rtag.ids import do_ids
 from rtag._import import do_import
 from rtag.list_dir import do_list_dir
 from rtag.merge import do_merge
@@ -46,14 +44,6 @@ def main(cwd, argv):
             required=False,
             default=default,
             help=f"path to data directory (default: {default})")
-
-    def add_dump_command(subparsers):
-        p = make_subparser(
-            subparsers,
-            name="dump",
-            help="dump out tags for file")
-        p.set_defaults(func=lambda ctx, args: do_dump(ctx=ctx, path=args.path))
-        p.add_argument("path", metavar="PATH", type=path_type, help="path")
 
     def add_edit_command(subparsers):
         p = make_subparser(
@@ -105,14 +95,6 @@ def main(cwd, argv):
             metavar="MUSIC_DIR",
             type=path_type,
             help="path to music files")
-
-    def add_ids_command(subparsers):
-        p = make_subparser(
-            subparsers,
-            name="ids",
-            help="add IDs to file")
-        p.set_defaults(func=lambda ctx, args: do_ids(ctx=ctx, path=args.path))
-        p.add_argument("path", metavar="PATH", type=path_type, help="path")
 
     def add_list_dir_command(subparsers):
         p = make_subparser(
@@ -215,10 +197,8 @@ def main(cwd, argv):
 
     parser = ArgumentParser(prog="rtag", description="Richard's Tagging Tool")
     subparsers = parser.add_subparsers(required=True, dest="command")
-    add_dump_command(subparsers=subparsers)
     add_edit_command(subparsers=subparsers)
     add_import_command(subparsers=subparsers)
-    add_ids_command(subparsers=subparsers)
     add_list_dir_command(subparsers=subparsers)
     add_merge_command(subparsers=subparsers)
     add_picard_fixup_command(subparsers=subparsers)
