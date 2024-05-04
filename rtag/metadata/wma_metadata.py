@@ -20,12 +20,28 @@ class WMAMetadata(Metadata):
         return self._get_raw(key=self.__class__.KEYS[tag], default=default)
 
     def _set_tag(self, tag, value):
-        key = self.__class__.KEYS[tag]
-        self._m.tags[key] = value
+        self._set_raw(key=self.__class__.KEYS[tag], value=value)
 
     def _del_tag(self, tag):
-        key = self.__class__.KEYS[tag]
-        del self._m.tags[key]
+        self._del_raw(key=self.__class__.KEYS[tag])
+
+    def _get_track_disc(self, default=UNSPECIFIED):
+        return self._get_pos(key="WM/PartOfSet", default=default)
+
+    def _set_track_disc(self, value):
+        self._set_pos(key="WM/PartOfSet", value=value)
+
+    def _del_track_disc(self):
+        self._del_raw(key="WM/PartOfSet")
+
+    def _get_track_number(self, default=UNSPECIFIED):
+        return self._get_pos(key="WM/TrackNumber", default=default)
+
+    def _set_track_number(self, value):
+        self._set_pos(key="WM/TrackNumber", value=value)
+
+    def _del_track_number(self):
+        self._del_raw(key="WM/TrackNumber")
 
     def _get_raw(self, key, default=UNSPECIFIED):
         if default is UNSPECIFIED:
@@ -45,11 +61,14 @@ class WMAMetadata(Metadata):
             assert isinstance(value, str)
             return value
 
-    def _get_track_disc(self, default=UNSPECIFIED):
-        return self._get_pos(key="WM/PartOfSet", default=default)
+    def _set_raw(self, key, value):
+        self._m.tags[key] = value
 
-    def _get_track_number(self, default=UNSPECIFIED):
-        return self._get_pos(key="WM/TrackNumber", default=default)
+    def _del_raw(self, key):
+        try:
+            del self._m.tags[key]
+        except KeyError:
+            pass
 
     def _get_pos(self, key, default=UNSPECIFIED):
         value = self._get_raw(
@@ -60,3 +79,6 @@ class WMAMetadata(Metadata):
             case int(): return Pos(index=value, total=None)
             case str(): return Pos.parse(value)
             case _: raise NotImplementedError()
+
+    def _set_pos(self, key, value):
+        self._set_raw(key=key, value=str(value))

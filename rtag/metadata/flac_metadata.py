@@ -20,18 +20,40 @@ class FLACMetadata(Metadata):
         return self._get_raw(key=self.__class__.KEYS[tag], default=default)
 
     def _set_tag(self, tag, value):
-        key = self.__class__.KEYS[tag]
-        self._m.tags[key] = value
+        self._set_raw(key=self.__class__.KEYS[tag], value=value)
 
     def _del_tag(self, tag):
-        key = self.__class__.KEYS[tag]
-        del self._m.tags[key]
+        self._del_raw(key=self.__class__.KEYS[tag])
 
     def _get_track_disc(self, default=UNSPECIFIED):
-        return self._get_pos(key="disknumber", default=default)
+        assert self._get_raw(key="disknumber", default=None) is None
+        assert self._get_raw(key="totaldisks", default=None) is None
+        return self._get_pos(index_key="discnumber", total_key="totaldiscs", default=default)
+
+    def _set_track_disc(self, value):
+        assert self._get_raw(key="disknumber", default=None) is None
+        assert self._get_raw(key="totaldisks", default=None) is None
+        self._set_pos(
+            index_key="discnumber",
+            total_key="totaldiscs",
+            value=value)
+
+    def _del_track_disc(self, default=UNSPECIFIED):
+        self._del_raw(key="discnumber")
+        self._del_raw(key="totaldiscs")
 
     def _get_track_number(self, default=UNSPECIFIED):
-        return self._get_pos(key="tracknumber", default=default)
+        return self._get_pos(index_key="tracknumber", total_key="totaltracks", default=default)
+
+    def _set_track_number(self, value):
+        self._set_pos(
+            index_key="tracknumber",
+            total_key="totaltracks",
+            value=value)
+
+    def _del_track_number(self, default=UNSPECIFIED):
+        self._del_raw(key="tracknumber")
+        self._del_raw(key="totaltracks")
 
     def _get_raw(self, key, default=UNSPECIFIED):
         if default is UNSPECIFIED:
@@ -48,11 +70,31 @@ class FLACMetadata(Metadata):
 
         return value
 
-    def _get_pos(self, key, default=UNSPECIFIED):
-        value = self._get_raw(
-            key=key,
+    def _set_raw(self, key, value):
+        self._m.tags[key] = value
+
+    def _del_raw(self, key):
+        try:
+            del self._m.tags[key]
+        except KeyError:
+            pass
+
+    def _get_pos(self, index_key, total_key, default=UNSPECIFIED):
+        index_str = self._get_raw(
+            key=index_key,
             default=default if default is UNSPECIFIED else None)
-        match value:
-            case None: return default
-            case str(): return Pos.parse(value)
-            case _: raise NotImplementedError()
+        if index_str is None:
+            return default
+
+        total_str = self._get_raw(key=total_key, default=None)
+
+        index = int(index_str)
+        total = None if total_str is None else int(total_str)
+        return Pos(index=index, total=total)
+
+    def _set_pos(self, index_key, total_key, value):
+        self._set_raw(key=index_key, value=str(value.index))
+        if value.total is None:
+            self._del_raw(key=total_key)
+        else:
+            self._set_raw(key=total_key, value=str(value.total))
