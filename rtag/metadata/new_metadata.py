@@ -77,6 +77,17 @@ class Metadata(metaclass=MetadataMeta):
     def __init__(self, m):
         self._m = m
 
+    def __str__(self):
+        tags = "; ".join(
+            f"{k}={v}"
+            for k, v in
+            [
+                (tag, self.get_tag(tag, default=None))
+                for tag in sorted(self.tags)
+            ]
+            if v is not None)
+        return f"<[{self.__class__.__name__}] {tags}>"
+
     @cached_property
     def tags(self):
         return [tag for tag, _ in self.__class__._TAGS]
