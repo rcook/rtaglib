@@ -4,7 +4,7 @@ from rtag.metadata.new_metadata import *
 
 
 class MP3Metadata(Metadata):
-    _MAPPINGS = [
+    MAPPINGS = [
         (ARTIST_TITLE_ATTR, "TPE2", TPE2, partial(TPE2, encoding=3)),
         (ALBUM_TITLE_ATTR, "TALB", TALB, partial(TALB, encoding=2)),
         (TRACK_TITLE_ATTR, "TIT2", TIT2, partial(TIT2, encoding=3)),
@@ -12,12 +12,12 @@ class MP3Metadata(Metadata):
         (TRACK_NUMBER_ATTR, "TRCK", TRCK, partial(TRCK, encoding=3)),
     ] + [
         (
-            attr_name,
-            f"TXXX:{key or attr_name.upper()}",
+            tag,
+            f"TXXX:{key or tag.upper()}",
             TXXX,
-            partial(TXXX, encoding=3, desc=key or attr_name.upper())
+            partial(TXXX, encoding=3, desc=key or tag.upper())
         )
-        for attr_name, key in [
+        for tag, key in [
             (MUSICBRAINZ_ARTIST_ID_ATTR, "MusicBrainz Album Artist Id"),
             (MUSICBRAINZ_ALBUM_ID_ATTR, "MusicBrainz Album Id"),
             (MUSICBRAINZ_TRACK_ID_ATTR, "MusicBrainz Release Track Id"),
@@ -26,14 +26,14 @@ class MP3Metadata(Metadata):
             (RCOOK_TRACK_ID_ATTR, None)
         ]
     ]
-    _KEYS = {
-        name: (key, tag_type, tag_ctor)
-        for name, key, tag_type, tag_ctor in _MAPPINGS
+    KEYS = {
+        tag: (key, tag_type, tag_ctor)
+        for tag, key, tag_type, tag_ctor in MAPPINGS
     }
-    _NAMES = {key: name for name, key, _, _ in _MAPPINGS}
+    TAGS = {key: tag for tag, key, _, _ in MAPPINGS}
 
-    def get_tag(self, name, default=MISSING):
-        key, tag_type, _ = self.__class__._KEYS[name]
+    def _get_tag(self, tag, default=MISSING):
+        key, tag_type, _ = self.__class__.KEYS[tag]
 
         if default is MISSING:
             item = self._m.tags[key]
@@ -52,10 +52,10 @@ class MP3Metadata(Metadata):
 
         return value
 
-    def set_tag(self, name, value):
-        key, _, tag_ctor = self.__class__._KEYS[name]
+    def _set_tag(self, tag, value):
+        key, _, tag_ctor = self.__class__.KEYS[tag]
         self._m.tags[key] = tag_ctor(text=value)
 
-    def del_tag(self, name):
-        key, _, _ = self.__class__._KEYS[name]
+    def _del_tag(self, tag):
+        key, _, _ = self.__class__.KEYS[tag]
         del self._m.tags[key]

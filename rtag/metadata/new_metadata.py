@@ -19,7 +19,7 @@ RCOOK_TRACK_ID_ATTR = "rcook_track_id"
 
 
 class MetadataMeta(ABCMeta):
-    _ATTRS = [
+    _TAGS = [
         (ARTIST_TITLE_ATTR, str),
         (ALBUM_TITLE_ATTR, str),
         (TRACK_TITLE_ATTR, str),
@@ -32,27 +32,27 @@ class MetadataMeta(ABCMeta):
         (RCOOK_ALBUM_ID_ATTR, UUID),
         (RCOOK_TRACK_ID_ATTR, UUID)
     ]
+    _TO_TYPES = {tag: tag_type for tag, tag_type in _TAGS}
 
     def __new__(cls, name, bases, dct):
-        def fget(attr_name, attr_type, self):
-            value = self.get_tag(attr_name, default=None)
-            return None if value is None else attr_type(value)
+        def fget(tag, self):
+            return self.get_tag(tag, default=None)
 
-        def fset(attr_name, self, value):
-            return self.set_tag(attr_name, str(value))
+        def fset(tag, self, value):
+            return self.set_tag(tag, value)
 
-        def fdel(attr_name, self):
-            return self.del_tag(attr_name)
+        def fdel(tag, self):
+            return self.del_tag(tag)
 
         t = super().__new__(cls, name, bases, dct)
-        for attr_name, attr_type in cls._ATTRS:
+        for tag, _ in cls._TAGS:
             setattr(
                 t,
-                attr_name,
+                tag,
                 property(
-                    partial(fget, attr_name, attr_type),
-                    partial(fset, attr_name),
-                    partial(fdel, attr_name)))
+                    partial(fget, tag),
+                    partial(fset, tag),
+                    partial(fdel, tag)))
         return t
 
 
@@ -82,7 +82,7 @@ class Metadata(metaclass=MetadataMeta):
 
     @cached_property
     def tags(self):
-        return [attr_name for attr_name, _ in self.__class__._ATTRS]
+        return [tag for tag, _ in self.__class__._TAGS]
 
     @property
     def raw_tags(self):
@@ -94,11 +94,22 @@ class Metadata(metaclass=MetadataMeta):
     def pprint(self):
         return self._m.tags.pprint()
 
-    @abstractmethod
-    def get_tag(self, name, default=MISSING): raise NotImplementedError()
+    def get_tag(self, tag, default=MISSING):
+        tag_type = self.__class__._TO_TYPES[tag]
+        value = self._get_tag(tag, default=default)
+        return None if value is None else tag_type(value)
+
+    def set_tag(self, tag, value):
+        return self._set_tag(tag, str(value))
+
+    def del_tag(self, tag):
+        return self._del_tag(tag)
 
     @abstractmethod
-    def set_tag(self, name, value): raise NotImplementedError()
+    def _get_tag(self, name, default=MISSING): raise NotImplementedError()
 
     @abstractmethod
-    def del_tag(self, name): raise NotImplementedError()
+    def _set_tag(self, name, value): raise NotImplementedError()
+
+    @abstractmethod
+    def _del_tag(self, name): raise NotImplementedError()

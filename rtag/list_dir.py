@@ -28,7 +28,7 @@ class ExtInfo:
         return cls(ext=ext, count=0, tags=DictPlus())
 
 
-def show_tag_stats(ctx, dir):
+def show_raw_tag_stats(ctx, dir):
     exts = DictPlus()
     for p in walk_dir(dir, ignore_dirs=MUSIC_IGNORE_DIRS, include_exts=MUSIC_INCLUDE_EXTS):
         ext = p.suffix.lower()
@@ -61,7 +61,26 @@ def show_tag_stats(ctx, dir):
     print(f"Total: {total}")
 
 
+def show_tags(ctx, dir):
+    for p in walk_dir(dir, ignore_dirs=MUSIC_IGNORE_DIRS, include_exts=MUSIC_INCLUDE_EXTS):
+        m = Metadata.load(p)
+        cprint(Fore.LIGHTCYAN_EX, "/".join(p.relative_to(dir).parts))
+        for tag in m.tags:
+            value = m.get_tag(tag, default=None)
+            if value is not None:
+                cprint(
+                    Fore.LIGHTYELLOW_EX,
+                    "  ",
+                    tag.ljust(25),
+                    Fore.LIGHTWHITE_EX,
+                    ": ",
+                    Fore.LIGHTGREEN_EX,
+                    value,
+                    sep="")
+
+
 def do_list_dir(ctx, dir, mode):
     match mode:
-        case "show-tag-stats": show_tag_stats(ctx=ctx, dir=dir)
+        case "show-raw-tag-stats": show_raw_tag_stats(ctx=ctx, dir=dir)
+        case "show-tags": show_tags(ctx=ctx, dir=dir)
         case _: raise NotImplementedError(f"Unsupported mode {mode}")

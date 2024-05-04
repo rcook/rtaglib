@@ -2,7 +2,7 @@ from rtag.metadata.new_metadata import *
 
 
 class WMAMetadata(Metadata):
-    _MAPPINGS = [
+    MAPPINGS = [
         (ARTIST_TITLE_ATTR, "WM/AlbumArtist"),
         (ALBUM_TITLE_ATTR, "WM/AlbumTitle"),
         (TRACK_TITLE_ATTR, "Title"),
@@ -15,11 +15,11 @@ class WMAMetadata(Metadata):
         (RCOOK_ALBUM_ID_ATTR, "rcook_album_id"),
         (RCOOK_TRACK_ID_ATTR, "rcook_track_id")
     ]
-    _KEYS = {name: key for name, key in _MAPPINGS}
-    _NAMES = {key: name for name, key in _MAPPINGS}
+    KEYS = {tag: key for tag, key in MAPPINGS}
+    TAGS = {key: tag for tag, key in MAPPINGS}
 
-    def get_tag(self, name, default=MISSING):
-        key = self.__class__._KEYS[name]
+    def _get_tag(self, tag, default=MISSING):
+        key = self.__class__.KEYS[tag]
 
         if default is MISSING:
             items = self._m.tags[key]
@@ -38,10 +38,10 @@ class WMAMetadata(Metadata):
             assert isinstance(value, str)
             return value
 
-    def set_tag(self, name, value):
-        key = self.__class__._KEYS[name]
+    def _set_tag(self, tag, value):
+        key = self.__class__.KEYS[tag]
         self._m.tags[key] = value
 
-    def del_tag(self, name):
-        key = self.__class__._KEYS[name]
+    def _del_tag(self, tag):
+        key = self.__class__.KEYS[tag]
         del self._m.tags[key]
