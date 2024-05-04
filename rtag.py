@@ -123,7 +123,18 @@ def main(cwd, argv):
             func=lambda ctx, args:
             do_list_dir(
                 ctx=ctx,
-                dir=args.dir))
+                dir=args.dir,
+                mode=args.mode))
+        default = "show-tag-stats"
+        p.add_argument(
+            "--mode",
+            "-m",
+            dest="mode",
+            metavar="MODE",
+            choices=[default],
+            required=False,
+            default=default,
+            help=f"display mode (default: {default})")
         p.add_argument("dir", metavar="DIR", type=path_type, help="directory")
 
     def add_merge_command(subparsers):

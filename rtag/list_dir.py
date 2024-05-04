@@ -28,7 +28,7 @@ class ExtInfo:
         return cls(ext=ext, count=0, tags=DictPlus())
 
 
-def do_list_dir(ctx, dir):
+def show_tag_stats(ctx, dir):
     exts = DictPlus()
     for p in walk_dir(dir, ignore_dirs=MUSIC_IGNORE_DIRS, include_exts=MUSIC_INCLUDE_EXTS):
         ext = p.suffix.lower()
@@ -59,3 +59,9 @@ def do_list_dir(ctx, dir):
 
     total = sum(map(lambda x: x.count, exts.values()))
     print(f"Total: {total}")
+
+
+def do_list_dir(ctx, dir, mode):
+    match mode:
+        case "show-tag-stats": show_tag_stats(ctx=ctx, dir=dir)
+        case _: raise NotImplementedError(f"Unsupported mode {mode}")
