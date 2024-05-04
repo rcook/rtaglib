@@ -28,7 +28,12 @@ class FLACMetadata(Metadata):
     def _get_track_disc(self, default=UNSPECIFIED):
         assert self._get_raw(key="disknumber", default=None) is None
         assert self._get_raw(key="totaldisks", default=None) is None
-        return self._get_pos(index_key="discnumber", total_key="totaldiscs", default=default)
+        assert self._get_raw(key="disctotal", default=None) \
+            == self._get_raw(key="totaldiscs", default=None)
+        return self._get_pos(
+            index_key="discnumber",
+            total_key="totaldiscs",
+            default=default)
 
     def _set_track_disc(self, value):
         assert self._get_raw(key="disknumber", default=None) is None
@@ -43,6 +48,8 @@ class FLACMetadata(Metadata):
         self._del_raw(key="totaldiscs")
 
     def _get_track_number(self, default=UNSPECIFIED):
+        assert self._get_raw(key="tracktotal", default=None) \
+            == self._get_raw(key="totaltracks", default=None)
         return self._get_pos(index_key="tracknumber", total_key="totaltracks", default=default)
 
     def _set_track_number(self, value):

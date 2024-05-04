@@ -122,9 +122,6 @@ def show_raw_tags(ctx, dir, exclude_well_known_raw_tags=True):
         print("/".join(p.relative_to(dir).parts))
         ext_info = exts.get_or_add(ext, lambda k: ExtInfo.default(ext=k))
         ext_info.count += 1
-        # if ext == ".wma":
-        #    print(m.pprint())
-        #    exit(0)
         for tag in m.raw_tags:
             if tag not in well_known_raw_tags:
                 tag_info = ext_info.tags.get_or_add(
