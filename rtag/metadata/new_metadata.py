@@ -84,6 +84,10 @@ class Metadata(metaclass=MetadataMeta):
     def tags(self):
         return [attr_name for attr_name, _ in self.__class__._ATTRS]
 
+    @property
+    def raw_tags(self):
+        return self._m.tags.keys()
+
     def save(self):
         self._m.save()
 
