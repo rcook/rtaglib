@@ -38,9 +38,11 @@ class WMAMetadata(Metadata):
         return self._get_pos(key="WM/TrackNumber", default=default)
 
     def _set_track_number(self, value):
+        self._set_raw(key="WM/Track", value=int(value.index))
         self._set_pos(key="WM/TrackNumber", value=value)
 
     def _del_track_number(self):
+        self._del_raw(key="WM/Track")
         self._del_raw(key="WM/TrackNumber")
 
     def _get_raw(self, key, default=UNSPECIFIED):

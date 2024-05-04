@@ -7,6 +7,28 @@ from rtag.metadata.metadata import Metadata
 from rtag.fs import walk_dir
 
 
+WELL_KNOWN_RAW_TAGS = {
+    ".wma": {
+        "MusicBrainz/Album Artist Id",
+        "MusicBrainz/Album Id",
+        "MusicBrainz/Album Release Country",
+        "MusicBrainz/Album Status",
+        "MusicBrainz/Album Type",
+        "MusicBrainz/Artist Id",
+        "MusicBrainz/Release Group Id",
+        "MusicBrainz/Release Track Id",
+        "MusicBrainz/Track Id",
+        "rcook_album_id",
+        "rcook_artist_id",
+        "rcook_track_id",
+        "WM/AlbumArtist",
+        "WM/AlbumTitle",
+        "WM/PartOfSet",
+        # "WM/TrackNumber",
+    }
+}
+
+
 @dataclass(frozen=False)
 class TagInfo:
     tag: str
@@ -28,19 +50,23 @@ class ExtInfo:
         return cls(ext=ext, count=0, tags=DictPlus())
 
 
-def show_raw_tag_stats(ctx, dir):
+def show_raw_tags(ctx, dir, exclude_well_known_raw_tags=True):
     exts = DictPlus()
     for p in walk_dir(dir, ignore_dirs=MUSIC_IGNORE_DIRS, include_exts=MUSIC_INCLUDE_EXTS):
         ext = p.suffix.lower()
+        well_known_raw_tags = WELL_KNOWN_RAW_TAGS.get(ext, set()) \
+            if exclude_well_known_raw_tags \
+            else set()
         m = Metadata.load(p)
         print("/".join(p.relative_to(dir).parts))
         ext_info = exts.get_or_add(ext, lambda k: ExtInfo.default(ext=k))
         ext_info.count += 1
         for tag in m.raw_tags:
-            tag_info = ext_info.tags.get_or_add(
-                tag,
-                lambda k: TagInfo.default(tag=k))
-            tag_info.count += 1
+            if tag not in well_known_raw_tags:
+                tag_info = ext_info.tags.get_or_add(
+                    tag,
+                    lambda k: TagInfo.default(tag=k))
+                tag_info.count += 1
 
     for ext in sorted(exts.keys()):
         ext_info = exts[ext]
@@ -81,6 +107,6 @@ def show_tags(ctx, dir):
 
 def do_list_dir(ctx, dir, mode):
     match mode:
-        case "show-raw-tag-stats": show_raw_tag_stats(ctx=ctx, dir=dir)
+        case "show-raw-tags": show_raw_tags(ctx=ctx, dir=dir)
         case "show-tags": show_tags(ctx=ctx, dir=dir)
         case _: raise NotImplementedError(f"Unsupported mode {mode}")

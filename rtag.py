@@ -107,7 +107,7 @@ def main(cwd, argv):
                 ctx=ctx,
                 dir=args.dir,
                 mode=args.mode))
-        default = "show-raw-tag-stats"
+        default = "show-raw-tags"
         p.add_argument(
             "--mode",
             "-m",
