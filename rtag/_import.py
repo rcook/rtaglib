@@ -4,7 +4,7 @@ from rtag.artist import Artist
 from rtag.constants import MUSIC_IGNORE_DIRS, MUSIC_INCLUDE_EXTS
 from rtag.fs import walk_dir
 from rtag.inferred_info import InferredInfo
-from rtag.metadata.metadata import Metadata
+from rtag.metadata.new_metadata import Metadata
 from rtag.metadata_db import MetadataDB
 from rtag.safe_str import make_safe_str
 from rtag.track import Track
@@ -45,7 +45,7 @@ def do_import(ctx, data_dir, music_dir, init=False, new_ids=False):
                 result.skipped_count += 1
                 continue
 
-            if not new_ids and m.rcook_track_id.get(default=None) is not None:
+            if not new_ids and m.rcook_track_id is not None:
                 result.skipped_count += 1
                 continue
 
@@ -111,8 +111,8 @@ def process_file(ctx, result, dir, path, m, db):
         db=db,
         album_id=album.id,
         title=track_title,
-        disc=track_disc,
-        number=track_number,
+        disc=track_disc.index,
+        number=track_number.index,
         default=None)
     if track is None:
         track = create_track(
@@ -125,9 +125,9 @@ def process_file(ctx, result, dir, path, m, db):
             track_number=track_number)
         result.new_track_count += 1
 
-        m.rcook_artist_id.set(str(artist.uuid))
-        m.rcook_album_id.set(str(album.uuid))
-        m.rcook_track_id.set(str(track.uuid))
+        m.rcook_artist_id = artist.uuid
+        m.rcook_album_id = album.uuid
+        m.rcook_track_id = track.uuid
         m.save()
     else:
         result.existing_track_count += 1
@@ -141,8 +141,8 @@ def create_track(db, inferred, album, track_title, track_safe_title, track_disc,
             album_id=album.id,
             title=track_title,
             safe_title=track_safe_title,
-            disc=track_disc,
-            number=track_number)
+            disc=track_disc.index,
+            number=track_number.index)
 
     if track_number is None:
         return do_create(track_disc=inferred.track_disc, track_number=inferred.track_number)

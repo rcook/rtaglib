@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from rtag.error import ReportableError
+from rtag.pos import Pos
 from rtag.safe_str import humanize_str, make_safe_str
 import os
 import re
@@ -13,8 +14,8 @@ class InferredInfo:
     album_safe_title: str
     track_title: str
     track_safe_title: str
-    track_disc: int
-    track_number: int
+    track_disc: Pos
+    track_number: Pos
 
     _TRACK_DISC_NUMBER_RE = re.compile(
         "^(?P<disc>\\d+)\\-(?P<number>\\d+)[ \\-_](?P<rest>.+)$")
@@ -35,7 +36,7 @@ class InferredInfo:
                 track_disc = None
                 track_number = None
                 track_safe_title = s
-            return track_disc, track_number, track_safe_title.lstrip("_-. ")
+            return Pos(index=track_disc, total=None), Pos(index=track_number, total=None), track_safe_title.lstrip("_-. ")
 
         parts = rel_path.parts
         if len(parts) < 3:
