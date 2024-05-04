@@ -64,19 +64,25 @@ def show_raw_tag_stats(ctx, dir):
 def show_tags(ctx, dir):
     for p in walk_dir(dir, ignore_dirs=MUSIC_IGNORE_DIRS, include_exts=MUSIC_INCLUDE_EXTS):
         m = Metadata.load(p)
-        cprint(Fore.LIGHTCYAN_EX, "/".join(p.relative_to(dir).parts))
-        for tag in m.tags:
-            value = m.get_tag(tag, default=None)
-            if value is not None:
-                cprint(
-                    Fore.LIGHTYELLOW_EX,
-                    "  ",
-                    tag.ljust(25),
-                    Fore.LIGHTWHITE_EX,
-                    ": ",
-                    Fore.LIGHTGREEN_EX,
-                    value,
-                    sep="")
+        if p.suffix == ".mp3":
+            cprint(Fore.LIGHTCYAN_EX, "/".join(p.relative_to(dir).parts))
+            for tag in m.tags:
+                value = m.get_tag(tag, default=None)
+                if value is not None:
+                    cprint(
+                        Fore.LIGHTYELLOW_EX,
+                        "  ",
+                        tag.ljust(25),
+                        Fore.LIGHTWHITE_EX,
+                        ": ",
+                        Fore.LIGHTGREEN_EX,
+                        value,
+                        sep="")
+            from rtag.pos import Pos
+            # m.track_disc = Pos(index=1, total=3)
+            # m.save()
+            # m.save()
+            exit(0)
 
 
 def do_list_dir(ctx, dir, mode):

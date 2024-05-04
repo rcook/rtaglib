@@ -39,17 +39,28 @@ class MP3Metadata(Metadata):
 
     def _set_tag(self, tag, value):
         key, _, tag_ctor = self.__class__.KEYS[tag]
-        self._m.tags[key] = tag_ctor(text=value)
+        self._set_raw(key=key, tag_ctor=tag_ctor, value=value)
 
     def _del_tag(self, tag):
-        key, _, _ = self.__class__.KEYS[tag]
-        del self._m.tags[key]
+        self._del_raw(self.__class__.KEYS[tag][0])
 
     def _get_track_disc(self, default=UNSPECIFIED):
         return self._get_pos(tag_type=TPOS, default=default)
 
+    def _set_track_disc(self, value):
+        self._set_pos(tag_type=TPOS, value=value)
+
+    def _del_track_disc(self):
+        self._del_raw(key=TPOS.__name__)
+
     def _get_track_number(self, default=UNSPECIFIED):
         return self._get_pos(tag_type=TRCK, default=default)
+
+    def _set_track_number(self, value):
+        self._set_pos(tag_type=TRCK, value=value)
+
+    def _del_track_number(self):
+        self._del_raw(key=TRCK.__name__)
 
     def _get_raw(self, key, tag_type, default=UNSPECIFIED):
         if default is UNSPECIFIED:
@@ -69,6 +80,15 @@ class MP3Metadata(Metadata):
 
         return value
 
+    def _set_raw(self, key, tag_ctor, value):
+        self._m.tags[key] = tag_ctor(text=value)
+
+    def _del_raw(self, key):
+        try:
+            del self._m.tags[key]
+        except KeyError:
+            pass
+
     def _get_pos(self, tag_type, default=UNSPECIFIED):
         value = self._get_raw(
             key=tag_type.__name__,
@@ -78,3 +98,9 @@ class MP3Metadata(Metadata):
             case None: return default
             case str(): return Pos.parse(value)
             case _: raise NotImplementedError()
+
+    def _set_pos(self, tag_type, value):
+        self._set_raw(
+            key=tag_type.__name__,
+            tag_ctor=partial(tag_type, encoding=3),
+            value=str(value))
