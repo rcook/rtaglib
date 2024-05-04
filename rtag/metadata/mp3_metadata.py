@@ -14,17 +14,17 @@ class MP3Metadata(Metadata):
     ] + [
         (
             tag,
-            f"TXXX:{key or tag.upper()}",
+            f"TXXX:{key}",
             TXXX,
-            partial(TXXX, encoding=3, desc=key or tag.upper())
+            partial(TXXX, encoding=3, desc=key)
         )
         for tag, key in [
             (MUSICBRAINZ_ARTIST_ID_ATTR, "MusicBrainz Album Artist Id"),
             (MUSICBRAINZ_ALBUM_ID_ATTR, "MusicBrainz Album Id"),
             (MUSICBRAINZ_TRACK_ID_ATTR, "MusicBrainz Release Track Id"),
-            (RCOOK_ARTIST_ID_ATTR, None),
-            (RCOOK_ALBUM_ID_ATTR, None),
-            (RCOOK_TRACK_ID_ATTR, None)
+            (RCOOK_ARTIST_ID_ATTR, "org.rcook/ArtistId"),
+            (RCOOK_ALBUM_ID_ATTR, "org.rcook/AlbumId"),
+            (RCOOK_TRACK_ID_ATTR, "org.rcook/TrackId")
         ]
     ]
     KEYS = {

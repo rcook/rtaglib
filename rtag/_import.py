@@ -128,6 +128,9 @@ def process_file(ctx, result, dir, path, m, db):
         m.rcook_artist_id = artist.uuid
         m.rcook_album_id = album.uuid
         m.rcook_track_id = track.uuid
+        # del m.rcook_artist_id
+        # del m.rcook_album_id
+        # del m.rcook_track_id
         m.save()
     else:
         result.existing_track_count += 1

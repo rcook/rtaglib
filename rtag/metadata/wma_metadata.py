@@ -9,9 +9,9 @@ class WMAMetadata(Metadata):
         (MUSICBRAINZ_ARTIST_ID_ATTR, "MusicBrainz/Artist Id"),
         (MUSICBRAINZ_ALBUM_ID_ATTR, "MusicBrainz/Album Id"),
         (MUSICBRAINZ_TRACK_ID_ATTR, "MusicBrainz/Track Id"),
-        (RCOOK_ARTIST_ID_ATTR, "rcook_artist_id"),
-        (RCOOK_ALBUM_ID_ATTR, "rcook_album_id"),
-        (RCOOK_TRACK_ID_ATTR, "rcook_track_id")
+        (RCOOK_ARTIST_ID_ATTR, "org.rcook/ArtistId"),
+        (RCOOK_ALBUM_ID_ATTR, "org.rcook/AlbumId"),
+        (RCOOK_TRACK_ID_ATTR, "org.rcook/TrackId")
     ]
     KEYS = {tag: key for tag, key in MAPPINGS}
     TAGS = {key: tag for tag, key in MAPPINGS}

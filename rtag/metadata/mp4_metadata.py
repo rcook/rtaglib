@@ -10,8 +10,12 @@ class MP4Metadata(Metadata):
         (MUSICBRAINZ_ALBUM_ID_ATTR, "musicbrainz_albumid"),
         (MUSICBRAINZ_TRACK_ID_ATTR, "musicbrainz_trackid")
     ] + [
-        (attr, f"----:org.rcook:{attr.upper()}")
-        for attr in [RCOOK_ARTIST_ID_ATTR, RCOOK_ALBUM_ID_ATTR, RCOOK_TRACK_ID_ATTR]
+        (tag, f"----:org.rcook:{label}")
+        for tag, label in [
+            (RCOOK_ARTIST_ID_ATTR, "ArtistId"),
+            (RCOOK_ALBUM_ID_ATTR, "AlbumId"),
+            (RCOOK_TRACK_ID_ATTR, "TrackId"),
+        ]
     ]
     KEYS = {tag: key for tag, key in MAPPINGS}
     TAGS = {key: tag for tag, key in MAPPINGS}
