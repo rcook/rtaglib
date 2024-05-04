@@ -46,10 +46,10 @@ class MP3Metadata(Metadata):
         del self._m.tags[key]
 
     def _get_track_disc(self, default=UNSPECIFIED):
-        return self._get_position(tag_type=TPOS, default=default)
+        return self._get_pos(tag_type=TPOS, default=default)
 
     def _get_track_number(self, default=UNSPECIFIED):
-        return self._get_position(tag_type=TRCK, default=default)
+        return self._get_pos(tag_type=TRCK, default=default)
 
     def _get_raw(self, key, tag_type, default=UNSPECIFIED):
         if default is UNSPECIFIED:
@@ -69,12 +69,12 @@ class MP3Metadata(Metadata):
 
         return value
 
-    def _get_position(self, tag_type, default=UNSPECIFIED):
+    def _get_po(self, tag_type, default=UNSPECIFIED):
         value = self._get_raw(
             key=tag_type.__name__,
             tag_type=tag_type,
             default=default if default is UNSPECIFIED else None)
         match value:
             case None: return default
-            case str(): return Position.parse(value)
+            case str(): return Pos.parse(value)
             case _: raise NotImplementedError()

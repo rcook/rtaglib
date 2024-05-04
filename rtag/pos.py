@@ -1,9 +1,10 @@
 from dataclasses import dataclass
+from functools import cache
 
 
 @dataclass(frozen=True)
-class Position:
-    index: int | None
+class Pos:
+    index: int
     total: int | None
 
     @classmethod
@@ -17,3 +18,10 @@ class Position:
             case [index_str]: return cls(index=int(index_str), total=None)
             case [index_str, total_str]: return cls(index=int(index_str), total=int(total_str))
             case _: raise NotImplementedError()
+
+    @cache
+    def __str__(self):
+        if self.total is None:
+            return self(self.index)
+        else:
+            return f"{self.index}/{self.total}"

@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from functools import cached_property, partial
-from rtag.position import Position
+from rtag.pos import Pos
 from uuid import UUID
 
 
@@ -23,8 +23,8 @@ class MetadataMeta(ABCMeta):
         (ARTIST_TITLE_ATTR, str),
         (ALBUM_TITLE_ATTR, str),
         (TRACK_TITLE_ATTR, str),
-        (TRACK_DISC_ATTR, Position.check),
-        (TRACK_NUMBER_ATTR, Position.check),
+        (TRACK_DISC_ATTR, Pos.check),
+        (TRACK_NUMBER_ATTR, Pos.check),
         (MUSICBRAINZ_ARTIST_ID_ATTR, UUID),
         (MUSICBRAINZ_ALBUM_ID_ATTR, UUID),
         (MUSICBRAINZ_TRACK_ID_ATTR, UUID),
@@ -113,10 +113,18 @@ class Metadata(metaclass=MetadataMeta):
         return value if value is None else tag_type(value)
 
     def set_tag(self, tag, value):
-        return self._set_tag(tag, str(value))
+        setter = getattr(self, f"_set_{tag}", None)
+        if setter is None:
+            self._set_tag(tag, value)
+        else:
+            setter(value)
 
     def del_tag(self, tag):
-        return self._del_tag(tag)
+        deleter = getattr(self, f"_del_{tag}", None)
+        if deleter is None:
+            self._del_tag(tag)
+        else:
+            deleter()
 
     @abstractmethod
     def _get_tag(self, name, default=UNSPECIFIED): raise NotImplementedError()

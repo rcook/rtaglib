@@ -1,5 +1,5 @@
 from colorama import Fore
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from rtag.collections import DictPlus
 from rtag.constants import MUSIC_IGNORE_DIRS, MUSIC_INCLUDE_EXTS
 from rtag.cprint import cprint
