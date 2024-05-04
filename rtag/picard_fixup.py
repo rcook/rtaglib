@@ -1,34 +1,35 @@
 from colorama import Fore
 from pathlib import Path
 from rtag.cprint import cprint
-from rtag.metadata.old_metadata import Metadata
+from rtag.metadata.new_metadata import Metadata
 import os
 
 
 def do_picard_fixup(ctx):
     def perform_fixup(path):
-        metadata = Metadata.from_file(path)
-        if not metadata.has_musicbrainz_metadata:
+        m = Metadata.load(path)
+        if m.musicbrainz_album_id is None:
             return False
 
-        fixup = ctx.config.fixups_by_album_id.get(metadata.album_id)
+        fixup = ctx.config.fixups_by_album_id.get(m.m.musicbrainz_album_id)
         if not fixup:
             return False
 
         if ctx.dry_run:
             cprint(
                 Fore.LIGHTYELLOW_EX,
-                f"Skipping {metadata.album_title} in dry-run mode")
+                f"Skipping {m.album_title} in dry-run mode")
             return True
 
         fixed_up = False
 
-        if metadata.album_title != fixup.album_title_tag_override:
+        if m.album_title != fixup.album_title_tag_override:
             fixed_up = True
             cprint(
                 Fore.LIGHTYELLOW_EX,
-                f"Fixing album tag from {metadata.album_title} -> {fixup.album_title_tag_override}")
-            metadata.set_album_title(fixup.album_title_tag_override)
+                f"Fixing album tag from {m.album_title} -> {fixup.album_title_tag_override}")
+            m.album_title = fixup.album_title_tag_override
+            m.save()
 
         if path.parent.name != fixup.dir:
             fixed_up = True
