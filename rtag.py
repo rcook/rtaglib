@@ -10,12 +10,12 @@ from rtag.fs import home_dir
 from rtag._import import do_import
 from rtag.merge import do_merge
 from rtag.retag import do_retag
-from rtag.show import do_show
 from rtag.show_raw_tags import do_show_raw_tags
 from rtag.show_tags import do_show_tags
 import os
 import rtag.delete
 import rtag.edit
+import rtag.show
 import sys
 
 
@@ -157,18 +157,25 @@ def main(cwd, argv):
         add_dry_run_arg(parser=p)
 
     def add_show_command(subparsers):
+        def invoke(subcommand, ctx, args):
+            func = getattr(
+                rtag.show,
+                f"do_show_{subcommand.replace('-', '_')}")
+            return func(ctx=ctx)
+
         p = make_subparser(
             subparsers,
             name="show",
             help="show data from local metadata database")
-        p.set_defaults(
-            func=lambda ctx, args:
-            do_show(ctx=ctx, mode=args.mode))
-        add_common_args(parser=p)
-        p.add_argument(
-            "mode",
-            choices=["album-tracks"],
-            help="show artist, album or track")
+        subparsers0 = p.add_subparsers(required=True, dest="subcommand")
+
+        for subcommand in ["artist", "album", "track", "album-tracks"]:
+            p0 = make_subparser(
+                subparsers0,
+                name=subcommand,
+                help=f"edit {subcommand} in local metadata database")
+            p0.set_defaults(func=partial(invoke, subcommand))
+            add_common_args(parser=p0)
 
     def add_show_raw_tags_command(subparsers):
         p = make_subparser(
