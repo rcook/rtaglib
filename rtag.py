@@ -46,6 +46,16 @@ def main(cwd, argv):
             default=default,
             help=f"path to data directory (default: {default})")
 
+    def add_dry_run_arg(parser):
+        default = True
+        parser.add_argument(
+            "--dry-run",
+            dest="dry_run",
+            action=BooleanOptionalAction,
+            default=default,
+            required=False,
+            help=f"dry run (default: {default})")
+
     def add_edit_command(subparsers):
         p = make_subparser(
             subparsers,
@@ -133,13 +143,7 @@ def main(cwd, argv):
                 required=True,
                 help="path to configuration file")
 
-        p.add_argument(
-            "--dry-run",
-            dest="dry_run",
-            action=BooleanOptionalAction,
-            default=True,
-            required=False,
-            help="dry run (default: True)")
+        add_dry_run_arg(p)
 
     def add_retag_command(subparsers):
         p = make_subparser(
@@ -150,10 +154,12 @@ def main(cwd, argv):
             func=lambda ctx, args:
             do_retag(
                 ctx=ctx,
+                dry_run=args.dry_run,
                 input_dir=args.input_dir,
                 music_dir=args.music_dir,
                 misc_dir=args.misc_dir))
         add_common_args(parser=p)
+        add_dry_run_arg(parser=p)
         p.add_argument(
             "input_dir",
             metavar="INPUT_DIR",

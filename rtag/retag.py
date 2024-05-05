@@ -11,20 +11,26 @@ from rtag.track import Track
 from time import sleep
 
 
-def move_file(source_path, target_path):
-    target_path.parent.mkdir(parents=True, exist_ok=True)
-    source_path.rename(target_path)
-    d = source_path.parent
-    if len(list(d.iterdir())) == 0:
-        for i in range(0, 3):
-            try:
-                d.rmdir()
-                return
-            except PermissionError:
-                sleep(0.1)
+def move_file(ctx, dry_run, source_path, target_path):
+    if dry_run:
+        ctx.log_info(f"Would move {source_path} to {target_path}")
+    else:
+        target_path.parent.mkdir(parents=True, exist_ok=True)
+        source_path.rename(target_path)
+        ctx.log_info(f"Moved {source_path} to {target_path}")
+
+        d = source_path.parent
+        if len(list(d.iterdir())) == 0:
+            for i in range(0, 3):
+                try:
+                    d.rmdir()
+                    return
+                except PermissionError:
+                    sleep(0.1)
+            ctx.log_info(f"Removed directory {d}")
 
 
-def do_retag(ctx, input_dir, music_dir, misc_dir):
+def do_retag(ctx, dry_run, input_dir, music_dir, misc_dir):
     with ctx.open_db() as db:
         for p in walk_dir(input_dir, include_exts=MUSIC_INCLUDE_EXTS, ignore_dirs=MUSIC_IGNORE_DIRS):
             rel_path = p.relative_to(input_dir)
@@ -35,7 +41,11 @@ def do_retag(ctx, input_dir, music_dir, misc_dir):
 
             if m.musicbrainz_track_id is not None:
                 target_path = music_dir / rel_path
-                move_file(p, target_path)
+                move_file(
+                    ctx=ctx,
+                    dry_run=dry_run,
+                    source_path=p,
+                    target_path=target_path)
                 continue
 
             artist = Artist.get_by_uuid(db=db, uuid=m.rcook_artist_id)
@@ -86,6 +96,11 @@ def do_retag(ctx, input_dir, music_dir, misc_dir):
 
             target_path = misc_dir / artist_part / album_part / track_part
 
-            move_file(p, target_path)
+            move_file(
+                ctx=ctx,
+                dry_run=dry_run,
+                source_path=p,
+                target_path=target_path)
 
-            # m.save()
+            if not dry_run:
+                m.save()
