@@ -14,33 +14,32 @@ import subprocess
 
 
 def move_file(ctx, db, dry_run, source_path, target_path):
+    def remove_dir_if_empty(dir):
+        if len(list(dir.iterdir())) == 0:
+            for i in range(0, 3):
+                try:
+                    dir.rmdir()
+                    return
+                except PermissionError:
+                    sleep(0.5)
+
+            if dir.is_dir():
+                subprocess.run(["rd", "/s", "/q", str(dir)], shell=True)
+
+            if dir.is_dir():
+                ctx.log_warn(
+                    f"Could not remove directory "
+                    f"{dir} (probably locked by another process)")
+            else:
+                ctx.log_info(f"Removed directory {dir}")
+
     if dry_run:
         ctx.log_info(f"Would move {source_path} to {target_path}")
     else:
         target_path.parent.mkdir(parents=True, exist_ok=True)
         source_path.rename(target_path)
         ctx.log_info(f"Moved {source_path} to {target_path}")
-
-        d = source_path.parent
-        if len(list(d.iterdir())) > 0:
-            return
-
-        for i in range(0, 3):
-            try:
-                d.rmdir()
-                return
-            except PermissionError:
-                sleep(0.5)
-
-        if d.is_dir():
-            subprocess.run(["rd", "/s", "/q", str(d)], shell=True)
-
-        if d.is_dir():
-            ctx.log_warn(
-                f"Could not remove directory "
-                f"{d} (probably locked by another process)")
-        else:
-            ctx.log_info(f"Removed directory {d}")
+        remove_dir_if_empty(dir=source_path.parent)
 
     cursor = db.cursor()
     cursor.execute(
@@ -50,12 +49,12 @@ def move_file(ctx, db, dry_run, source_path, target_path):
         WHERE path = ?
         """,
         (str(target_path), str(source_path), ))
-    match cursor.rowcount:
-        case 0: raise RuntimeError(f"Metadata DB contains no entry for \"{source_path}\"")
-        case 1: pass
-        case _: raise RuntimeError(f"Metadata DB contains multiple entries for \"{source_path}\"")
+    if cursor.rowcount != 1:
+        raise RuntimeError(
+            f"Failed to update file entry for \"{source_path}\"")
     if not dry_run:
         db.commit()
+
 
 def do_retag(ctx, dry_run):
     with ctx.open_db() as db:
