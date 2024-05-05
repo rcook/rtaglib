@@ -27,6 +27,8 @@ def move_file(ctx, dry_run, source_path, target_path):
                     return
                 except PermissionError:
                     sleep(0.1)
+            if d.is_dir():
+                raise RuntimeError(f"Could not remove directory {d}")
             ctx.log_info(f"Removed directory {d}")
 
 
