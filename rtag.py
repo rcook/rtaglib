@@ -4,7 +4,6 @@ from functools import partial
 from pathlib import Path
 from rtag.context import Context
 from rtag.cprint import cprint
-from rtag.delete import do_delete_track
 from rtag.error import ReportableError, UserCancelledError
 from rtag.picard_fixup import do_picard_fixup
 from rtag.fs import home_dir
@@ -15,6 +14,7 @@ from rtag.show import do_show
 from rtag.show_raw_tags import do_show_raw_tags
 from rtag.show_tags import do_show_tags
 import os
+import rtag.delete
 import rtag.edit
 import sys
 
@@ -59,20 +59,25 @@ def main(cwd, argv):
             help=f"dry run (default: {default})")
 
     def add_delete_command(subparsers):
+        def invoke(subcommand, ctx, args):
+            func = getattr(
+                rtag.delete,
+                f"do_delete_{subcommand.replace('-', '_')}")
+            return func(ctx=ctx)
+
         p = make_subparser(
             subparsers,
             name="delete",
             help="delete items from local metadata database")
         subparsers0 = p.add_subparsers(required=True, dest="subcommand")
 
-        p0 = make_subparser(
-            subparsers0,
-            name="track",
-            help="delete track from local metadata database")
-        p0.set_defaults(
-            func=lambda ctx, args:
-            do_delete_track(ctx=ctx))
-        add_common_args(parser=p0)
+        for subcommand in ["artist", "album", "track"]:
+            p0 = make_subparser(
+                subparsers0,
+                name=subcommand,
+                help=f"delete {subcommand} from local metadata database")
+            p0.set_defaults(func=partial(invoke, subcommand))
+            add_common_args(parser=p0)
 
     def add_edit_command(subparsers):
         def invoke(subcommand, ctx, args):
