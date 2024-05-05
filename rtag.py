@@ -1,10 +1,10 @@
 from argparse import ArgumentParser, BooleanOptionalAction
 from colorama import Fore, just_fix_windows_console
+from functools import partial
 from pathlib import Path
 from rtag.context import Context
 from rtag.cprint import cprint
 from rtag.delete import do_delete_track
-from rtag.edit import do_edit
 from rtag.error import ReportableError
 from rtag.picard_fixup import do_picard_fixup
 from rtag.fs import home_dir
@@ -15,6 +15,7 @@ from rtag.show import do_show
 from rtag.show_raw_tags import do_show_raw_tags
 from rtag.show_tags import do_show_tags
 import os
+import rtag.edit
 import sys
 
 
@@ -63,6 +64,7 @@ def main(cwd, argv):
             name="delete",
             help="delete items from local metadata database")
         subparsers0 = p.add_subparsers(required=True, dest="subcommand")
+
         p0 = make_subparser(
             subparsers0,
             name="track",
@@ -73,18 +75,24 @@ def main(cwd, argv):
         add_common_args(parser=p0)
 
     def add_edit_command(subparsers):
+        def invoke(subcommand, ctx, args):
+            return getattr(
+                rtag.edit,
+                f"do_edit_{subcommand.replace('-', '_')}")(ctx=ctx)
+
         p = make_subparser(
             subparsers,
             name="edit",
             help="edit data in local metadata database")
-        p.set_defaults(
-            func=lambda ctx, args:
-            do_edit(ctx=ctx, mode=args.mode))
-        add_common_args(parser=p)
-        p.add_argument(
-            "mode",
-            choices=["artist", "album", "track", "album-tracks"],
-            help="edit artist, album or track")
+        subparsers0 = p.add_subparsers(required=True, dest="subcommand")
+
+        for subcommand in ["artist", "album", "track", "album-tracks"]:
+            p0 = make_subparser(
+                subparsers0,
+                name=subcommand,
+                help=f"edit {subcommand} in local metadata database")
+            p0.set_defaults(func=partial(invoke, subcommand))
+            add_common_args(parser=p0)
 
     def add_import_command(subparsers):
         p = make_subparser(

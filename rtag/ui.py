@@ -12,6 +12,14 @@ _EDIT_VALUE_PROMPT = f"[Type new value, empty to leave unchanged, " \
     f"{_EMPTY_PLACEHOLDER} to set to NULL or (Q) to quit]"
 
 
+def banner(s):
+    width = len(s.upper())
+    line = "-" * width
+    cprint(Fore.LIGHTMAGENTA_EX, line)
+    cprint(Fore.LIGHTMAGENTA_EX, s.upper())
+    cprint(Fore.LIGHTMAGENTA_EX, line)
+
+
 def choose_item(items, page_size, detail_func=None):
     item_count = len(items)
     page_count = item_count // page_size
