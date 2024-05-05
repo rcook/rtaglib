@@ -208,7 +208,7 @@ class Album(Entity):
         row = cursor.fetchone()
         match row:
             case (None,): return 1
-            case (int(count), ): return count
+            case (int(total), ): return total
             case _: raise NotImplementedError()
 
     def get_track_total(self, db):
@@ -222,5 +222,7 @@ class Album(Entity):
             """,
             (str(self.uuid), ))
         row = cursor.fetchone()
-        assert row is not None and isinstance(row[0], int)
-        return row[0]
+        match row:
+            case (None,): return None
+            case (int(total), ): return total
+            case _: raise NotImplementedError()
