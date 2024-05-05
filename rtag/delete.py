@@ -7,9 +7,6 @@ def do_delete_track(ctx):
 
     with ctx.open_db() as db:
         track = select_track(db=db)
-        if track is None or not track:
-            return track
-
         file = File.get_by_track_id(db=db, track_id=track.id)
         show_item(track)
         show_item(file)
