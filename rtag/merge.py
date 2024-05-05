@@ -3,16 +3,14 @@ from rtag.album import Album
 from rtag.artist import Artist
 from rtag.collections import DictPlus
 from rtag.cprint import cprint
-from rtag.metadata_db import MetadataDB
 from rtag.ui import choose_item
 
 
 _PAGE_SIZE = 20
 
 
-def do_merge(ctx, data_dir, mode):
-    db_path = data_dir / "metadata.db"
-    with MetadataDB(db_path) as db:
+def do_merge(ctx,  mode):
+    with ctx.open_db() as db:
         match mode:
             case "artists": result = do_merge_artists(ctx=ctx, db=db)
             case "albums": result = do_merge_albums(ctx=ctx, db=db)

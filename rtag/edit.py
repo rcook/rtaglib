@@ -1,6 +1,5 @@
 from rtag.album import Album
 from rtag.artist import Artist
-from rtag.metadata_db import MetadataDB
 from rtag.track import Track
 from rtag.ui import choose_item, edit_item
 
@@ -8,9 +7,8 @@ from rtag.ui import choose_item, edit_item
 _PAGE_SIZE = 20
 
 
-def do_edit(ctx, data_dir, mode):
-    db_path = data_dir / "metadata.db"
-    with MetadataDB(db_path) as db:
+def do_edit(ctx, mode):
+    with ctx.open_db() as db:
         while True:
             match mode:
                 case "artist": result = do_edit_artist(ctx=ctx, db=db)

@@ -1,6 +1,7 @@
 from contextlib import contextmanager
 from functools import cache, cached_property, partialmethod
 from rtag.config import Config
+from rtag.metadata_db import MetadataDB
 from time import perf_counter
 import inspect
 import logging
@@ -28,6 +29,12 @@ class Context(metaclass=ContextMeta):
     def __init__(self, args, log_level=logging.DEBUG):
         self._args = args
         self._log_level = log_level
+
+    def open_db(self, init=False):
+        db_path = self._args.data_dir / "metadata.db"
+        if init and db_path.is_file():
+            db_path.unlink()
+        return MetadataDB(db_path=db_path)
 
     @cached_property
     def config(self):

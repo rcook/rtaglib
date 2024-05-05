@@ -26,17 +26,9 @@ class DBResult:
         return cls(**{f.name: 0 for f in fields(cls)})
 
 
-def do_import(ctx, data_dir, music_dir, init=False, new_ids=False):
-    db_path = data_dir / "metadata.db"
-    ctx.log_debug("do_import begin")
-    ctx.log_debug(f"db_path={db_path}")
-
-    if init and db_path.is_file():
-        db_path.unlink()
-
+def do_import(ctx, music_dir, init=False, new_ids=False):
     result = DBResult.default()
-
-    with MetadataDB(db_path) as db:
+    with ctx.open_db(init=init) as db:
         for p in walk_dir(music_dir, include_exts=MUSIC_INCLUDE_EXTS, ignore_dirs=MUSIC_IGNORE_DIRS):
             result.total += 1
             m = Metadata.load(p)
@@ -59,8 +51,6 @@ def do_import(ctx, data_dir, music_dir, init=False, new_ids=False):
 
     for k, v in asdict(result).items():
         ctx.log_info(f"{k}={v}")
-
-    ctx.log_debug("do_import end")
 
 
 def process_file(ctx, result, dir, path, m, db):

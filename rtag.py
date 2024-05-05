@@ -9,6 +9,7 @@ from rtag.picard_fixup import do_picard_fixup
 from rtag.fs import home_dir
 from rtag._import import do_import
 from rtag.merge import do_merge
+from rtag.retag import do_retag
 from rtag.show import do_show
 from rtag.show_raw_tags import do_show_raw_tags
 from rtag.show_tags import do_show_tags
@@ -52,10 +53,7 @@ def main(cwd, argv):
             help="edit data in local metadata database")
         p.set_defaults(
             func=lambda ctx, args:
-            do_edit(
-                ctx=ctx,
-                data_dir=args.data_dir,
-                mode=args.mode))
+            do_edit(ctx=ctx, mode=args.mode))
         add_common_args(parser=p)
         p.add_argument(
             "mode",
@@ -71,7 +69,6 @@ def main(cwd, argv):
             func=lambda ctx, args:
             do_import(
                 ctx=ctx,
-                data_dir=args.data_dir,
                 music_dir=args.music_dir,
                 init=args.init,
                 new_ids=args.new_ids))
@@ -103,10 +100,7 @@ def main(cwd, argv):
             help="merge artists or albums in local metadata database")
         p.set_defaults(
             func=lambda ctx, args:
-            do_merge(
-                ctx=ctx,
-                data_dir=args.data_dir,
-                mode=args.mode))
+            do_merge(ctx=ctx, mode=args.mode))
         add_common_args(parser=p)
         p.add_argument(
             "mode",
@@ -147,6 +141,17 @@ def main(cwd, argv):
             required=False,
             help="dry run (default: True)")
 
+    def add_retag_command(subparsers):
+        p = make_subparser(
+            subparsers,
+            name="retag",
+            help="retag and move files based on local metadata database")
+        p.set_defaults(
+            func=lambda ctx, args:
+            do_retag(ctx=ctx, dir=args.dir))
+        add_common_args(parser=p)
+        p.add_argument("dir", metavar="DIR", type=path_type, help="directory")
+
     def add_show_command(subparsers):
         p = make_subparser(
             subparsers,
@@ -154,7 +159,7 @@ def main(cwd, argv):
             help="show data from local metadata database")
         p.set_defaults(
             func=lambda ctx, args:
-            do_show(ctx=ctx, data_dir=args.data_dir, mode=args.mode))
+            do_show(ctx=ctx, mode=args.mode))
         add_common_args(parser=p)
         p.add_argument(
             "mode",
@@ -188,6 +193,7 @@ def main(cwd, argv):
     add_import_command(subparsers=subparsers)
     add_merge_command(subparsers=subparsers)
     add_picard_fixup_command(subparsers=subparsers)
+    add_retag_command(subparsers=subparsers)
     add_show_command(subparsers=subparsers)
     add_show_raw_tags_command(subparsers=subparsers)
     add_show_tags_command(subparsers=subparsers)
