@@ -23,7 +23,7 @@ def default_data_dir():
 
 def main(cwd, argv):
     def path_type(s):
-        return Path(cwd, s).resolve()
+        return Path(cwd, Path(s).expanduser()).resolve()
 
     def make_subparser(subparsers, *args, name, help, description=None, **kwargs):
         if description is None:
@@ -148,9 +148,27 @@ def main(cwd, argv):
             help="retag and move files based on local metadata database")
         p.set_defaults(
             func=lambda ctx, args:
-            do_retag(ctx=ctx, dir=args.dir))
+            do_retag(
+                ctx=ctx,
+                input_dir=args.input_dir,
+                music_dir=args.music_dir,
+                misc_dir=args.misc_dir))
         add_common_args(parser=p)
-        p.add_argument("dir", metavar="DIR", type=path_type, help="directory")
+        p.add_argument(
+            "input_dir",
+            metavar="INPUT_DIR",
+            type=path_type,
+            help="input directory")
+        p.add_argument(
+            "music_dir",
+            metavar="MUSIC_DIR",
+            type=path_type,
+            help="music output directory")
+        p.add_argument(
+            "misc_dir",
+            metavar="MISC_DIR",
+            type=path_type,
+            help="miscellaneous output directory")
 
     def add_show_command(subparsers):
         p = make_subparser(
