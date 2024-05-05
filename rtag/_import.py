@@ -57,7 +57,7 @@ def do_import(ctx, dir, init=False):
 
 
 def process_file(ctx, result, path, rel_path, m, db):
-    inferred = InferredInfo.parse(rel_path)
+    inferred = InferredInfo.parse(path=path)
 
     def get_titles(key):
         temp = getattr(m, key)

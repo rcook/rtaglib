@@ -22,7 +22,7 @@ class InferredInfo:
     _TRACK_NUMBER_RE = re.compile("^(?P<number>\\d+)[ \\-_](?P<rest>.+)$")
 
     @classmethod
-    def parse(cls, rel_path):
+    def parse(cls, path):
         def strip_track_disc_number(s):
             if m := cls._TRACK_DISC_NUMBER_RE.match(s):
                 track_disc = int(m.group("disc"))
@@ -38,12 +38,12 @@ class InferredInfo:
                 track_safe_title = s
             return Pos(index=track_disc, total=None), Pos(index=track_number, total=None), track_safe_title.lstrip("_-. ")
 
-        parts = rel_path.parts
-        if len(parts) < 3:
+        parts = path.parts[-3:]
+        if len(parts) != 3:
             raise ReportableError(
-                f"File path \"{rel_path}\" does not match expected structure")
+                f"File path \"{path}\" does not match expected structure")
 
-        artist_safe_title, album_safe_title, file_name = parts[-3:]
+        artist_safe_title, album_safe_title, file_name = parts
         base_file_name, _ = os.path.splitext(file_name)
         track_disc, track_number, track_safe_title = \
             strip_track_disc_number(base_file_name)
