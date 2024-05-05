@@ -16,15 +16,6 @@ import subprocess
 def move_file(ctx, db, dry_run, source_path, target_path):
     if dry_run:
         ctx.log_info(f"Would move {source_path} to {target_path}")
-        cursor = db.cursor()
-        cursor.execute(
-            """
-            SELECT * FROM files
-            WHERE path = ?
-            """,
-            source_path)
-        for row in cursor.fetchall():
-            print(row)
     else:
         target_path.parent.mkdir(parents=True, exist_ok=True)
         source_path.rename(target_path)
@@ -51,25 +42,35 @@ def move_file(ctx, db, dry_run, source_path, target_path):
         else:
             ctx.log_info(f"Removed directory {d}")
 
+    cursor = db.cursor()
+    cursor.execute(
+        """
+        UPDATE files
+        SET path = ?
+        WHERE path = ?
+        """,
+        (str(target_path), str(source_path), ))
+    match cursor.rowcount:
+        case 0: raise RuntimeError(f"Metadata DB contains no entry for \"{source_path}\"")
+        case 1: pass
+        case _: raise RuntimeError(f"Metadata DB contains multiple entries for \"{source_path}\"")
+    if not dry_run:
+        db.commit()
 
 def do_retag(ctx, dry_run):
     with ctx.open_db() as db:
         for file in File.list(db=db):
-            print(file.path)
-        return
-        for p in walk_dir(input_dir, include_exts=MUSIC_INCLUDE_EXTS, ignore_dirs=MUSIC_IGNORE_DIRS):
-            rel_path = p.relative_to(input_dir)
-            display_path = "/".join(rel_path.parts)
+            display_path = "/".join(file.rel_path.parts)
             cprint(Fore.LIGHTCYAN_EX, f"Processing {display_path}")
 
-            m = Metadata.load(p)
+            m = Metadata.load(file.path)
 
             if m.musicbrainz_track_id is not None:
-                target_path = music_dir / rel_path
+                target_path = ctx.config.retagging.music_dir / file.rel_path
                 move_file(
                     ctx=ctx,
                     dry_run=dry_run,
-                    source_path=p,
+                    source_path=file.path,
                     target_path=target_path)
                 continue
 
@@ -113,13 +114,14 @@ def do_retag(ctx, dry_run):
                 track_part += f"{track.number:02}_{track.safe_title}"
                 m.track_number = Pos(index=track.number, total=track_total)
 
-            track_part += p.suffix.lower()
+            track_part += file.path.suffix.lower()
 
             m.artist_title = artist_title
             m.album_title = album_title
             m.track_title = track.title
 
-            target_path = misc_dir / artist_part / album_part / track_part
+            target_path = ctx.config.retagging.misc_dir / \
+                artist_part / album_part / track_part
 
             if not dry_run:
                 m.save()
@@ -128,5 +130,5 @@ def do_retag(ctx, dry_run):
                 ctx=ctx,
                 db=db,
                 dry_run=dry_run,
-                source_path=p,
+                source_path=file.path,
                 target_path=target_path)

@@ -21,3 +21,6 @@ fixups:
   - album_id: fdd6cf5c-0d1a-4743-846c-498dd513e6c9
     dir: Best_of_the_Beast_Standard_Edition
     album_title_tag_override: Best of the Beast (Standard Edition)
+retagging:
+  music_dir: C:\Users\rcook\Desktop\Output\Music
+  misc_dir: C:\Users\rcook\Desktop\Output\Misc

@@ -19,6 +19,18 @@ class Fixup:
             album_title_tag_override=obj["album_title_tag_override"])
 
 
+@dataclass(frozen=True)
+class Retagging:
+    music_dir: Path
+    misc_dir: Path
+
+    @classmethod
+    def read(cls, obj):
+        return cls(
+            music_dir=Path(obj["music_dir"]),
+            misc_dir=Path(obj["misc_dir"]))
+
+
 class Config:
     @classmethod
     def load(cls, path):
@@ -40,10 +52,13 @@ class Config:
     @cached_property
     def skips(self): return set(str(x) for x in self._obj.get("skips", []))
 
-    @ cached_property
+    @cached_property
     def fixups_by_album_id(self):
         fixups = [Fixup.read(x) for x in self._obj["fixups"]]
         return {
             f.album_id: f
             for f in fixups
         }
+
+    @cached_property
+    def retagging(self): return Retagging.read(self._obj["retagging"])

@@ -31,14 +31,15 @@ class Context(metaclass=ContextMeta):
         self._log_level = log_level
 
     def open_db(self, init=False):
-        db_path = self._args.data_dir / "metadata.db"
+        db_path = self._args.config_dir / "metadata.db"
         if init and db_path.is_file():
             db_path.unlink()
         return MetadataDB(db_path=db_path)
 
     @cached_property
     def config(self):
-        return Config.load(self._args.config_path)
+        config_path = self._args.config_dir / "config.yaml"
+        return Config.load(config_path)
 
     @contextmanager
     def timing(self, operation):

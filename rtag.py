@@ -17,7 +17,7 @@ import os
 import sys
 
 
-def default_data_dir():
+def default_config_dir():
     return home_dir() / ".rtag"
 
 
@@ -35,16 +35,16 @@ def main(cwd, argv):
         return p
 
     def add_common_args(parser):
-        default = default_data_dir()
+        default = default_config_dir()
         parser.add_argument(
             "--dir",
             "-d",
-            dest="data_dir",
-            metavar="DATA_DIR",
+            dest="config_dir",
+            metavar="CONFIG_DIR",
             type=path_type,
             required=False,
             default=default,
-            help=f"path to data directory (default: {default})")
+            help=f"path to configuration directory (default: {default})")
 
     def add_dry_run_arg(parser):
         default = True
@@ -123,27 +123,8 @@ def main(cwd, argv):
             name="picard-fixup",
             help="fix up tags post-Picard")
         p.set_defaults(func=lambda ctx, args: do_picard_fixup(ctx=ctx))
-
-        default = Path(cwd, "config.yaml")
-        if default.is_file():
-            p.add_argument(
-                "--config",
-                "-c",
-                dest="config_path",
-                type=Path,
-                default=default,
-                required=False,
-                help=f"path to configuration file (default: {default})")
-        else:
-            p.add_argument(
-                "--config",
-                "-c",
-                dest="config_path",
-                type=Path,
-                required=True,
-                help="path to configuration file")
-
-        add_dry_run_arg(p)
+        add_common_args(parser=p)
+        add_dry_run_arg(parser=p)
 
     def add_retag_command(subparsers):
         p = make_subparser(
