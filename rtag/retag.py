@@ -12,7 +12,7 @@ from rtag.track import Track
 
 def move_file(source_path, target_path):
     target_path.parent.mkdir(parents=True, exist_ok=True)
-    # source_path.rename(target_path)
+    source_path.rename(target_path)
     d = source_path.parent
     if len(list(d.iterdir())) == 0:
         d.rmdir()
