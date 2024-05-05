@@ -30,6 +30,8 @@ def do_retag(ctx, input_dir, music_dir, misc_dir):
             artist = Artist.get_by_uuid(db=db, uuid=m.rcook_artist_id)
             album = Album.get_by_uuid(db=db, uuid=m.rcook_album_id)
             track = Track.get_by_uuid(db=db, uuid=m.rcook_track_id)
-            print(artist)
-            print(album)
-            print(track)
+
+            print(album.get_track_count(db=db))
+            m.artist_title = artist.title
+            m.album_title = album.title
+            m.track_title = track.title

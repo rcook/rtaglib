@@ -194,3 +194,17 @@ class Album(Entity):
         if cursor.rowcount != 1:
             raise RuntimeError(f"Failed to update album with ID {self.id}")
         db.commit()
+
+    def get_track_count(self, db):
+        cursor = db.cursor()
+        cursor.execute(
+            """
+            SELECT COUNT(*)
+            FROM tracks
+            INNER JOIN albums ON tracks.album_id = albums.id
+            WHERE albums.uuid = ?
+            """,
+            (str(self.uuid), ))
+        row = cursor.fetchone()
+        assert row is not None and isinstance(row[0], int)
+        return row[0]
