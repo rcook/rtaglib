@@ -26,12 +26,14 @@ class File(Entity):
             (
                 id INTEGER PRIMARY KEY NOT NULL,
                 path TEXT NOT NULL UNIQUE,
-                rel_path TEXT NOT NULL,
-                artist_id INTEGER NOT NULL,
-                album_id INTEGER NOT NULL,
-                track_id INTEGER NOT NULL,
+                rel_path TEXT NOT NULL UNIQUE,
+                artist_id INTEGER NULL,
+                album_id INTEGER NULL,
+                track_id INTEGER NULL,
                 UNIQUE(artist_id, album_id, track_id)
+                FOREIGN KEY(artist_id) REFERENCES artists(id)
                 FOREIGN KEY(album_id) REFERENCES albums(id)
+                FOREIGN KEY(track_id) REFERENCES tracks(id)
             );
             CREATE INDEX IF NOT EXISTS files_path_idx ON files(path);
             CREATE INDEX IF NOT EXISTS files_artist_id_idx ON files(artist_id);

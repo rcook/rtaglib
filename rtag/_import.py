@@ -30,13 +30,22 @@ def do_import(ctx, dir, init=False, new_ids=False):
     result = DBResult.default()
     with ctx.open_db(init=init) as db:
         for p in walk_dir(dir, include_exts=MUSIC_INCLUDE_EXTS, ignore_dirs=MUSIC_IGNORE_DIRS):
+            rel_path = p.relative_to(dir)
             result.total += 1
             m = Metadata.load(p)
 
             if m.musicbrainz_track_id is not None:
+                File.create(
+                    db=db,
+                    path=p,
+                    rel_path=rel_path,
+                    artist_id=None,
+                    album_id=None,
+                    track_id=None)
                 result.skipped_count += 1
                 continue
 
+            # Maybe --new-ids should always be true?
             if not new_ids and m.rcook_track_id is not None:
                 result.skipped_count += 1
                 continue
@@ -44,8 +53,8 @@ def do_import(ctx, dir, init=False, new_ids=False):
             process_file(
                 ctx=ctx,
                 result=result,
-                dir=dir,
                 path=p,
+                rel_path=rel_path,
                 m=m,
                 db=db)
 
@@ -53,8 +62,7 @@ def do_import(ctx, dir, init=False, new_ids=False):
         ctx.log_info(f"{k}={v}")
 
 
-def process_file(ctx, result, dir, path, m, db):
-    rel_path = path.relative_to(dir)
+def process_file(ctx, result, path, rel_path, m, db):
     inferred = InferredInfo.parse(rel_path)
 
     def get_titles(key):

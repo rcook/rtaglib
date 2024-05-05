@@ -82,6 +82,7 @@ def do_retag(ctx, dry_run):
                 target_path = ctx.config.retagging.music_dir / file.rel_path
                 move_file(
                     ctx=ctx,
+                    db=db,
                     dry_run=dry_run,
                     source_path=file.path,
                     target_path=target_path)
