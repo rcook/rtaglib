@@ -9,6 +9,7 @@ from rtag.pos import Pos
 from rtag.safe_str import make_safe_str
 from rtag.track import Track
 from time import sleep
+import subprocess
 
 
 def move_file(ctx, dry_run, source_path, target_path):
@@ -20,15 +21,24 @@ def move_file(ctx, dry_run, source_path, target_path):
         ctx.log_info(f"Moved {source_path} to {target_path}")
 
         d = source_path.parent
-        if len(list(d.iterdir())) == 0:
-            for i in range(0, 3):
-                try:
-                    d.rmdir()
-                    return
-                except PermissionError:
-                    sleep(0.1)
-            if d.is_dir():
-                raise RuntimeError(f"Could not remove directory {d}")
+        if len(list(d.iterdir())) > 0:
+            return
+
+        for i in range(0, 3):
+            try:
+                d.rmdir()
+                return
+            except PermissionError:
+                sleep(0.5)
+
+        if d.is_dir():
+            subprocess.run(["rd", "/s", "/q", str(d)], shell=True)
+
+        if d.is_dir():
+            ctx.log_warn(
+                f"Could not remove directory "
+                f"{d} (probably locked by another process)")
+        else:
             ctx.log_info(f"Removed directory {d}")
 
 
