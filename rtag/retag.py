@@ -96,11 +96,11 @@ def do_retag(ctx, dry_run, input_dir, music_dir, misc_dir):
 
             target_path = misc_dir / artist_part / album_part / track_part
 
+            if not dry_run:
+                m.save()
+
             move_file(
                 ctx=ctx,
                 dry_run=dry_run,
                 source_path=p,
                 target_path=target_path)
-
-            if not dry_run:
-                m.save()
