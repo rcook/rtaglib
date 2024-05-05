@@ -125,10 +125,9 @@ def process_file(ctx, result, dir, path, m, db):
     else:
         result.existing_track_count += 1
 
-    display_path = "/".join(rel_path.parts)
     File.create(
         db=db,
-        path=display_path,
+        path=str(path),
         artist_id=artist.id,
         album_id=album.id,
         track_id=track.id)
