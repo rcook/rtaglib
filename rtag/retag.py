@@ -8,6 +8,7 @@ from rtag.metadata.metadata import Metadata
 from rtag.pos import Pos
 from rtag.safe_str import make_safe_str
 from rtag.track import Track
+from time import sleep
 
 
 def move_file(source_path, target_path):
@@ -15,7 +16,12 @@ def move_file(source_path, target_path):
     source_path.rename(target_path)
     d = source_path.parent
     if len(list(d.iterdir())) == 0:
-        d.rmdir()
+        for i in range(0, 3):
+            try:
+                d.rmdir()
+                return
+            except PermissionError:
+                sleep(0.1)
 
 
 def do_retag(ctx, input_dir, music_dir, misc_dir):
