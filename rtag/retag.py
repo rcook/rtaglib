@@ -1,10 +1,11 @@
 from colorama import Fore
+from itertools import takewhile
+from pathlib import Path
 from rtag.album import Album
 from rtag.artist import Artist
-from rtag.constants import MUSIC_IGNORE_DIRS, MUSIC_INCLUDE_EXTS
 from rtag.cprint import cprint
 from rtag.file import File
-from rtag.fs import walk_dir
+from rtag.fs import clean_dir
 from rtag.metadata.metadata import Metadata
 from rtag.pos import Pos
 from rtag.safe_str import make_safe_str
@@ -61,8 +62,17 @@ def move_file(ctx, db, dry_run, source_path, target_path):
 
 
 def do_retag(ctx, dry_run):
+    def update_prefix(prefix, path):
+        if prefix is None:
+            return path.parent.parts
+        comps = map(lambda p: p[0] == p[1], zip(prefix, path.parent.parts))
+        new_prefix_len = len(list(takewhile(lambda p: p, comps)))
+        return prefix[0:new_prefix_len]
+
+    prefix = None
     with ctx.open_db() as db:
         for file in File.list(db=db):
+            prefix = update_prefix(prefix, file.path)
             display_path = "/".join(file.rel_path.parts)
             cprint(Fore.LIGHTCYAN_EX, f"Processing {display_path}")
 
@@ -135,3 +145,7 @@ def do_retag(ctx, dry_run):
                 dry_run=dry_run,
                 source_path=file.path,
                 target_path=target_path)
+
+    # Earlier directory deletions don't always succeed, so let's try to clean up here...
+    root_dir = Path(*prefix)
+    clean_dir(dir=root_dir)

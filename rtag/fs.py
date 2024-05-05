@@ -27,3 +27,13 @@ def home_dir():
         case "darwin": return Path(os.getenv("HOME")).resolve()
         case "windows": return Path(os.getenv("USERPROFILE")).resolve()
         case _: raise NotImplementedError(f"Unsupported platform \"{s}\"")
+
+
+def clean_dir(dir):
+    for root, ds, _ in dir.walk(top_down=False):
+        ds.sort()
+        for d in ds:
+            p = root / d
+            print(p)
+            if len(list(p.iterdir())) == 0:
+                p.rmdir()
