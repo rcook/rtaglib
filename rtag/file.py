@@ -30,6 +30,7 @@ class File(Entity):
                 UNIQUE(artist_id, album_id, track_id)
                 FOREIGN KEY(album_id) REFERENCES albums(id)
             );
+            CREATE INDEX IF NOT EXISTS files_path_idx ON files(path);
             CREATE INDEX IF NOT EXISTS files_artist_id_idx ON files(artist_id);
             CREATE INDEX IF NOT EXISTS files_album_id_idx ON files(album_id);
             CREATE INDEX IF NOT EXISTS files_track_id_idx ON files(track_id);
