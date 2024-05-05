@@ -31,7 +31,7 @@ class Artist(Entity):
                 sort_title TEXT NULL,
                 UNIQUE(title, disambiguator)
             );
-            CREATE INDEX artists_uuid_idx ON artists(uuid);
+            CREATE INDEX IF NOT EXISTS artists_uuid_idx ON artists(uuid);
             COMMIT;
             """)
 

@@ -35,7 +35,7 @@ class Album(Entity):
                 UNIQUE(artist_id, safe_title)
                 FOREIGN KEY(artist_id) REFERENCES artists(id)
             );
-            CREATE INDEX albums_uuid_idx ON albums(uuid);
+            CREATE INDEX IF NOT EXISTS albums_uuid_idx ON albums(uuid);
             COMMIT;
             """)
 

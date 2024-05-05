@@ -34,7 +34,7 @@ class Track(Entity):
                 UNIQUE(album_id, disc, number)
                 FOREIGN KEY(album_id) REFERENCES albums(id)
             );
-            CREATE INDEX tracks_uuid_idx ON tracks(uuid);
+            CREATE INDEX IF NOT EXISTS tracks_uuid_idx ON tracks(uuid);
             COMMIT;
             """)
 
