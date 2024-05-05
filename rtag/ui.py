@@ -88,6 +88,7 @@ def choose_item(items, page_size, detail_func=None):
 
             item = page_items[choice - 1]
             return item
+    raise UserCancelledError()
 
 
 def select_artist(db, **kwargs):
