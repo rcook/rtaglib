@@ -148,4 +148,8 @@ def do_retag(ctx, dry_run):
 
     # Earlier directory deletions don't always succeed, so let's try to clean up here...
     root_dir = Path(*prefix)
-    clean_dir(dir=root_dir)
+    if dry_run:
+        ctx.log_info(f"Would attempt to clean up root directory {root_dir}")
+    else:
+        ctx.log_info(f"Attempting to clean up root directory {root_dir}")
+        clean_dir(dir=root_dir)
