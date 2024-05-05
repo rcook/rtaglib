@@ -195,7 +195,23 @@ class Album(Entity):
             raise RuntimeError(f"Failed to update album with ID {self.id}")
         db.commit()
 
-    def get_track_count(self, db):
+    def get_disc_total(self, db):
+        cursor = db.cursor()
+        cursor.execute(
+            """
+            SELECT MAX(disc)
+            FROM tracks
+            INNER JOIN albums ON tracks.album_id = albums.id
+            WHERE albums.uuid = ?
+            """,
+            (str(self.uuid), ))
+        row = cursor.fetchone()
+        match row:
+            case (None,): return 1
+            case (int(count), ): return count
+            case _: raise NotImplementedError()
+
+    def get_track_total(self, db):
         cursor = db.cursor()
         cursor.execute(
             """
