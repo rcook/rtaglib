@@ -1,5 +1,5 @@
 from colorama import Fore
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from rtag.collections import DictPlus
 from rtag.constants import MUSIC_IGNORE_DIRS, MUSIC_INCLUDE_EXTS
 from rtag.cprint import cprint
@@ -111,7 +111,7 @@ class ExtInfo:
         return cls(ext=ext, count=0, tags=DictPlus())
 
 
-def show_raw_tags(ctx, dir, exclude_well_known_raw_tags=True):
+def do_show_raw_tags(ctx, dir, exclude_well_known_raw_tags=True):
     exts = DictPlus()
     for p in walk_dir(dir, ignore_dirs=MUSIC_IGNORE_DIRS, include_exts=MUSIC_INCLUDE_EXTS):
         ext = p.suffix.lower()
@@ -146,28 +146,3 @@ def show_raw_tags(ctx, dir, exclude_well_known_raw_tags=True):
 
     total = sum(map(lambda x: x.count, exts.values()))
     print(f"Total: {total}")
-
-
-def show_tags(ctx, dir):
-    for p in walk_dir(dir, ignore_dirs=MUSIC_IGNORE_DIRS, include_exts=MUSIC_INCLUDE_EXTS):
-        m = Metadata.load(p)
-        cprint(Fore.LIGHTCYAN_EX, "/".join(p.relative_to(dir).parts))
-        for tag in m.tags:
-            value = m.get_tag(tag, default=None)
-            if value is not None:
-                cprint(
-                    Fore.LIGHTYELLOW_EX,
-                    "  ",
-                    tag.ljust(25),
-                    Fore.LIGHTWHITE_EX,
-                    ": ",
-                    Fore.LIGHTGREEN_EX,
-                    value,
-                    sep="")
-
-
-def do_list_dir(ctx, dir, mode):
-    match mode:
-        case "show-raw-tags": show_raw_tags(ctx=ctx, dir=dir)
-        case "show-tags": show_tags(ctx=ctx, dir=dir)
-        case _: raise NotImplementedError(f"Unsupported mode {mode}")

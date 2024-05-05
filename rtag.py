@@ -8,10 +8,10 @@ from rtag.error import ReportableError
 from rtag.picard_fixup import do_picard_fixup
 from rtag.fs import home_dir
 from rtag._import import do_import
-from rtag.list_dir import do_list_dir
 from rtag.merge import do_merge
-from rtag.scan import do_scan
 from rtag.show import do_show
+from rtag.show_raw_tags import do_show_raw_tags
+from rtag.show_tags import do_show_tags
 import os
 import sys
 
@@ -96,29 +96,6 @@ def main(cwd, argv):
             type=path_type,
             help="path to music files")
 
-    def add_list_dir_command(subparsers):
-        p = make_subparser(
-            subparsers,
-            name="list-dir",
-            help="list contents of directory")
-        p.set_defaults(
-            func=lambda ctx, args:
-            do_list_dir(
-                ctx=ctx,
-                dir=args.dir,
-                mode=args.mode))
-        default = "show-raw-tags"
-        p.add_argument(
-            "--mode",
-            "-m",
-            dest="mode",
-            metavar="MODE",
-            choices=[default, "show-tags"],
-            required=False,
-            default=default,
-            help=f"display mode (default: {default})")
-        p.add_argument("dir", metavar="DIR", type=path_type, help="directory")
-
     def add_merge_command(subparsers):
         p = make_subparser(
             subparsers,
@@ -170,14 +147,6 @@ def main(cwd, argv):
             required=False,
             help="dry run (default: True)")
 
-    def add_scan_command(subparsers):
-        p = make_subparser(
-            subparsers,
-            name="scan",
-            help="list files not in local metadata database")
-        p.set_defaults(func=lambda ctx, args: do_scan(ctx=ctx, dir=args.dir))
-        p.add_argument("dir", metavar="DIR", type=path_type, help="directory")
-
     def add_show_command(subparsers):
         p = make_subparser(
             subparsers,
@@ -185,25 +154,43 @@ def main(cwd, argv):
             help="show data from local metadata database")
         p.set_defaults(
             func=lambda ctx, args:
-            do_show(
-                ctx=ctx,
-                data_dir=args.data_dir,
-                mode=args.mode))
+            do_show(ctx=ctx, data_dir=args.data_dir, mode=args.mode))
         add_common_args(parser=p)
         p.add_argument(
             "mode",
             choices=["album-tracks"],
             help="show artist, album or track")
 
+    def add_show_raw_tags_command(subparsers):
+        p = make_subparser(
+            subparsers,
+            name="show-raw-tags",
+            help="summarize raw tags in files")
+        p.set_defaults(
+            func=lambda ctx, args:
+            do_show_raw_tags(ctx=ctx, dir=args.dir))
+        p.add_argument("dir", metavar="DIR", type=path_type, help="directory")
+
+    def add_show_tags_command(subparsers):
+        p = make_subparser(
+            subparsers,
+            name="show-tags",
+            help="show tags")
+        p.set_defaults(
+            func=lambda ctx, args:
+            do_show_tags(ctx=ctx, dir=args.dir))
+        add_common_args(parser=p)
+        p.add_argument("dir", metavar="DIR", type=path_type, help="directory")
+
     parser = ArgumentParser(prog="rtag", description="Richard's Tagging Tool")
     subparsers = parser.add_subparsers(required=True, dest="command")
     add_edit_command(subparsers=subparsers)
     add_import_command(subparsers=subparsers)
-    add_list_dir_command(subparsers=subparsers)
     add_merge_command(subparsers=subparsers)
     add_picard_fixup_command(subparsers=subparsers)
-    add_scan_command(subparsers=subparsers)
     add_show_command(subparsers=subparsers)
+    add_show_raw_tags_command(subparsers=subparsers)
+    add_show_tags_command(subparsers=subparsers)
 
     args = parser.parse_args(argv)
 
