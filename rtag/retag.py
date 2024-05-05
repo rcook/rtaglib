@@ -73,13 +73,13 @@ def do_retag(ctx, dry_run):
     with ctx.open_db() as db:
         for file in File.list(db=db):
             prefix = update_prefix(prefix, file.path)
-            display_path = "/".join(file.rel_path.parts)
-            cprint(Fore.LIGHTCYAN_EX, f"Processing {display_path}")
+            cprint(Fore.LIGHTCYAN_EX, f"Processing {file.key_path}")
 
             m = Metadata.load(file.path)
 
             if m.musicbrainz_track_id is not None:
-                target_path = ctx.config.retagging.music_dir / file.rel_path
+                target_path = ctx.config.retagging.music_dir / \
+                    Path(file.key_path)
                 move_file(
                     ctx=ctx,
                     db=db,

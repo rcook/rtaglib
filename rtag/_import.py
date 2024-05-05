@@ -1,4 +1,5 @@
 from dataclasses import asdict, dataclass, fields
+from pathlib import Path
 from rtag.album import Album
 from rtag.artist import Artist
 from rtag.constants import MUSIC_IGNORE_DIRS, MUSIC_INCLUDE_EXTS
@@ -30,8 +31,16 @@ def do_import(ctx, dir, init=False):
     result = DBResult.default()
     with ctx.open_db(init=init) as db:
         for p in walk_dir(dir, include_exts=MUSIC_INCLUDE_EXTS, ignore_dirs=MUSIC_IGNORE_DIRS):
-            rel_path = p.relative_to(dir)
             result.total += 1
+
+            key_path_parts = p.parts[-3:]
+            if len(key_path_parts) != 3:
+                ctx.log_warn(f"Skipping {p} due to unexpected path structure")
+                result.skipped_count += 1
+                continue
+
+            key_path = "/".join(key_path_parts)
+
             m = Metadata.load(p)
 
             if m.musicbrainz_track_id is None:
@@ -39,24 +48,23 @@ def do_import(ctx, dir, init=False):
                     ctx=ctx,
                     result=result,
                     path=p,
-                    rel_path=rel_path,
+                    key_path=key_path,
                     m=m,
                     db=db)
             else:
                 File.create(
                     db=db,
                     path=p,
-                    rel_path=rel_path,
+                    key_path=key_path,
                     artist_id=None,
                     album_id=None,
                     track_id=None)
-                result.skipped_count += 1
 
     for k, v in asdict(result).items():
         ctx.log_info(f"{k}={v}")
 
 
-def process_file(ctx, result, path, rel_path, m, db):
+def process_file(ctx, result, path, key_path, m, db):
     inferred = InferredInfo.parse(path=path)
 
     def get_titles(key):
@@ -127,7 +135,7 @@ def process_file(ctx, result, path, rel_path, m, db):
     File.create(
         db=db,
         path=path,
-        rel_path=rel_path,
+        key_path=key_path,
         artist_id=artist.id,
         album_id=album.id,
         track_id=track.id)
