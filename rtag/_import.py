@@ -44,7 +44,7 @@ def do_import(ctx, dir, init=False, new_ids=False):
             process_file(
                 ctx=ctx,
                 result=result,
-                dir=music_dir,
+                dir=dir,
                 path=p,
                 m=m,
                 db=db)
