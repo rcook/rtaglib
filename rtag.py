@@ -3,6 +3,7 @@ from colorama import Fore, just_fix_windows_console
 from pathlib import Path
 from rtag.context import Context
 from rtag.cprint import cprint
+from rtag.del_track import do_del_track
 from rtag.edit import do_edit
 from rtag.error import ReportableError
 from rtag.picard_fixup import do_picard_fixup
@@ -55,6 +56,16 @@ def main(cwd, argv):
             default=default,
             required=False,
             help=f"dry run (default: {default})")
+
+    def add_del_track_command(subparsers):
+        p = make_subparser(
+            subparsers,
+            name="del-track",
+            help="delete track from local metadata database")
+        p.set_defaults(
+            func=lambda ctx, args:
+            do_del_track(ctx=ctx))
+        add_common_args(parser=p)
 
     def add_edit_command(subparsers):
         p = make_subparser(
@@ -175,6 +186,7 @@ def main(cwd, argv):
 
     parser = ArgumentParser(prog="rtag", description="Richard's Tagging Tool")
     subparsers = parser.add_subparsers(required=True, dest="command")
+    add_del_track_command(subparsers=subparsers)
     add_edit_command(subparsers=subparsers)
     add_import_command(subparsers=subparsers)
     add_merge_command(subparsers=subparsers)

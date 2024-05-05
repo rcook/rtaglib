@@ -1,10 +1,5 @@
-from rtag.album import Album
-from rtag.artist import Artist
 from rtag.track import Track
-from rtag.ui import choose_item, edit_item
-
-
-_PAGE_SIZE = 20
+from rtag.ui import edit_item, select_artist, select_album, select_track
 
 
 def do_edit(ctx, mode):
@@ -21,11 +16,7 @@ def do_edit(ctx, mode):
 
 
 def do_edit_artist(ctx, db):
-    artist = choose_item(
-        items=list(Artist.list(db=db)),
-        page_size=_PAGE_SIZE)
-    if artist is None or not artist:
-        return artist
+    artist = select_artist(db=db)
 
     result = edit_item(item=artist)
     if result is None or not result:
@@ -36,18 +27,7 @@ def do_edit_artist(ctx, db):
 
 
 def do_edit_album(ctx, db):
-    artist = choose_item(
-        items=list(Artist.list(db=db)),
-        page_size=_PAGE_SIZE)
-    if artist is None or not artist:
-        return artist
-
-    album = choose_item(
-        items=list(
-            Album.list(
-                db=db,
-                artist_id=artist.id)),
-        page_size=_PAGE_SIZE)
+    album = select_album(db=db)
     if album is None or not album:
         return album
 
@@ -60,27 +40,7 @@ def do_edit_album(ctx, db):
 
 
 def do_edit_track(ctx, db):
-    artist = choose_item(
-        items=list(Artist.list(db=db)),
-        page_size=_PAGE_SIZE)
-    if artist is None or not artist:
-        return artist
-
-    album = choose_item(
-        items=list(
-            Album.list(
-                db=db,
-                artist_id=artist.id)),
-        page_size=_PAGE_SIZE)
-    if album is None or not album:
-        return album
-
-    track = choose_item(
-        items=list(
-            Track.list(
-                db=db,
-                album_id=album.id)),
-        page_size=_PAGE_SIZE)
+    track = select_track(db=db)
     if track is None or not track:
         return track
 
@@ -93,18 +53,7 @@ def do_edit_track(ctx, db):
 
 
 def do_edit_album_tracks(ctx, db):
-    artist = choose_item(
-        items=list(Artist.list(db=db)),
-        page_size=_PAGE_SIZE)
-    if artist is None or not artist:
-        return artist
-
-    album = choose_item(
-        items=list(
-            Album.list(
-                db=db,
-                artist_id=artist.id)),
-        page_size=_PAGE_SIZE)
+    album = select_album(db=db)
     if album is None or not album:
         return album
 

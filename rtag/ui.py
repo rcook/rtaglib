@@ -1,8 +1,12 @@
 from colorama import Fore
 from dataclasses import fields, replace
+from rtag.album import Album
+from rtag.artist import Artist
 from rtag.cprint import cprint
+from rtag.track import Track
 
 
+_PAGE_SIZE = 20
 _EMPTY_PLACEHOLDER = "(empty)"
 _EDIT_VALUE_PROMPT = f"[Type new value, empty to leave unchanged, " \
     f"{_EMPTY_PLACEHOLDER} to set to NULL or (Q) to quit]"
@@ -76,29 +80,56 @@ def choose_item(items, page_size, detail_func=None):
             return item
 
 
+def select_artist(db):
+    return choose_item(
+        items=list(Artist.list(db=db)),
+        page_size=_PAGE_SIZE)
+
+
+def select_album(db):
+    artist = select_artist(db=db)
+    if artist is None or not artist:
+        return artist
+
+    return choose_item(
+        items=list(Album.list(db=db, artist_id=artist.id)),
+        page_size=_PAGE_SIZE)
+
+
+def select_track(db):
+    album = select_album(db=db)
+    if album is None or not album:
+        return album
+
+    return choose_item(
+        items=list(Track.list(db=db, album_id=album.id)),
+        page_size=_PAGE_SIZE)
+
+
+def show_item(item):
+    def pretty(name):
+        value = getattr(item, name)
+        return "(empty)" if value is None else str(value)
+
+    name_width = 0
+    for f in fields(item):
+        name_width = max(name_width, len(f.name))
+
+    cprint(Fore.LIGHTCYAN_EX, item.__class__.__name__)
+    for f in fields(item):
+        cprint(
+            Fore.LIGHTYELLOW_EX,
+            "  ",
+            f.name.ljust(name_width),
+            Fore.LIGHTWHITE_EX,
+            " : ",
+            Fore.LIGHTGREEN_EX,
+            pretty(f.name),
+            sep="")
+    print("-----")
+
+
 def edit_item(item):
-    def show_item(item):
-        def pretty(name):
-            value = getattr(item, name)
-            return "(empty)" if value is None else str(value)
-
-        name_width = 0
-        for f in fields(item):
-            name_width = max(name_width, len(f.name))
-
-        cprint(Fore.LIGHTCYAN_EX, item.__class__.__name__)
-        for f in fields(item):
-            cprint(
-                Fore.LIGHTYELLOW_EX,
-                "  ",
-                f.name.ljust(name_width),
-                Fore.LIGHTWHITE_EX,
-                " : ",
-                Fore.LIGHTGREEN_EX,
-                pretty(f.name),
-                sep="")
-        print("-----")
-
     show_item(item=item)
 
     fixed_fields = {"id", "uuid"}
@@ -142,3 +173,13 @@ def edit_item(item):
         return
 
     return replace(item, **new_values)
+
+
+def confirm(ctx, prompt):
+    result = input(f"{prompt} [YES/N]: ")
+    if result != "YES":
+        ctx.log_info("Operation cancelled")
+        return False
+
+    ctx.log_info("Operation confirmed")
+    return True

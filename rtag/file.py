@@ -92,3 +92,27 @@ class File(Entity):
             artist_id=artist_id,
             album_id=album_id,
             track_id=track_id)
+
+    @classmethod
+    def get_by_track_id(cls, db, track_id, default=_MISSING):
+        cursor = db.cursor()
+        cursor.execute(
+            """
+            SELECT id, path, key_path, artist_id, album_id
+            FROM files WHERE track_id = ?
+            """,
+            (track_id, ))
+        row = cursor.fetchone()
+        if row is not None:
+            return cls(
+                id=row[0],
+                path=Path(row[1]),
+                key_path=row[2],
+                artist_id=row[3],
+                album_id=row[4],
+                track_id=track_id)
+
+        if default is not _MISSING:
+            return default
+
+        raise RuntimeError(f"Could not retrieve file with track ID {track_id}")
