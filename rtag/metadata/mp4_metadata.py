@@ -1,6 +1,9 @@
 from rtag.metadata.metadata import *
 
 
+_FREEFORM_PREFIX = "----:"
+
+
 class MP4Metadata(Metadata):
     MAPPINGS = [
         (ARTIST_TITLE_ATTR, "aART"),
@@ -10,7 +13,7 @@ class MP4Metadata(Metadata):
         (MUSICBRAINZ_ALBUM_ID_ATTR, "musicbrainz_albumid"),
         (MUSICBRAINZ_TRACK_ID_ATTR, "musicbrainz_trackid")
     ] + [
-        (tag, f"----:org.rcook:{label}")
+        (tag,  f"{_FREEFORM_PREFIX}org.rcook:{label}")
         for tag, label in [
             (RCOOK_ARTIST_ID_ATTR, "ArtistId"),
             (RCOOK_ALBUM_ID_ATTR, "AlbumId"),
@@ -70,7 +73,11 @@ class MP4Metadata(Metadata):
         return value
 
     def _set_raw(self, key, value):
-        self._m.tags[key] = [value]
+        if key.startswith(_FREEFORM_PREFIX):
+            data = value.encode("utf-8")
+        else:
+            data = value
+        self._m.tags[key] = [data]
 
     def _del_raw(self, key):
         try:
