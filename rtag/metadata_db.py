@@ -1,12 +1,13 @@
 from rtag.album import Album
 from rtag.artist import Artist
 from rtag.entity import Entity
+from rtag.file import File
 from rtag.track import Track
 import sqlite3
 
 
 class MetadataDB:
-    _ENTITIES: list[Entity] = [Artist, Album, Track]
+    _ENTITIES: list[Entity] = [Artist, Album, Track, File]
 
     def __init__(self, db_path):
         db_path.parent.mkdir(parents=True, exist_ok=True)
