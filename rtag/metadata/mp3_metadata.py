@@ -90,10 +90,11 @@ class MP3Metadata(Metadata):
         self._m.tags[key] = tag_ctor(text=value)
 
     def _del_raw(self, key):
-        try:
-            del self._m.tags[key]
-        except KeyError:
-            pass
+        if self._m.tags is not None:
+            try:
+                del self._m.tags[key]
+            except KeyError:
+                pass
 
     def _get_pos(self, tag_type, default=UNSPECIFIED):
         value = self._get_raw(
