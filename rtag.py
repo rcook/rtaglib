@@ -5,7 +5,7 @@ from pathlib import Path
 from rtag.context import Context
 from rtag.cprint import cprint
 from rtag.delete import do_delete_track
-from rtag.error import ReportableError
+from rtag.error import ReportableError, UserCancelledError
 from rtag.picard_fixup import do_picard_fixup
 from rtag.fs import home_dir
 from rtag._import import do_import
@@ -76,9 +76,10 @@ def main(cwd, argv):
 
     def add_edit_command(subparsers):
         def invoke(subcommand, ctx, args):
-            return getattr(
+            func = getattr(
                 rtag.edit,
-                f"do_edit_{subcommand.replace('-', '_')}")(ctx=ctx)
+                f"do_edit_{subcommand.replace('-', '_')}")
+            return func(ctx=ctx)
 
         p = make_subparser(
             subparsers,
@@ -215,14 +216,18 @@ def main(cwd, argv):
     operation = [args.command]
     if (temp := getattr(args, "subcommand", None)) is not None:
         operation.append(temp)
-    with ctx.timing(operation=operation):
-        try:
+
+    try:
+        with ctx.timing(operation=operation):
             status = args.func(ctx=ctx, args=args)
-        except ReportableError as e:
-            m = str(e)
-            m = "(No message)" if len(m) == 0 else m
-            cprint(Fore.LIGHTRED_EX, m, file=sys.stderr)
-            sys.exit(e.exit_code)
+    except ReportableError as e:
+        m = str(e)
+        m = "(No message)" if len(m) == 0 else m
+        cprint(Fore.LIGHTRED_EX, m, file=sys.stderr)
+        sys.exit(e.exit_code)
+    except UserCancelledError:
+        cprint(Fore.LIGHTBLUE_EX, "Operation cancelled by user")
+        sys.exit(0)
 
     if status is None:
         pass

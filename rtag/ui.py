@@ -3,6 +3,7 @@ from dataclasses import fields, replace
 from rtag.album import Album
 from rtag.artist import Artist
 from rtag.cprint import cprint
+from rtag.error import UserCancelledError
 from rtag.track import Track
 
 
@@ -71,7 +72,7 @@ def choose_item(items, page_size, detail_func=None):
             result = input(
                 f"Choose (1)-({page_item_count}), (Enter) to go to next page, (Q) to quit: ").strip()
             if result == "Q" or result == "q":
-                return False
+                raise UserCancelledError()
             if result == "":
                 page_number += 1
                 break
@@ -96,9 +97,6 @@ def select_artist(db):
 
 def select_album(db):
     artist = select_artist(db=db)
-    if artist is None or not artist:
-        return artist
-
     return choose_item(
         items=list(Album.list(db=db, artist_id=artist.id)),
         page_size=_PAGE_SIZE)
@@ -106,9 +104,6 @@ def select_album(db):
 
 def select_track(db):
     album = select_album(db=db)
-    if album is None or not album:
-        return album
-
     return choose_item(
         items=list(Track.list(db=db, album_id=album.id)),
         page_size=_PAGE_SIZE)
@@ -162,7 +157,7 @@ def edit_item(item):
         while True:
             result = input(f" {_EDIT_VALUE_PROMPT}: ").strip()
             if result == "Q" or result == "q":
-                return False
+                raise UserCancelledError()
             if result == "" or result != _EMPTY_PLACEHOLDER and result == current_value:
                 break
 
@@ -187,7 +182,6 @@ def confirm(ctx, prompt):
     result = input(f"{prompt} [YES/N]: ")
     if result != "YES":
         ctx.log_info("Operation cancelled")
-        return False
+        raise UserCancelledError()
 
     ctx.log_info("Operation confirmed")
-    return True

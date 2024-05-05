@@ -13,8 +13,7 @@ def do_delete_track(ctx):
         file = File.get_by_track_id(db=db, track_id=track.id)
         show_item(track)
         show_item(file)
-        if not confirm(ctx=ctx, prompt="Do you wish to delete this track from the database?"):
-            return
+        confirm(ctx=ctx, prompt="Do you wish to delete this track from the database?")
 
         cursor = db.cursor()
 

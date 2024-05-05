@@ -1,6 +1,7 @@
 from contextlib import contextmanager
 from functools import cache, cached_property, partialmethod
 from rtag.config import Config
+from rtag.error import UserCancelledError
 from rtag.metadata_db import MetadataDB
 from time import perf_counter
 import inspect
@@ -43,23 +44,29 @@ class Context(metaclass=ContextMeta):
 
     @contextmanager
     def timing(self, operation):
+        def report_end(begin_time, how_ended):
+            end_time = perf_counter()
+            self.log_error(
+                f"{op} {how_ended} after "
+                f"{end_time - begin_time:.02f} s")
+
         op = "/".join(operation) if isinstance(operation, list) else operation
         self.log_info(f"{op} started")
         begin_time = perf_counter()
 
         try:
             yield
+        except UserCancelledError:
+            report_end(begin_time=begin_time, how_ended="cancelled")
+            raise
+        except SystemExit:
+            report_end(begin_time=begin_time, how_ended="exited")
+            raise
         except:
-            end_time = perf_counter()
-            self.log_error(
-                f"{op} failed after "
-                f"{end_time - begin_time:.02f} s")
+            report_end(begin_time=begin_time, how_ended="failed")
             raise
 
-        end_time = perf_counter()
-        self.log_info(
-            f"{op} completed in "
-            f"{end_time - begin_time:.02f} s")
+        report_end(begin_time=begin_time, how_ended="completed")
 
     @cache
     def _logger(self, name):

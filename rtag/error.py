@@ -5,3 +5,7 @@ class ReportableError(RuntimeError):
 
     @property
     def exit_code(self): return self._exit_code
+
+
+class UserCancelledError(RuntimeError):
+    pass
