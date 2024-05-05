@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from rtag.metadata.metadata import *
 
 
@@ -16,6 +17,65 @@ class FLACMetadata(Metadata):
     KEYS = {tag: key for tag, key in MAPPINGS}
     TAGS = {key: tag for tag, key in MAPPINGS}
 
+    @dataclass(frozen=True)
+    class PosTag:
+        obj: object
+        index_key: str
+        other_index_keys: list[str]
+        total_key: str
+        other_total_keys: list[str]
+
+        def get(self, default):
+            index_str = self.obj._get_raw(
+                key=self.index_key,
+                default=default if default is UNSPECIFIED else None)
+            for k in self.other_index_keys:
+                s = self.obj._get_raw(key=k, default=None)
+                assert s is None or s == index_str
+
+            if index_str is None:
+                return default
+
+            total_str = self.obj._get_raw(key=self.total_key, default=None)
+            for k in self.other_total_keys:
+                s = self.obj._get_raw(key=k, default=None)
+                assert s is None or s == total_str
+
+            index = int(index_str)
+            total = None if total_str is None else int(total_str)
+            return Pos(index=index, total=total)
+
+        def set(self, value):
+            s = str(value.index)
+            for k in [self.index_key] + self.other_index_keys:
+                self.obj._set_raw(key=k, value=s)
+
+            s = str(value.total)
+            for k in [self.total_key] + self.other_total_keys:
+                if value.total is None:
+                    self.obj._del_raw(key=k)
+                else:
+                    self.obj._set_raw(key=k, value=s)
+
+        def delete(self):
+            for k in [self.index_key, self.total_key] + self.other_index_keys + self.other_total_keys:
+                self.obj._del_raw(key=k)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._track_disc = self.__class__.PosTag(
+            obj=self,
+            index_key="discnumber",
+            other_index_keys=[],
+            total_key="totaldiscs",
+            other_total_keys=["disctotal"])
+        self._track_number = self.__class__.PosTag(
+            obj=self,
+            index_key="tracknumber",
+            other_index_keys=[],
+            total_key="totaltracks",
+            other_total_keys=["tracktotal"])
+
     def _get_tag(self, tag, default=UNSPECIFIED):
         return self._get_raw(key=self.__class__.KEYS[tag], default=default)
 
@@ -26,41 +86,22 @@ class FLACMetadata(Metadata):
         self._del_raw(key=self.__class__.KEYS[tag])
 
     def _get_track_disc(self, default=UNSPECIFIED):
-        assert self._get_raw(key="disknumber", default=None) is None
-        assert self._get_raw(key="totaldisks", default=None) is None
-        assert self._get_raw(key="disctotal", default=None) \
-            == self._get_raw(key="totaldiscs", default=None)
-        return self._get_pos(
-            index_key="discnumber",
-            total_key="totaldiscs",
-            default=default)
+        return self._track_disc.get(default=default)
 
     def _set_track_disc(self, value):
-        assert self._get_raw(key="disknumber", default=None) is None
-        assert self._get_raw(key="totaldisks", default=None) is None
-        self._set_pos(
-            index_key="discnumber",
-            total_key="totaldiscs",
-            value=value)
+        self._track_disc.set(value=value)
 
-    def _del_track_disc(self, default=UNSPECIFIED):
-        self._del_raw(key="discnumber")
-        self._del_raw(key="totaldiscs")
+    def _del_track_disc(self):
+        self._track_disc.delete()
 
     def _get_track_number(self, default=UNSPECIFIED):
-        assert self._get_raw(key="tracktotal", default=None) \
-            == self._get_raw(key="totaltracks", default=None)
-        return self._get_pos(index_key="tracknumber", total_key="totaltracks", default=default)
+        return self._track_number.get(default=default)
 
     def _set_track_number(self, value):
-        self._set_pos(
-            index_key="tracknumber",
-            total_key="totaltracks",
-            value=value)
+        self._track_number.set(value=value)
 
-    def _del_track_number(self, default=UNSPECIFIED):
-        self._del_raw(key="tracknumber")
-        self._del_raw(key="totaltracks")
+    def _del_track_number(self):
+        self._track_number.delete()
 
     def _get_raw(self, key, default=UNSPECIFIED):
         if default is UNSPECIFIED:
@@ -85,23 +126,3 @@ class FLACMetadata(Metadata):
             del self._m.tags[key]
         except KeyError:
             pass
-
-    def _get_pos(self, index_key, total_key, default=UNSPECIFIED):
-        index_str = self._get_raw(
-            key=index_key,
-            default=default if default is UNSPECIFIED else None)
-        if index_str is None:
-            return default
-
-        total_str = self._get_raw(key=total_key, default=None)
-
-        index = int(index_str)
-        total = None if total_str is None else int(total_str)
-        return Pos(index=index, total=total)
-
-    def _set_pos(self, index_key, total_key, value):
-        self._set_raw(key=index_key, value=str(value.index))
-        if value.total is None:
-            self._del_raw(key=total_key)
-        else:
-            self._set_raw(key=total_key, value=str(value.total))
