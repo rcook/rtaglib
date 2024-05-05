@@ -18,8 +18,9 @@ class Artist(Entity):
 
     @staticmethod
     def create_schema(db):
-        db.execute(
+        db.executescript(
             """
+            BEGIN;
             CREATE TABLE IF NOT EXISTS artists
             (
                 id INTEGER PRIMARY KEY NOT NULL,
@@ -29,7 +30,9 @@ class Artist(Entity):
                 disambiguator TEXT NULL,
                 sort_title TEXT NULL,
                 UNIQUE(title, disambiguator)
-            )
+            );
+            CREATE INDEX artists_uuid_idx ON artists(uuid);
+            COMMIT;
             """)
 
     @classmethod

@@ -19,8 +19,9 @@ class Album(Entity):
 
     @staticmethod
     def create_schema(db):
-        db.execute(
+        db.executescript(
             """
+            BEGIN;
             CREATE TABLE IF NOT EXISTS albums
             (
                 id INTEGER PRIMARY KEY NOT NULL,
@@ -33,7 +34,9 @@ class Album(Entity):
                 UNIQUE(artist_id, title, disambiguator)
                 UNIQUE(artist_id, safe_title)
                 FOREIGN KEY(artist_id) REFERENCES artists(id)
-            )
+            );
+            CREATE INDEX albums_uuid_idx ON albums(uuid);
+            COMMIT;
             """)
 
     @classmethod
