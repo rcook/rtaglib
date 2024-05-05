@@ -64,8 +64,12 @@ class MP3Metadata(Metadata):
 
     def _get_raw(self, key, tag_type, default=UNSPECIFIED):
         if default is UNSPECIFIED:
+            if self._m.tags is None:
+                raise KeyError(key)
             item = self._m.tags[key]
         else:
+            if self._m.tags is None:
+                return default
             item = self._m.tags.get(key)
             if item is None:
                 return default
@@ -81,6 +85,8 @@ class MP3Metadata(Metadata):
         return value
 
     def _set_raw(self, key, tag_ctor, value):
+        if self._m.tags is None:
+            self._m.add_tags()
         self._m.tags[key] = tag_ctor(text=value)
 
     def _del_raw(self, key):
