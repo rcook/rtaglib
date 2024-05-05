@@ -33,6 +33,10 @@ def move_file(ctx, db, dry_run, source_path, target_path):
             else:
                 ctx.log_info(f"Removed directory {dir}")
 
+    if source_path == target_path:
+        ctx.log_info(f"No need to move {source_path}")
+        return
+
     if dry_run:
         ctx.log_info(f"Would move {source_path} to {target_path}")
     else:
