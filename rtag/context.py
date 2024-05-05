@@ -44,9 +44,9 @@ class Context(metaclass=ContextMeta):
 
     @contextmanager
     def timing(self, operation):
-        def report_end(begin_time, how_ended):
+        def report_end(log_level, begin_time, how_ended):
             end_time = perf_counter()
-            self.log_error(
+            getattr(self, f"log_{log_level}")(
                 f"{op} {how_ended} after "
                 f"{end_time - begin_time:.02f} s")
 
@@ -57,16 +57,28 @@ class Context(metaclass=ContextMeta):
         try:
             yield
         except UserCancelledError:
-            report_end(begin_time=begin_time, how_ended="cancelled")
+            report_end(
+                log_level="info",
+                begin_time=begin_time,
+                how_ended="cancelled")
             raise
         except SystemExit:
-            report_end(begin_time=begin_time, how_ended="exited")
+            report_end(
+                log_level="info",
+                begin_time=begin_time,
+                how_ended="exited")
             raise
         except:
-            report_end(begin_time=begin_time, how_ended="failed")
+            report_end(
+                log_level="error",
+                begin_time=begin_time,
+                how_ended="failed")
             raise
 
-        report_end(begin_time=begin_time, how_ended="completed")
+        report_end(
+            log_level="info",
+            begin_time=begin_time,
+            how_ended="completed")
 
     @cache
     def _logger(self, name):

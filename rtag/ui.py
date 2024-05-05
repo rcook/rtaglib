@@ -2,6 +2,7 @@ from colorama import Fore
 from dataclasses import fields, replace
 from rtag.album import Album
 from rtag.artist import Artist
+from rtag.collections import DictPlus
 from rtag.cprint import cprint
 from rtag.error import UserCancelledError
 from rtag.track import Track
@@ -89,24 +90,27 @@ def choose_item(items, page_size, detail_func=None):
             return item
 
 
-def select_artist(db):
+def select_artist(db, **kwargs):
     return choose_item(
         items=list(Artist.list(db=db)),
-        page_size=_PAGE_SIZE)
+        page_size=_PAGE_SIZE,
+        **kwargs)
 
 
-def select_album(db):
+def select_album(db, **kwargs):
     artist = select_artist(db=db)
     return choose_item(
         items=list(Album.list(db=db, artist_id=artist.id)),
-        page_size=_PAGE_SIZE)
+        page_size=_PAGE_SIZE,
+        **kwargs)
 
 
-def select_track(db):
+def select_track(db, **kwargs):
     album = select_album(db=db)
     return choose_item(
         items=list(Track.list(db=db, album_id=album.id)),
-        page_size=_PAGE_SIZE)
+        page_size=_PAGE_SIZE,
+        **kwargs)
 
 
 def show_item(item):
@@ -185,3 +189,71 @@ def confirm(ctx, prompt):
         raise UserCancelledError()
 
     ctx.log_info("Operation confirmed")
+
+
+def select_artists(db):
+    selection = []
+
+    while True:
+        artist = select_artist(db=db)
+        selection.append(artist)
+
+        cprint(Fore.LIGHTCYAN_EX, "Selected artist(s):")
+        for artist in selection:
+            cprint(
+                Fore.LIGHTGREEN_EX,
+                "  ",
+                artist.title,
+                sep="")
+
+        if len(selection) > 1:
+            while True:
+                result = input(
+                    "[Press Enter to add more artists, press (M) to merge these artists or (Q) to quit] ").strip()
+                if result == "Q" or result == "q":
+                    raise UserCancelledError()
+                if result == "":
+                    break
+                if result == "M" or result == "m":
+                    return selection
+
+
+def select_albums(db):
+    artists = DictPlus()
+
+    def get_detail(item):
+        artist = artists.get_or_add(
+            item.artist_id,
+            lambda artist_id: Artist.get_by_id(db=db, id=artist_id))
+        return artist.title
+
+    selection = []
+
+    while True:
+        album = select_album(db=db, detail_func=get_detail)
+        selection.append(album)
+
+        cprint(Fore.LIGHTCYAN_EX, "Selected album(s):")
+        for album in selection:
+            cprint(
+                Fore.LIGHTGREEN_EX,
+                "  ",
+                album.title,
+                Fore.LIGHTWHITE_EX,
+                " (",
+                Fore.LIGHTCYAN_EX,
+                artists[album.artist_id].title,
+                Fore.LIGHTWHITE_EX,
+                ")",
+                sep="")
+
+        if len(selection) > 1:
+            while True:
+                result = input(
+                    "[Press Enter to add more albums, press (M) to merge these albums or (Q) to quit] ").strip()
+                if result == "Q" or result == "q":
+                    raise UserCancelledError()
+                if result == "":
+                    break
+                if result == "M" or result == "m":
+                    return selection

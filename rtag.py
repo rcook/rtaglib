@@ -8,13 +8,13 @@ from rtag.error import ReportableError, UserCancelledError
 from rtag.picard_fixup import do_picard_fixup
 from rtag.fs import home_dir
 from rtag._import import do_import
-from rtag.merge import do_merge
 from rtag.retag import do_retag
 from rtag.show_raw_tags import do_show_raw_tags
 from rtag.show_tags import do_show_tags
 import os
 import rtag.delete
 import rtag.edit
+import rtag.merge
 import rtag.show
 import sys
 
@@ -123,18 +123,25 @@ def main(cwd, argv):
             help="path to music files")
 
     def add_merge_command(subparsers):
+        def invoke(subcommand, ctx, args):
+            func = getattr(
+                rtag.merge,
+                f"do_merge_{subcommand.replace('-', '_')}")
+            return func(ctx=ctx)
+
         p = make_subparser(
             subparsers,
             name="merge",
-            help="merge artists or albums in local metadata database")
-        p.set_defaults(
-            func=lambda ctx, args:
-            do_merge(ctx=ctx, mode=args.mode))
-        add_common_args(parser=p)
-        p.add_argument(
-            "mode",
-            choices=["artists", "albums"],
-            help="merge artists or albums")
+            help="merge data in local metadata database")
+        subparsers0 = p.add_subparsers(required=True, dest="subcommand")
+
+        for subcommand in ["artists", "albums"]:
+            p0 = make_subparser(
+                subparsers0,
+                name=subcommand,
+                help=f"merge {subcommand} in local metadata database")
+            p0.set_defaults(func=partial(invoke, subcommand))
+            add_common_args(parser=p0)
 
     def add_picard_fixup_command(subparsers):
         p = make_subparser(
