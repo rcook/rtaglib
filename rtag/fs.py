@@ -29,11 +29,16 @@ def home_dir():
         case _: raise NotImplementedError(f"Unsupported platform \"{s}\"")
 
 
-def clean_dir(dir):
+def clean_dir(dir, fail_ok=False):
     for root, ds, _ in dir.walk(top_down=False):
         ds.sort()
         for d in ds:
             p = root / d
-            print(p)
             if len(list(p.iterdir())) == 0:
-                p.rmdir()
+                if fail_ok:
+                    try:
+                        p.rmdir()
+                    except PermissionError:
+                        pass
+                else:
+                    p.rmdir()

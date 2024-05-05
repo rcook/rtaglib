@@ -152,4 +152,4 @@ def do_retag(ctx, dry_run):
         ctx.log_info(f"Would attempt to clean up root directory {root_dir}")
     else:
         ctx.log_info(f"Attempting to clean up root directory {root_dir}")
-        clean_dir(dir=root_dir)
+        clean_dir(dir=root_dir, fail_ok=True)
