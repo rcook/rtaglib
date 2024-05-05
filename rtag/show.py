@@ -2,7 +2,22 @@ from colorama import Fore
 from rtag.artist import Artist
 from rtag.cprint import cprint
 from rtag.track import Track
-from rtag.ui import select_album
+from rtag.ui import select_album, select_artist, select_track, show_item
+
+
+def do_show_artist(ctx):
+    with ctx.open_db() as db:
+        show_item(select_artist(db=db))
+
+
+def do_show_album(ctx):
+    with ctx.open_db() as db:
+        show_item(select_album(db=db))
+
+
+def do_show_track(ctx):
+    with ctx.open_db() as db:
+        show_item(select_track(db=db))
 
 
 def do_show_album_tracks(ctx):
