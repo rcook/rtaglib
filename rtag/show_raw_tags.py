@@ -111,7 +111,19 @@ class ExtInfo:
         return cls(ext=ext, count=0, tags=DictPlus())
 
 
-def do_show_raw_tags(ctx, dir, exclude_well_known_raw_tags=True):
+def do_show_raw_tags_detail(ctx, dir):
+    for p in walk_dir(dir, ignore_dirs=MUSIC_IGNORE_DIRS, include_exts=MUSIC_INCLUDE_EXTS):
+        m = Metadata.load(p)
+        cprint(Fore.LIGHTCYAN_EX, "/".join(p.relative_to(dir).parts))
+        for line in m.pprint().splitlines():
+            cprint(Fore.LIGHTYELLOW_EX, "  ", line, sep="")
+
+
+def do_show_raw_tags(ctx, dir, detail, exclude_well_known_raw_tags=True):
+    if detail:
+        do_show_raw_tags_detail(ctx=ctx, dir=dir)
+        return
+
     exts = DictPlus()
     for p in walk_dir(dir, ignore_dirs=MUSIC_IGNORE_DIRS, include_exts=MUSIC_INCLUDE_EXTS):
         ext = p.suffix.lower()
