@@ -69,7 +69,7 @@ def main(cwd, argv):
             func=lambda ctx, args:
             do_import(
                 ctx=ctx,
-                music_dir=args.music_dir,
+                dir=args.dir,
                 init=args.init,
                 new_ids=args.new_ids))
         add_common_args(parser=p)
@@ -88,8 +88,8 @@ def main(cwd, argv):
             default=False,
             help="force generation of new RCOOK_xxx IDs (default: False)")
         p.add_argument(
-            "music_dir",
-            metavar="MUSIC_DIR",
+            "dir",
+            metavar="DIR",
             type=path_type,
             help="path to music files")
 

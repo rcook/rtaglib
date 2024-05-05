@@ -26,10 +26,10 @@ class DBResult:
         return cls(**{f.name: 0 for f in fields(cls)})
 
 
-def do_import(ctx, music_dir, init=False, new_ids=False):
+def do_import(ctx, dir, init=False, new_ids=False):
     result = DBResult.default()
     with ctx.open_db(init=init) as db:
-        for p in walk_dir(music_dir, include_exts=MUSIC_INCLUDE_EXTS, ignore_dirs=MUSIC_IGNORE_DIRS):
+        for p in walk_dir(dir, include_exts=MUSIC_INCLUDE_EXTS, ignore_dirs=MUSIC_IGNORE_DIRS):
             result.total += 1
             m = Metadata.load(p)
 
