@@ -147,7 +147,7 @@ def main(cwd, argv):
             help="summarize raw tags in files")
         p.set_defaults(
             func=lambda ctx, args:
-            do_show_raw_tags(ctx=ctx, dir=args.dir, detail=args.detail))
+            do_show_raw_tags(ctx=ctx, path=args.path, detail=args.detail))
         default = False
         p.add_argument(
             "--detail",
@@ -156,7 +156,11 @@ def main(cwd, argv):
             required=False,
             default=default,
             help=f"show detail (default: {default})")
-        p.add_argument("dir", metavar="DIR", type=path_type, help="directory")
+        p.add_argument(
+            "path",
+            metavar="PATH",
+            type=path_type,
+            help="path to directory or file")
 
     def add_show_tags_command(subparsers):
         p = make_subparser(
