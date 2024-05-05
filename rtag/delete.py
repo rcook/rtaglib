@@ -1,5 +1,5 @@
 from rtag.file import File
-from rtag.ui import banner, confirm, select_artist, select_track, show_item
+from rtag.ui import banner, confirm, select_album, select_artist, select_track, show_item
 
 
 def do_delete_artist(ctx):
@@ -15,7 +15,7 @@ def do_delete_artist(ctx):
         cursor.execute(
             """
             DELETE FROM files
-            WHERE artist_id = ?
+            WHERE artist_id = ?;
             """,
             (artist.id, ))
 
@@ -37,7 +37,7 @@ def do_delete_artist(ctx):
         cursor.execute(
             """
             DELETE FROM albums
-            WHERE artist_id = ?
+            WHERE artist_id = ?;
             """,
             (artist.id, ))
 
@@ -46,11 +46,52 @@ def do_delete_artist(ctx):
         cursor.execute(
             """
             DELETE FROM artists
-            WHERE id = ?
+            WHERE id = ?;
             """,
             (artist.id, ))
 
         ctx.log_info(f"Deleted {cursor.rowcount} artist records")
+
+        db.commit()
+
+
+def do_delete_album(ctx):
+    banner("delete album")
+
+    with ctx.open_db() as db:
+        album = select_album(db=db)
+        show_item(album)
+        confirm(
+            ctx=ctx, prompt="Do you wish to delete this album and all associated tracks from the database?")
+
+        cursor = db.cursor()
+
+        cursor.execute(
+            """
+            DELETE FROM files
+            WHERE album_id = ?;
+            """,
+            (album.id, ))
+
+        ctx.log_info(f"Deleted {cursor.rowcount} file records")
+
+        cursor.execute(
+            """
+            DELETE FROM tracks
+            WHERE album_id = ?;
+            """,
+            (album.id, ))
+
+        ctx.log_info(f"Deleted {cursor.rowcount} track records")
+
+        cursor.execute(
+            """
+            DELETE FROM albums
+            WHERE id = ?;
+            """,
+            (album.id, ))
+
+        ctx.log_info(f"Deleted {cursor.rowcount} album records")
 
         db.commit()
 
