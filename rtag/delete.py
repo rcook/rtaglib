@@ -2,7 +2,7 @@ from rtag.file import File
 from rtag.ui import confirm, select_track, show_item
 
 
-def do_del_track(ctx):
+def do_delete_track(ctx):
     with ctx.open_db() as db:
         track = select_track(db=db)
         if track is None or not track:

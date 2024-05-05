@@ -43,7 +43,8 @@ class Context(metaclass=ContextMeta):
 
     @contextmanager
     def timing(self, operation):
-        self.log_info(f"{operation} started")
+        op = "/".join(operation) if isinstance(operation, list) else operation
+        self.log_info(f"{op} started")
         begin_time = perf_counter()
 
         try:
@@ -51,13 +52,13 @@ class Context(metaclass=ContextMeta):
         except:
             end_time = perf_counter()
             self.log_error(
-                f"{operation} failed after "
+                f"{op} failed after "
                 f"{end_time - begin_time:.02f} s")
             raise
 
         end_time = perf_counter()
         self.log_info(
-            f"{operation} completed in "
+            f"{op} completed in "
             f"{end_time - begin_time:.02f} s")
 
     @cache
