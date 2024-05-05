@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from pathlib import Path
 from rtag.entity import Entity
 from rtag.error import ReportableError
 from uuid import UUID, uuid4
@@ -10,7 +11,8 @@ _MISSING = object()
 @dataclass(frozen=True)
 class File(Entity):
     id: int
-    path: str
+    path: Path
+    rel_path: Path
     artist_id: int
     album_id: int
     track_id: int
@@ -24,6 +26,7 @@ class File(Entity):
             (
                 id INTEGER PRIMARY KEY NOT NULL,
                 path TEXT NOT NULL UNIQUE,
+                rel_path TEXT NOT NULL,
                 artist_id INTEGER NOT NULL,
                 album_id INTEGER NOT NULL,
                 track_id INTEGER NOT NULL,
@@ -38,10 +41,25 @@ class File(Entity):
             """)
 
     @classmethod
-    def create(cls, db, path, artist_id, album_id, track_id):
+    def list(cls, db):
+        cursor = db.cursor()
+        cursor.execute(
+            "SELECT id, path, rel_path, artist_id, album_id, track_id FROM files ORDER BY path")
+        for row in cursor.fetchall():
+            yield cls(
+                id=row[0],
+                path=Path(row[1]),
+                rel_path=Path(row[2]),
+                artist_id=row[3],
+                album_id=row[4],
+                track_id=row[5])
+
+    @classmethod
+    def create(cls, db, path, rel_path, artist_id, album_id, track_id):
         file = cls.try_create(
             db=db,
             path=path,
+            rel_path=rel_path,
             artist_id=artist_id,
             album_id=album_id,
             track_id=track_id)
@@ -51,15 +69,15 @@ class File(Entity):
         raise ReportableError(f"File {path} is not unique")
 
     @classmethod
-    def try_create(cls, db, path, artist_id, album_id, track_id):
+    def try_create(cls, db, path, rel_path, artist_id, album_id, track_id):
         cursor = db.cursor()
         cursor.execute(
             """
-            INSERT OR IGNORE INTO files (path, artist_id, album_id, track_id)
-            VALUES (?, ?, ?, ?)
+            INSERT OR IGNORE INTO files (path, rel_path, artist_id, album_id, track_id)
+            VALUES (?, ?, ?, ?, ?)
             RETURNING id
             """,
-            (path, artist_id, album_id, track_id))
+            (str(path), str(rel_path), artist_id, album_id, track_id))
         row = cursor.fetchone()
         db.commit()
         if row is None:
@@ -68,6 +86,7 @@ class File(Entity):
         return cls(
             id=row[0],
             path=path,
+            rel_path=rel_path,
             artist_id=artist_id,
             album_id=album_id,
             track_id=track_id)

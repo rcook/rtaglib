@@ -152,29 +152,9 @@ def main(cwd, argv):
             help="retag and move files based on local metadata database")
         p.set_defaults(
             func=lambda ctx, args:
-            do_retag(
-                ctx=ctx,
-                dry_run=args.dry_run,
-                input_dir=args.input_dir,
-                music_dir=args.music_dir,
-                misc_dir=args.misc_dir))
+            do_retag(ctx=ctx, dry_run=args.dry_run))
         add_common_args(parser=p)
         add_dry_run_arg(parser=p)
-        p.add_argument(
-            "input_dir",
-            metavar="INPUT_DIR",
-            type=path_type,
-            help="input directory")
-        p.add_argument(
-            "music_dir",
-            metavar="MUSIC_DIR",
-            type=path_type,
-            help="music output directory")
-        p.add_argument(
-            "misc_dir",
-            metavar="MISC_DIR",
-            type=path_type,
-            help="miscellaneous output directory")
 
     def add_show_command(subparsers):
         p = make_subparser(

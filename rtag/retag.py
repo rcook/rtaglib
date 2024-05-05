@@ -3,6 +3,7 @@ from rtag.album import Album
 from rtag.artist import Artist
 from rtag.constants import MUSIC_IGNORE_DIRS, MUSIC_INCLUDE_EXTS
 from rtag.cprint import cprint
+from rtag.file import File
 from rtag.fs import walk_dir
 from rtag.metadata.metadata import Metadata
 from rtag.pos import Pos
@@ -12,9 +13,18 @@ from time import sleep
 import subprocess
 
 
-def move_file(ctx, dry_run, source_path, target_path):
+def move_file(ctx, db, dry_run, source_path, target_path):
     if dry_run:
         ctx.log_info(f"Would move {source_path} to {target_path}")
+        cursor = db.cursor()
+        cursor.execute(
+            """
+            SELECT * FROM files
+            WHERE path = ?
+            """,
+            source_path)
+        for row in cursor.fetchall():
+            print(row)
     else:
         target_path.parent.mkdir(parents=True, exist_ok=True)
         source_path.rename(target_path)
@@ -42,8 +52,11 @@ def move_file(ctx, dry_run, source_path, target_path):
             ctx.log_info(f"Removed directory {d}")
 
 
-def do_retag(ctx, dry_run, input_dir, music_dir, misc_dir):
+def do_retag(ctx, dry_run):
     with ctx.open_db() as db:
+        for file in File.list(db=db):
+            print(file.path)
+        return
         for p in walk_dir(input_dir, include_exts=MUSIC_INCLUDE_EXTS, ignore_dirs=MUSIC_IGNORE_DIRS):
             rel_path = p.relative_to(input_dir)
             display_path = "/".join(rel_path.parts)
@@ -113,6 +126,7 @@ def do_retag(ctx, dry_run, input_dir, music_dir, misc_dir):
 
             move_file(
                 ctx=ctx,
+                db=db,
                 dry_run=dry_run,
                 source_path=p,
                 target_path=target_path)
