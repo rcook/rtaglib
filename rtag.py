@@ -77,11 +77,7 @@ def main(cwd, argv):
             help="import data into local metadata database")
         p.set_defaults(
             func=lambda ctx, args:
-            do_import(
-                ctx=ctx,
-                dir=args.dir,
-                init=args.init,
-                new_ids=args.new_ids))
+            do_import(ctx=ctx, dir=args.dir, init=args.init))
         add_common_args(parser=p)
         p.add_argument(
             "--init",
@@ -90,13 +86,6 @@ def main(cwd, argv):
             required=False,
             default=False,
             help="clear/initialize database from scratch (default: False)")
-        p.add_argument(
-            "--new-ids",
-            metavar="NEW_IDS",
-            action=BooleanOptionalAction,
-            required=False,
-            default=False,
-            help="force generation of new RCOOK_xxx IDs (default: False)")
         p.add_argument(
             "dir",
             metavar="DIR",

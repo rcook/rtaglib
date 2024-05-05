@@ -26,7 +26,7 @@ class DBResult:
         return cls(**{f.name: 0 for f in fields(cls)})
 
 
-def do_import(ctx, dir, init=False, new_ids=False):
+def do_import(ctx, dir, init=False):
     result = DBResult.default()
     with ctx.open_db(init=init) as db:
         for p in walk_dir(dir, include_exts=MUSIC_INCLUDE_EXTS, ignore_dirs=MUSIC_IGNORE_DIRS):
@@ -34,7 +34,15 @@ def do_import(ctx, dir, init=False, new_ids=False):
             result.total += 1
             m = Metadata.load(p)
 
-            if m.musicbrainz_track_id is not None:
+            if m.musicbrainz_track_id is None:
+                process_file(
+                    ctx=ctx,
+                    result=result,
+                    path=p,
+                    rel_path=rel_path,
+                    m=m,
+                    db=db)
+            else:
                 File.create(
                     db=db,
                     path=p,
@@ -43,20 +51,6 @@ def do_import(ctx, dir, init=False, new_ids=False):
                     album_id=None,
                     track_id=None)
                 result.skipped_count += 1
-                continue
-
-            # Maybe --new-ids should always be true?
-            if not new_ids and m.rcook_track_id is not None:
-                result.skipped_count += 1
-                continue
-
-            process_file(
-                ctx=ctx,
-                result=result,
-                path=p,
-                rel_path=rel_path,
-                m=m,
-                db=db)
 
     for k, v in asdict(result).items():
         ctx.log_info(f"{k}={v}")
