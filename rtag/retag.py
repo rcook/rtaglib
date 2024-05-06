@@ -134,7 +134,8 @@ def do_retag(ctx, dry_run):
             m.album_title = album_title
             m.track_title = track.title
 
-            target_path = ctx.config.retagging.misc_dir / \
+            target_path = \
+                ctx.config.retagging.misc_dir / \
                 artist_part / album_part / track_part
 
             if not dry_run:
