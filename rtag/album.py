@@ -32,7 +32,7 @@ class Album(Entity):
                 disambiguator TEXT NULL,
                 sort_title TEXT NULL,
                 UNIQUE(artist_id, title, disambiguator)
-                UNIQUE(artist_id, safe_title)
+                UNIQUE(artist_id, safe_title, disambiguator)
                 FOREIGN KEY(artist_id) REFERENCES artists(id)
             );
             CREATE INDEX IF NOT EXISTS albums_uuid_idx ON albums(uuid);
