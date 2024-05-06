@@ -9,8 +9,8 @@ from rtag.picard_fixup import do_picard_fixup
 from rtag.fs import home_dir
 from rtag._import import do_import
 from rtag.retag import do_retag
-from rtag.show_raw_tags import do_show_raw_tags
 from rtag.show_tags import do_show_tags
+from rtag.show_tag_stats import do_show_tag_stats
 import os
 import rtag.delete
 import rtag.edit
@@ -184,38 +184,33 @@ def main(cwd, argv):
             p0.set_defaults(func=partial(invoke, subcommand))
             add_common_args(parser=p0)
 
-    def add_show_raw_tags_command(subparsers):
+    def add_show_tags_command(subparsers):
         p = make_subparser(
             subparsers,
-            name="show-raw-tags",
-            help="summarize raw tags in files")
+            name="show-tags",
+            help="show tags in files")
         p.set_defaults(
             func=lambda ctx, args:
-            do_show_raw_tags(ctx=ctx, path=args.path, detail=args.detail))
-        default = False
-        p.add_argument(
-            "--detail",
-            dest="detail",
-            action=BooleanOptionalAction,
-            required=False,
-            default=default,
-            help=f"show detail (default: {default})")
+            do_show_tags(ctx=ctx, path=args.path))
         p.add_argument(
             "path",
             metavar="PATH",
             type=path_type,
             help="path to directory or file")
 
-    def add_show_tags_command(subparsers):
+    def add_show_tag_stats_command(subparsers):
         p = make_subparser(
             subparsers,
-            name="show-tags",
-            help="show tags")
+            name="show-tag-stats",
+            help="show tag stats for directory")
         p.set_defaults(
             func=lambda ctx, args:
-            do_show_tags(ctx=ctx, dir=args.dir))
-        add_common_args(parser=p)
-        p.add_argument("dir", metavar="DIR", type=path_type, help="directory")
+            do_show_tag_stats(ctx=ctx, dir=args.dir))
+        p.add_argument(
+            "dir",
+            metavar="DIR",
+            type=path_type,
+            help="path to directory")
 
     parser = ArgumentParser(prog="rtag", description="Richard's Tagging Tool")
     subparsers = parser.add_subparsers(required=True, dest="command")
@@ -226,8 +221,8 @@ def main(cwd, argv):
     add_picard_fixup_command(subparsers=subparsers)
     add_retag_command(subparsers=subparsers)
     add_show_command(subparsers=subparsers)
-    add_show_raw_tags_command(subparsers=subparsers)
     add_show_tags_command(subparsers=subparsers)
+    add_show_tag_stats_command(subparsers=subparsers)
 
     args = parser.parse_args(argv)
 

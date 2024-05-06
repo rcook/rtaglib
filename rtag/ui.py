@@ -14,11 +14,12 @@ _EDIT_VALUE_PROMPT = f"[Type new value, empty to leave unchanged, " \
     f"{_EMPTY_PLACEHOLDER} to set to NULL or (Q) to quit]"
 
 
-def banner(s):
-    width = len(s.upper())
+def banner(s, upper=True):
+    s = s.upper() if upper else s
+    width = len(s)
     line = "-" * width
     cprint(Fore.LIGHTMAGENTA_EX, line)
-    cprint(Fore.LIGHTMAGENTA_EX, s.upper())
+    cprint(Fore.LIGHTMAGENTA_EX, s)
     cprint(Fore.LIGHTMAGENTA_EX, line)
 
 

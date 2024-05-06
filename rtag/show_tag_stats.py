@@ -111,29 +111,13 @@ class ExtInfo:
         return cls(ext=ext, count=0, tags=DictPlus())
 
 
-def do_show_raw_tags_detail(ctx, path):
-    def show(path, display_path):
-        m = Metadata.load(path)
-        cprint(Fore.LIGHTCYAN_EX, display_path)
-        for line in m.pprint().splitlines():
-            cprint(Fore.LIGHTYELLOW_EX, "  ", line, sep="")
-
-    if path.is_dir():
-        cprint(Fore.LIGHTGREEN_EX, f"Displaying tags for files in {path}")
-        for p in walk_dir(path, ignore_dirs=MUSIC_IGNORE_DIRS, include_exts=MUSIC_INCLUDE_EXTS):
-            show(path=p, display_path="/".join(p.relative_to(path).parts))
-    else:
-        show(path=path, display_path=path)
-
-
-def do_show_raw_tags(ctx, path, detail, exclude_well_known_raw_tags=True):
+def do_show_tag_stats(ctx, dir, exclude_well_known_raw_tags=True):
     def show(exts, path, display_path):
         ext = path.suffix.lower()
         well_known_raw_tags = WELL_KNOWN_RAW_TAGS.get(ext, set()) \
             if exclude_well_known_raw_tags \
             else set()
         m = Metadata.load(path)
-        print(display_path)
         ext_info = exts.get_or_add(ext, lambda k: ExtInfo.default(ext=k))
         ext_info.count += 1
         for tag in m.raw_tags:
@@ -143,34 +127,27 @@ def do_show_raw_tags(ctx, path, detail, exclude_well_known_raw_tags=True):
                     lambda k: TagInfo.default(tag=k))
                 tag_info.count += 1
 
-    if detail:
-        do_show_raw_tags_detail(ctx=ctx, path=path)
-        return
-
     exts = DictPlus()
-    if path.is_dir():
-        for p in walk_dir(path, ignore_dirs=MUSIC_IGNORE_DIRS, include_exts=MUSIC_INCLUDE_EXTS):
-            show(
-                exts=exts,
-                path=p,
-                display_path="/".join(p.relative_to(path).parts))
+    for p in walk_dir(dir, ignore_dirs=MUSIC_IGNORE_DIRS, include_exts=MUSIC_INCLUDE_EXTS):
+        show(
+            exts=exts,
+            path=p,
+            display_path="/".join(p.relative_to(dir).parts))
 
-        for ext in sorted(exts.keys()):
-            ext_info = exts[ext]
-            cprint(Fore.LIGHTCYAN_EX, f"{ext}: {ext_info.count}")
-            for tag, tag_info in sorted(
-                    ext_info.tags.items(),
-                    key=lambda t: (-t[1].count, t[1].tag)):
-                cprint(
-                    Fore.LIGHTYELLOW_EX,
-                    "  ",
-                    tag.ljust(40),
-                    " ",
-                    Fore.LIGHTGREEN_EX,
-                    f"{tag_info.count / ext_info.count:.00%}",
-                    sep="")
+    for ext in sorted(exts.keys()):
+        ext_info = exts[ext]
+        cprint(Fore.LIGHTCYAN_EX, f"{ext}: {ext_info.count}")
+        for tag, tag_info in sorted(
+                ext_info.tags.items(),
+                key=lambda t: (-t[1].count, t[1].tag)):
+            cprint(
+                Fore.LIGHTYELLOW_EX,
+                "  ",
+                tag.ljust(40),
+                " ",
+                Fore.LIGHTGREEN_EX,
+                f"{tag_info.count / ext_info.count:.00%}",
+                sep="")
 
-        total = sum(map(lambda x: x.count, exts.values()))
-        print(f"Total: {total}")
-    else:
-        show(exts=exts, path=path, display_path=path)
+    total = sum(map(lambda x: x.count, exts.values()))
+    print(f"Total: {total}")
