@@ -77,16 +77,19 @@ def do_edit_all(ctx):
 
             artist0 = edit_item(item=artist)
             if artist0 is not None:
-                print("WRITE ARTIST")
+                artist0.update(db=db)
+                ctx.log_info(f"Updated artist with ID {artist0.id}")
 
             for album in Album.list(db=db, artist_id=artist.id):
                 album0 = edit_item(item=album)
                 if album0 is not None:
-                    print("WRITE ALBUM")
+                    album0.update(db=db)
+                    ctx.log_info(f"Updated album with ID {album0.id}")
 
                 for track in Track.list(db=db, album_id=album.id):
                     track0 = edit_item(item=track)
                     if track0 is not None:
-                        print("WRITE TRACK")
+                        track0.update(db=db)
+                        ctx.log_info(f"Updated track with ID {track0.id}")
 
     print("ALL")
