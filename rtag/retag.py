@@ -130,7 +130,13 @@ def do_retag(ctx, dry_run):
                 track_part += track.safe_title
                 del m.track_number
             else:
-                track_part += f"{track.number:02}_{track.safe_title}"
+                if track_total < 100:
+                    track_number_str = f"{track.number:02}"
+                elif track_total < 1000:
+                    track_number_str = f"{track.number:03}"
+                else:
+                    track_number_str = f"{track.number:04}"
+                track_part += f"{track_number_str}_{track.safe_title}"
                 m.track_number = Pos(index=track.number, total=track_total)
 
             track_part += file.path.suffix.lower()
