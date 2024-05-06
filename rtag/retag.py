@@ -72,7 +72,12 @@ def do_retag(ctx, dry_run):
     prefix = None
     with ctx.open_db() as db:
         for file in File.list(db=db):
+            if not file.path.is_file():
+                ctx.log_warning(f"File {file.path} not found")
+                continue
+
             prefix = update_prefix(prefix, file.path)
+
             cprint(Fore.LIGHTCYAN_EX, f"Processing {file.key_path}")
 
             m = Metadata.load(file.path)
