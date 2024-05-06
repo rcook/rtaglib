@@ -202,27 +202,36 @@ class Album(Entity):
             SELECT MAX(disc)
             FROM tracks
             INNER JOIN albums ON tracks.album_id = albums.id
-            WHERE albums.uuid = ?
+            WHERE albums.id = ?
             """,
-            (str(self.uuid), ))
+            (str(self.id), ))
         row = cursor.fetchone()
         match row:
-            case (None,): return 1
+            case (None, ): return 1
             case (int(total), ): return total
             case _: raise NotImplementedError()
 
-    def get_track_total(self, db):
+    def get_track_total(self, db, disc):
         cursor = db.cursor()
+
+        if disc is None:
+            placeholder = "IS NULL"
+            params = (str(self.id), )
+        else:
+            placeholder = "= ?"
+            params = (str(self.id), disc)
+
         cursor.execute(
-            """
-            SELECT COUNT(*)
+            f"""
+            SELECT MAX(number)
             FROM tracks
             INNER JOIN albums ON tracks.album_id = albums.id
-            WHERE albums.uuid = ?
+            WHERE albums.id = ?
+            AND tracks.disc {placeholder}
             """,
-            (str(self.uuid), ))
+            params)
         row = cursor.fetchone()
         match row:
-            case (None,): return None
+            case (None, ): raise RuntimeError(f"Could not determine track total for album {self.id}")
             case (int(total), ): return total
             case _: raise NotImplementedError()

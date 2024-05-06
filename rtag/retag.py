@@ -93,7 +93,7 @@ def do_retag(ctx, dry_run):
             track = Track.get_by_uuid(db=db, uuid=m.rcook_track_id)
 
             disc_total = album.get_disc_total(db=db)
-            track_total = album.get_track_total(db=db)
+            track_total = album.get_track_total(db=db, disc=track.disc)
 
             if artist.disambiguator is None:
                 artist_title = artist.title
