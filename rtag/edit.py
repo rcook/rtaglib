@@ -1,3 +1,7 @@
+from colorama import Fore
+from rtag.album import Album
+from rtag.artist import Artist
+from rtag.cprint import cprint
 from rtag.track import Track
 from rtag.ui import banner, edit_item, select_artist, select_album, select_track
 
@@ -56,3 +60,33 @@ def do_edit_album_tracks(ctx):
             if result is not None:
                 result.update(db=db)
                 ctx.log_info(f"Updated track with ID {result.id}")
+
+
+def do_edit_all(ctx):
+    banner("edit everything")
+
+    with ctx.open_db() as db:
+        cprint(Fore.LIGHTCYAN_EX, "Select starting artist")
+        starting_artist = select_artist(db=db)
+
+        editing = False
+        for artist in Artist.list(db=db):
+            if not editing and artist != starting_artist:
+                continue
+            editing = True
+
+            artist0 = edit_item(item=artist)
+            if artist0 is not None:
+                print("WRITE ARTIST")
+
+            for album in Album.list(db=db, artist_id=artist.id):
+                album0 = edit_item(item=album)
+                if album0 is not None:
+                    print("WRITE ALBUM")
+
+                for track in Track.list(db=db, album_id=album.id):
+                    track0 = edit_item(item=track)
+                    if track0 is not None:
+                        print("WRITE TRACK")
+
+    print("ALL")

@@ -92,7 +92,7 @@ def main(cwd, argv):
             help="edit data in local metadata database")
         subparsers0 = p.add_subparsers(required=True, dest="subcommand")
 
-        for subcommand in ["artist", "album", "track", "album-tracks"]:
+        for subcommand in ["all", "artist", "album", "track", "album-tracks"]:
             p0 = make_subparser(
                 subparsers0,
                 name=subcommand,
