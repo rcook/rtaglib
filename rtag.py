@@ -5,6 +5,7 @@ from pathlib import Path
 from rtag.context import Context
 from rtag.cprint import cprint
 from rtag.error import ReportableError, UserCancelledError
+from rtag.hack import do_hack
 from rtag.picard_fixup import do_picard_fixup
 from rtag.fs import home_dir
 from rtag._import import do_import
@@ -99,6 +100,21 @@ def main(cwd, argv):
                 help=f"edit {subcommand} in local metadata database")
             p0.set_defaults(func=partial(invoke, subcommand))
             add_common_args(parser=p0)
+
+    def add_hack_command(subparsers):
+        p = make_subparser(
+            subparsers,
+            name="hack",
+            help="experimental hacks")
+        p.set_defaults(
+            func=lambda ctx, args:
+            do_hack(ctx=ctx, path=args.path))
+        p.add_argument(
+            "path",
+            metavar="PATH",
+            type=path_type,
+            help="path to directory or file")
+        add_common_args(parser=p)
 
     def add_import_command(subparsers):
         p = make_subparser(
@@ -216,6 +232,7 @@ def main(cwd, argv):
     subparsers = parser.add_subparsers(required=True, dest="command")
     add_delete_command(subparsers=subparsers)
     add_edit_command(subparsers=subparsers)
+    add_hack_command(subparsers=subparsers)
     add_import_command(subparsers=subparsers)
     add_merge_command(subparsers=subparsers)
     add_picard_fixup_command(subparsers=subparsers)
