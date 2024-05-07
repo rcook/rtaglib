@@ -92,4 +92,3 @@ def do_edit_all(ctx):
                         track0.update(db=db)
                         ctx.log_info(f"Updated track with ID {track0.id}")
 
-    print("ALL")
