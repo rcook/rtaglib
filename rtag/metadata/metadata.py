@@ -20,19 +20,22 @@ RCOOK_TRACK_ID_ATTR = "rcook_track_id"
 
 class MetadataMeta(ABCMeta):
     _TAGS = [
-        (ARTIST_TITLE_ATTR, str),
-        (ALBUM_TITLE_ATTR, str),
-        (TRACK_TITLE_ATTR, str),
-        (TRACK_DISC_ATTR, Pos.check),
-        (TRACK_NUMBER_ATTR, Pos.check),
-        (MUSICBRAINZ_ARTIST_ID_ATTR, UUID),
-        (MUSICBRAINZ_ALBUM_ID_ATTR, UUID),
-        (MUSICBRAINZ_TRACK_ID_ATTR, UUID),
-        (RCOOK_ARTIST_ID_ATTR, UUID),
-        (RCOOK_ALBUM_ID_ATTR, UUID),
-        (RCOOK_TRACK_ID_ATTR, UUID)
+        (ARTIST_TITLE_ATTR, str, str),
+        (ALBUM_TITLE_ATTR, str, str),
+        (TRACK_TITLE_ATTR, str, str),
+        (TRACK_DISC_ATTR, Pos, Pos.check),
+        (TRACK_NUMBER_ATTR, Pos, Pos.check),
+        (MUSICBRAINZ_ARTIST_ID_ATTR, UUID, UUID),
+        (MUSICBRAINZ_ALBUM_ID_ATTR, UUID, UUID),
+        (MUSICBRAINZ_TRACK_ID_ATTR, UUID, UUID),
+        (RCOOK_ARTIST_ID_ATTR, UUID, UUID),
+        (RCOOK_ALBUM_ID_ATTR, UUID, UUID),
+        (RCOOK_TRACK_ID_ATTR, UUID, UUID)
     ]
-    _TO_TYPES = {tag: tag_type for tag, tag_type in _TAGS}
+    _TO_TAG_INFOS = {
+        tag: (tag_type, tag_ctor)
+        for tag, tag_type, tag_ctor in _TAGS
+    }
 
     def __new__(cls, name, bases, dct):
         def fget(tag, self):
@@ -45,7 +48,7 @@ class MetadataMeta(ABCMeta):
             return self.del_tag(tag)
 
         t = super().__new__(cls, name, bases, dct)
-        for tag, _ in cls._TAGS:
+        for tag, _, _ in cls._TAGS:
             setattr(
                 t,
                 tag,
@@ -109,10 +112,16 @@ class Metadata(metaclass=MetadataMeta):
         else:
             value = getter(default=default)
 
-        tag_type = self.__class__._TO_TYPES[tag]
-        return value if value is None else tag_type(value)
+        tag_ctor = self.__class__._TO_TAG_INFOS[tag][1]
+        return value if value is None else tag_ctor(value)
 
     def set_tag(self, tag, value):
+        tag_type = self.__class__._TO_TAG_INFOS[tag][0]
+        if not isinstance(value, tag_type):
+            raise ValueError(
+                f"Value {value} is not of required type "
+                f"{tag_type.__name__}")
+
         setter = getattr(self, f"_set_{tag}", None)
         if setter is None:
             self._set_tag(tag, value)
