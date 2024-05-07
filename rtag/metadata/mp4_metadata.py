@@ -77,6 +77,8 @@ class MP4Metadata(Metadata):
             data = value.encode("utf-8")
         else:
             data = value
+        if self._m.tags is None:
+            self._m.add_tags()
         self._m.tags[key] = [data]
 
     def _del_raw(self, key):
