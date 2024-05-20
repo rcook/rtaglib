@@ -1,0 +1,9 @@
+[project]
+dependencies = [
+  "mutagen",
+  "pyyaml",
+  "rpycli@file:///Users/richard.cook/src/personal/rpycli",
+  "unidecode",
+]
+dynamic = ["version"]
+name = "rtag"

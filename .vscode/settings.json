@@ -3,16 +3,9 @@
   "files.exclude": {
     "**/.vscode/": true,
     "**/__pycache__/": true,
+    "**/*.egg-info/": true,
+    "**/build/": true,
     "*.pyc": true,
-    "*.flac": true,
-    "*.flac.bak": true,
-    "*.m4a": true,
-    "*.m4a.bak": true,
-    "*.mp3": true,
-    "*.mp3.bak": true,
-    "*.wma": true,
-    "*.wma.bak": true,
   },
-  "rust-analyzer.showUnlinkedFileNotification": false,
   "python.analysis.autoImportCompletions": true,
 }

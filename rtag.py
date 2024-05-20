@@ -2,12 +2,11 @@ from argparse import ArgumentParser, BooleanOptionalAction
 from colorama import Fore, just_fix_windows_console
 from functools import partial
 from pathlib import Path
+from rpycli.fs import home_dir
+from rpycli.prelude import *
 from rtag.context import Context
-from rtag.cprint import cprint
-from rtag.error import ReportableError, UserCancelledError
 from rtag.hack import do_hack
 from rtag.picard_fixup import do_picard_fixup
-from rtag.fs import home_dir
 from rtag._import import do_import
 from rtag.retag import do_retag
 from rtag.show_tags import do_show_tags

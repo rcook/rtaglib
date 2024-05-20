@@ -1,8 +1,8 @@
 from colorama import Fore
+from rpycli.fs import iter_files
+from rpycli.prelude import *
 from rtag.constants import MUSIC_IGNORE_DIRS, MUSIC_INCLUDE_EXTS
-from rtag.cprint import cprint
 from rtag.metadata.metadata import Metadata
-from rtag.fs import walk_dir
 from rtag.ui import banner
 
 
@@ -29,7 +29,7 @@ def do_show_tags(ctx, path):
 
     if path.is_dir():
         banner(f"Tags for files in {path}", upper=False)
-        for p in walk_dir(path, ignore_dirs=MUSIC_IGNORE_DIRS, include_exts=MUSIC_INCLUDE_EXTS):
+        for p in iter_files(path, include_suffixes=MUSIC_INCLUDE_EXTS, ignore_dirs=MUSIC_IGNORE_DIRS):
             cprint(Fore.LIGHTCYAN_EX, "/".join(p.relative_to(path).parts))
             show(path=p)
     else:

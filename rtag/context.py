@@ -1,7 +1,7 @@
 from contextlib import contextmanager
 from functools import cache, cached_property, partialmethod
+from rpycli.prelude import *
 from rtag.config import Config
-from rtag.error import UserCancelledError
 from rtag.metadata_db import MetadataDB
 from time import perf_counter
 import inspect

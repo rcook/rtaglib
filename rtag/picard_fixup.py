@@ -1,6 +1,6 @@
 from colorama import Fore
 from pathlib import Path
-from rtag.cprint import cprint
+from rpycli.prelude import *
 from rtag.metadata.metadata import Metadata
 import os
 

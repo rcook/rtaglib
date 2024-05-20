@@ -1,6 +1,6 @@
 from colorama import Fore
+from rpycli.prelude import *
 from rtag.artist import Artist
-from rtag.cprint import cprint
 from rtag.track import Track
 from rtag.ui import select_album, select_artist, select_track, show_item
 

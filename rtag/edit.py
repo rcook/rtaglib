@@ -1,7 +1,7 @@
 from colorama import Fore
+from rpycli.prelude import *
 from rtag.album import Album
 from rtag.artist import Artist
-from rtag.cprint import cprint
 from rtag.track import Track
 from rtag.ui import banner, edit_item, select_artist, select_album, select_track
 
@@ -91,4 +91,3 @@ def do_edit_all(ctx):
                     if track0 is not None:
                         track0.update(db=db)
                         ctx.log_info(f"Updated track with ID {track0.id}")
-

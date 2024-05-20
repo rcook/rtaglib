@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from rtag.error import ReportableError
+from rpycli.prelude import *
 from rtag.pos import Pos
 from rtag.safe_str import humanize_str, make_safe_str
 import os

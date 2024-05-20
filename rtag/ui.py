@@ -1,10 +1,9 @@
 from colorama import Fore
 from dataclasses import fields, replace
+from rpycli.prelude import *
 from rtag.album import Album
 from rtag.artist import Artist
 from rtag.collections import DictPlus
-from rtag.cprint import cprint
-from rtag.error import UserCancelledError
 from rtag.track import Track
 
 

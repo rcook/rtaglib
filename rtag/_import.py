@@ -1,10 +1,9 @@
 from dataclasses import asdict, dataclass, fields
-from pathlib import Path
+from rpycli.prelude import *
 from rtag.album import Album
 from rtag.artist import Artist
 from rtag.constants import MUSIC_IGNORE_DIRS, MUSIC_INCLUDE_EXTS
 from rtag.file import File
-from rtag.fs import walk_dir
 from rtag.inferred_info import InferredInfo
 from rtag.metadata.metadata import Metadata
 from rtag.safe_str import make_safe_str

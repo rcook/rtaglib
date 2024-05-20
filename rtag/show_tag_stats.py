@@ -1,10 +1,10 @@
 from colorama import Fore
 from dataclasses import dataclass
+from rpycli.fs import iter_files
+from rpycli.prelude import *
 from rtag.collections import DictPlus
 from rtag.constants import MUSIC_IGNORE_DIRS, MUSIC_INCLUDE_EXTS
-from rtag.cprint import cprint
 from rtag.metadata.metadata import Metadata
-from rtag.fs import walk_dir
 
 
 WELL_KNOWN_RAW_TAGS = {
@@ -128,7 +128,7 @@ def do_show_tag_stats(ctx, dir, exclude_well_known_raw_tags=True):
                 tag_info.count += 1
 
     exts = DictPlus()
-    for p in walk_dir(dir, ignore_dirs=MUSIC_IGNORE_DIRS, include_exts=MUSIC_INCLUDE_EXTS):
+    for p in iter_files(dir, include_suffixes=MUSIC_INCLUDE_EXTS, ignore_dirs=MUSIC_IGNORE_DIRS):
         show(
             exts=exts,
             path=p,

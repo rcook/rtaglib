@@ -1,6 +1,6 @@
 from dataclasses import dataclass
+from rpycli.prelude import *
 from rtag.entity import Entity
-from rtag.error import ReportableError
 from uuid import UUID, uuid4
 
 

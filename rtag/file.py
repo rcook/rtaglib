@@ -1,8 +1,7 @@
 from dataclasses import dataclass
 from pathlib import Path
+from rpycli.prelude import *
 from rtag.entity import Entity
-from rtag.error import ReportableError
-from uuid import UUID, uuid4
 
 
 _MISSING = object()
