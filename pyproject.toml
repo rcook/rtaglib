@@ -2,7 +2,7 @@
 dependencies = [
   "mutagen",
   "pyyaml",
-  "rpycli@file:///Users/richard.cook/src/personal/rpycli",
+  "rpycli @ git+https://github.com/rcook/rpycli.git",
   "unidecode",
 ]
 dynamic = ["version"]
