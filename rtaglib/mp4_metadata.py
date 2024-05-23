@@ -1,7 +1,19 @@
-from rtag.metadata.metadata import *
+from rtaglib.metadata import \
+    ALBUM_TITLE_ATTR, \
+    ARTIST_TITLE_ATTR, \
+    TRACK_TITLE_ATTR, \
+    MISSING, \
+    MUSICBRAINZ_ALBUM_ID_ATTR, \
+    MUSICBRAINZ_ARTIST_ID_ATTR, \
+    MUSICBRAINZ_TRACK_ID_ATTR, \
+    RCOOK_ALBUM_ID_ATTR, \
+    RCOOK_ARTIST_ID_ATTR, \
+    RCOOK_TRACK_ID_ATTR, \
+    Metadata
+from rtaglib.pos import Pos
 
 
-_FREEFORM_PREFIX = "----:"
+FREEFORM_PREFIX = "----:"
 
 
 class MP4Metadata(Metadata):
@@ -13,7 +25,7 @@ class MP4Metadata(Metadata):
         (MUSICBRAINZ_ALBUM_ID_ATTR, "musicbrainz_albumid"),
         (MUSICBRAINZ_TRACK_ID_ATTR, "musicbrainz_trackid")
     ] + [
-        (tag,  f"{_FREEFORM_PREFIX}org.rcook:{label}")
+        (tag,  f"{FREEFORM_PREFIX}org.rcook:{label}")
         for tag, label in [
             (RCOOK_ARTIST_ID_ATTR, "ArtistId"),
             (RCOOK_ALBUM_ID_ATTR, "AlbumId"),
@@ -23,7 +35,7 @@ class MP4Metadata(Metadata):
     KEYS = {tag: key for tag, key in MAPPINGS}
     TAGS = {key: tag for tag, key in MAPPINGS}
 
-    def _get_tag(self, tag, default=UNSPECIFIED):
+    def _get_tag(self, tag, default=MISSING):
         return self._get_raw(self.__class__.KEYS[tag], default=default)
 
     def _set_tag(self, tag, value):
@@ -32,7 +44,7 @@ class MP4Metadata(Metadata):
     def _del_tag(self, tag):
         self._del_raw(key=self.__class__.KEYS[tag])
 
-    def _get_track_disc(self, default=UNSPECIFIED):
+    def _get_track_disc(self, default=MISSING):
         return self._get_pos("disk", default=default)
 
     def _set_track_disc(self, value):
@@ -41,7 +53,7 @@ class MP4Metadata(Metadata):
     def _del_track_disc(self):
         self._del_raw("disk")
 
-    def _get_track_number(self, default=UNSPECIFIED):
+    def _get_track_number(self, default=MISSING):
         return self._get_pos("trkn", default=default)
 
     def _set_track_number(self, value):
@@ -50,8 +62,8 @@ class MP4Metadata(Metadata):
     def _del_track_number(self):
         self._del_raw("trkn")
 
-    def _get_raw(self, key, default=UNSPECIFIED):
-        if default is UNSPECIFIED:
+    def _get_raw(self, key, default=MISSING):
+        if default is MISSING:
             items = self._m.tags[key]
         else:
             items = self._m.tags.get(key)
@@ -73,7 +85,7 @@ class MP4Metadata(Metadata):
         return value
 
     def _set_raw(self, key, value):
-        if key.startswith(_FREEFORM_PREFIX):
+        if key.startswith(FREEFORM_PREFIX):
             data = value.encode("utf-8")
         else:
             data = value
@@ -87,10 +99,10 @@ class MP4Metadata(Metadata):
         except KeyError:
             pass
 
-    def _get_pos(self, key, default=UNSPECIFIED):
+    def _get_pos(self, key, default=MISSING):
         value = self._get_raw(
             key,
-            default=default if default is UNSPECIFIED else None)
+            default=default if default is MISSING else None)
         match value:
             case None: return default
             case (int(index), int(total)): return Pos(index=index, total=total)

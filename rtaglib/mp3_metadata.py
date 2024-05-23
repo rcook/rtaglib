@@ -1,6 +1,18 @@
 from functools import partial
 from mutagen.id3 import TALB, TIT2, TPE2, TPOS, TRCK, TXXX
-from rtag.metadata.metadata import *
+from rtaglib.metadata import \
+    ALBUM_TITLE_ATTR, \
+    ARTIST_TITLE_ATTR, \
+    TRACK_TITLE_ATTR, \
+    MISSING, \
+    MUSICBRAINZ_ALBUM_ID_ATTR, \
+    MUSICBRAINZ_ARTIST_ID_ATTR, \
+    MUSICBRAINZ_TRACK_ID_ATTR, \
+    RCOOK_ALBUM_ID_ATTR, \
+    RCOOK_ARTIST_ID_ATTR, \
+    RCOOK_TRACK_ID_ATTR, \
+    Metadata
+from rtaglib.pos import Pos
 
 
 class MP3Metadata(Metadata):
@@ -33,7 +45,7 @@ class MP3Metadata(Metadata):
     }
     TAGS = {key: tag for tag, key, _, _ in MAPPINGS}
 
-    def _get_tag(self, tag, default=UNSPECIFIED):
+    def _get_tag(self, tag, default=MISSING):
         key, tag_type, _ = self.__class__.KEYS[tag]
         return self._get_raw(key=key, tag_type=tag_type, default=default)
 
@@ -44,7 +56,7 @@ class MP3Metadata(Metadata):
     def _del_tag(self, tag):
         self._del_raw(self.__class__.KEYS[tag][0])
 
-    def _get_track_disc(self, default=UNSPECIFIED):
+    def _get_track_disc(self, default=MISSING):
         return self._get_pos(tag_type=TPOS, default=default)
 
     def _set_track_disc(self, value):
@@ -53,7 +65,7 @@ class MP3Metadata(Metadata):
     def _del_track_disc(self):
         self._del_raw(key=TPOS.__name__)
 
-    def _get_track_number(self, default=UNSPECIFIED):
+    def _get_track_number(self, default=MISSING):
         return self._get_pos(tag_type=TRCK, default=default)
 
     def _set_track_number(self, value):
@@ -62,8 +74,8 @@ class MP3Metadata(Metadata):
     def _del_track_number(self):
         self._del_raw(key=TRCK.__name__)
 
-    def _get_raw(self, key, tag_type, default=UNSPECIFIED):
-        if default is UNSPECIFIED:
+    def _get_raw(self, key, tag_type, default=MISSING):
+        if default is MISSING:
             if self._m.tags is None:
                 raise KeyError(key)
             item = self._m.tags[key]
@@ -96,11 +108,11 @@ class MP3Metadata(Metadata):
             except KeyError:
                 pass
 
-    def _get_pos(self, tag_type, default=UNSPECIFIED):
+    def _get_pos(self, tag_type, default=MISSING):
         value = self._get_raw(
             key=tag_type.__name__,
             tag_type=tag_type,
-            default=default if default is UNSPECIFIED else None)
+            default=default if default is MISSING else None)
         match value:
             case None: return default
             case str(): return Pos.parse(value)

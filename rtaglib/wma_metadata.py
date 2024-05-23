@@ -1,4 +1,16 @@
-from rtag.metadata.metadata import *
+from rtaglib.metadata import \
+    ALBUM_TITLE_ATTR, \
+    ARTIST_TITLE_ATTR, \
+    TRACK_TITLE_ATTR, \
+    MISSING, \
+    MUSICBRAINZ_ALBUM_ID_ATTR, \
+    MUSICBRAINZ_ARTIST_ID_ATTR, \
+    MUSICBRAINZ_TRACK_ID_ATTR, \
+    RCOOK_ALBUM_ID_ATTR, \
+    RCOOK_ARTIST_ID_ATTR, \
+    RCOOK_TRACK_ID_ATTR, \
+    Metadata
+from rtaglib.pos import Pos
 
 
 class WMAMetadata(Metadata):
@@ -16,7 +28,7 @@ class WMAMetadata(Metadata):
     KEYS = {tag: key for tag, key in MAPPINGS}
     TAGS = {key: tag for tag, key in MAPPINGS}
 
-    def _get_tag(self, tag, default=UNSPECIFIED):
+    def _get_tag(self, tag, default=MISSING):
         return self._get_raw(key=self.__class__.KEYS[tag], default=default)
 
     def _set_tag(self, tag, value):
@@ -25,7 +37,7 @@ class WMAMetadata(Metadata):
     def _del_tag(self, tag):
         self._del_raw(key=self.__class__.KEYS[tag])
 
-    def _get_track_disc(self, default=UNSPECIFIED):
+    def _get_track_disc(self, default=MISSING):
         return self._get_pos(key="WM/PartOfSet", default=default)
 
     def _set_track_disc(self, value):
@@ -34,7 +46,7 @@ class WMAMetadata(Metadata):
     def _del_track_disc(self):
         self._del_raw(key="WM/PartOfSet")
 
-    def _get_track_number(self, default=UNSPECIFIED):
+    def _get_track_number(self, default=MISSING):
         return self._get_pos(key="WM/TrackNumber", default=default)
 
     def _set_track_number(self, value):
@@ -45,8 +57,8 @@ class WMAMetadata(Metadata):
         self._del_raw(key="WM/Track")
         self._del_raw(key="WM/TrackNumber")
 
-    def _get_raw(self, key, default=UNSPECIFIED):
-        if default is UNSPECIFIED:
+    def _get_raw(self, key, default=MISSING):
+        if default is MISSING:
             items = self._m.tags[key]
         else:
             items = self._m.tags.get(key)
@@ -72,10 +84,10 @@ class WMAMetadata(Metadata):
         except KeyError:
             pass
 
-    def _get_pos(self, key, default=UNSPECIFIED):
+    def _get_pos(self, key, default=MISSING):
         value = self._get_raw(
             key=key,
-            default=default if default is UNSPECIFIED else None)
+            default=default if default is MISSING else None)
         match value:
             case None: return default
             case int(): return Pos(index=value, total=None)

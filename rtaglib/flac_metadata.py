@@ -1,5 +1,17 @@
 from dataclasses import dataclass
-from rtag.metadata.metadata import *
+from rtaglib.metadata import \
+    ALBUM_TITLE_ATTR, \
+    ARTIST_TITLE_ATTR, \
+    TRACK_TITLE_ATTR, \
+    MISSING, \
+    MUSICBRAINZ_ALBUM_ID_ATTR, \
+    MUSICBRAINZ_ARTIST_ID_ATTR, \
+    MUSICBRAINZ_TRACK_ID_ATTR, \
+    RCOOK_ALBUM_ID_ATTR, \
+    RCOOK_ARTIST_ID_ATTR, \
+    RCOOK_TRACK_ID_ATTR, \
+    Metadata
+from rtaglib.pos import Pos
 
 
 class FLACMetadata(Metadata):
@@ -28,7 +40,7 @@ class FLACMetadata(Metadata):
         def get(self, default):
             index_str = self.obj._get_raw(
                 key=self.index_key,
-                default=default if default is UNSPECIFIED else None)
+                default=default if default is MISSING else None)
             for k in self.other_index_keys:
                 s = self.obj._get_raw(key=k, default=None)
                 assert s is None or s == index_str
@@ -76,7 +88,7 @@ class FLACMetadata(Metadata):
             total_key="totaltracks",
             other_total_keys=["tracktotal"])
 
-    def _get_tag(self, tag, default=UNSPECIFIED):
+    def _get_tag(self, tag, default=MISSING):
         return self._get_raw(key=self.__class__.KEYS[tag], default=default)
 
     def _set_tag(self, tag, value):
@@ -85,7 +97,7 @@ class FLACMetadata(Metadata):
     def _del_tag(self, tag):
         self._del_raw(key=self.__class__.KEYS[tag])
 
-    def _get_track_disc(self, default=UNSPECIFIED):
+    def _get_track_disc(self, default=MISSING):
         return self._track_disc.get(default=default)
 
     def _set_track_disc(self, value):
@@ -94,7 +106,7 @@ class FLACMetadata(Metadata):
     def _del_track_disc(self):
         self._track_disc.delete()
 
-    def _get_track_number(self, default=UNSPECIFIED):
+    def _get_track_number(self, default=MISSING):
         return self._track_number.get(default=default)
 
     def _set_track_number(self, value):
@@ -103,8 +115,8 @@ class FLACMetadata(Metadata):
     def _del_track_number(self):
         self._track_number.delete()
 
-    def _get_raw(self, key, default=UNSPECIFIED):
-        if default is UNSPECIFIED:
+    def _get_raw(self, key, default=MISSING):
+        if default is MISSING:
             return self._m.tags[key]
         else:
             values = self._m.tags.get(key)

@@ -1,10 +1,10 @@
 from abc import ABCMeta, abstractmethod
 from functools import cached_property, partial
-from rtag.pos import Pos
+from rtaglib.pos import Pos
 from uuid import UUID
 
 
-UNSPECIFIED = object()
+MISSING = object()
 ARTIST_TITLE_ATTR = "artist_title"
 ALBUM_TITLE_ATTR = "album_title"
 TRACK_TITLE_ATTR = "track_title"
@@ -105,7 +105,7 @@ class Metadata(metaclass=MetadataMeta):
     def pprint(self):
         return self._m.tags.pprint()
 
-    def get_tag(self, tag, default=UNSPECIFIED):
+    def get_tag(self, tag, default=MISSING):
         getter = getattr(self, f"_get_{tag}", None)
         if getter is None:
             value = self._get_tag(tag, default=default)
@@ -136,7 +136,7 @@ class Metadata(metaclass=MetadataMeta):
             deleter()
 
     @abstractmethod
-    def _get_tag(self, name, default=UNSPECIFIED): raise NotImplementedError()
+    def _get_tag(self, name, default=MISSING): raise NotImplementedError()
 
     @abstractmethod
     def _set_tag(self, name, value): raise NotImplementedError()
