@@ -59,10 +59,10 @@ class MetadataMeta(ABCMeta):
 class Metadata(metaclass=MetadataMeta):
     @staticmethod
     def load(path):
-        from rtag.metadata.flac_metadata import FLACMetadata
-        from rtag.metadata.mp3_metadata import MP3Metadata
-        from rtag.metadata.mp4_metadata import MP4Metadata
-        from rtag.metadata.wma_metadata import WMAMetadata
+        from rtaglib.flac_metadata import FLACMetadata
+        from rtaglib.mp3_metadata import MP3Metadata
+        from rtaglib.mp4_metadata import MP4Metadata
+        from rtaglib.wma_metadata import WMAMetadata
         import mutagen
         import mutagen.asf
         import mutagen.flac
