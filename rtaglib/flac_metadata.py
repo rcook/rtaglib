@@ -1,9 +1,8 @@
-from dataclasses import dataclass
+from dataclasses import MISSING, dataclass
 from rtaglib.metadata import \
     ALBUM_TITLE_ATTR, \
     ARTIST_TITLE_ATTR, \
     TRACK_TITLE_ATTR, \
-    MISSING, \
     MUSICBRAINZ_ALBUM_ID_ATTR, \
     MUSICBRAINZ_ARTIST_ID_ATTR, \
     MUSICBRAINZ_TRACK_ID_ATTR, \
@@ -12,10 +11,11 @@ from rtaglib.metadata import \
     RCOOK_TRACK_ID_ATTR, \
     Metadata
 from rtaglib.pos import Pos
+from typing import Any, Sequence, Tuple
 
 
 class FLACMetadata(Metadata):
-    MAPPINGS = [
+    MAPPINGS: Sequence[Tuple[str, str]] = [
         (ARTIST_TITLE_ATTR, "albumartist"),
         (ALBUM_TITLE_ATTR, "album"),
         (TRACK_TITLE_ATTR, "title"),
@@ -26,18 +26,18 @@ class FLACMetadata(Metadata):
         (RCOOK_ALBUM_ID_ATTR, "rcook_album_id"),
         (RCOOK_TRACK_ID_ATTR, "rcook_track_id")
     ]
-    KEYS = {tag: key for tag, key in MAPPINGS}
-    TAGS = {key: tag for tag, key in MAPPINGS}
+    KEYS: dict[str, str] = {tag: key for tag, key in MAPPINGS}
+    TAGS: dict[str, str] = {key: tag for tag, key in MAPPINGS}
 
     @dataclass(frozen=True)
     class PosTag:
-        obj: object
+        obj: "FLACMetadata"
         index_key: str
         other_index_keys: list[str]
         total_key: str
         other_total_keys: list[str]
 
-        def get(self, default):
+        def get(self, default: Any) -> Any:
             index_str = self.obj._get_raw(
                 key=self.index_key,
                 default=default if default is MISSING else None)
@@ -57,7 +57,7 @@ class FLACMetadata(Metadata):
             total = None if total_str is None else int(total_str)
             return Pos(index=index, total=total)
 
-        def set(self, value):
+        def set(self, value: Pos) -> None:
             s = str(value.index)
             for k in [self.index_key] + self.other_index_keys:
                 self.obj._set_raw(key=k, value=s)
@@ -69,7 +69,7 @@ class FLACMetadata(Metadata):
                 else:
                     self.obj._set_raw(key=k, value=s)
 
-        def delete(self):
+        def delete(self) -> None:
             for k in [self.index_key, self.total_key] + self.other_index_keys + self.other_total_keys:
                 self.obj._del_raw(key=k)
 
@@ -88,34 +88,34 @@ class FLACMetadata(Metadata):
             total_key="totaltracks",
             other_total_keys=["tracktotal"])
 
-    def _get_tag(self, tag, default=MISSING):
+    def _get_tag(self, tag: str, default: Any = MISSING) -> Any:
         return self._get_raw(key=self.__class__.KEYS[tag], default=default)
 
-    def _set_tag(self, tag, value):
+    def _set_tag(self, tag: str, value: Any) -> None:
         self._set_raw(key=self.__class__.KEYS[tag], value=str(value))
 
-    def _del_tag(self, tag):
+    def _del_tag(self, tag: str) -> None:
         self._del_raw(key=self.__class__.KEYS[tag])
 
-    def _get_track_disc(self, default=MISSING):
+    def _get_track_disc(self, default: Any = MISSING) -> Any:
         return self._track_disc.get(default=default)
 
-    def _set_track_disc(self, value):
+    def _set_track_disc(self, value: Pos) -> None:
         self._track_disc.set(value=value)
 
-    def _del_track_disc(self):
+    def _del_track_disc(self) -> None:
         self._track_disc.delete()
 
-    def _get_track_number(self, default=MISSING):
+    def _get_track_number(self, default: Any = MISSING) -> Any:
         return self._track_number.get(default=default)
 
-    def _set_track_number(self, value):
+    def _set_track_number(self, value: Pos) -> None:
         self._track_number.set(value=value)
 
-    def _del_track_number(self):
+    def _del_track_number(self) -> None:
         self._track_number.delete()
 
-    def _get_raw(self, key, default=MISSING):
+    def _get_raw(self, key: str, default: Any = MISSING) -> Any:
         if default is MISSING:
             return self._m.tags[key]
         else:
@@ -130,10 +130,10 @@ class FLACMetadata(Metadata):
 
         return value
 
-    def _set_raw(self, key, value):
+    def _set_raw(self, key: str, value: Any) -> None:
         self._m.tags[key] = value
 
-    def _del_raw(self, key):
+    def _del_raw(self, key: str) -> None:
         try:
             del self._m.tags[key]
         except KeyError:

@@ -1,5 +1,5 @@
 from functools import partial
-from mutagen.id3 import TALB, TIT2, TPE2, TPOS, TRCK, TXXX
+from mutagen.id3 import TALB, TIT2, TPE2, TPOS, TRCK, TXXX, TextFrame
 from rtaglib.metadata import \
     ALBUM_TITLE_ATTR, \
     ARTIST_TITLE_ATTR, \
@@ -13,10 +13,16 @@ from rtaglib.metadata import \
     RCOOK_TRACK_ID_ATTR, \
     Metadata
 from rtaglib.pos import Pos
+from typing import Any, Protocol, Sequence, Tuple
+
+
+class TagCtor(Protocol):
+    def __call__(self, text: str) -> object:
+        raise NotImplementedError()
 
 
 class MP3Metadata(Metadata):
-    MAPPINGS = [
+    MAPPINGS: Sequence[Tuple[str, str, type[TextFrame], TagCtor]] = [
         (tag, tag_type.__name__, tag_type, partial(tag_type, encoding=3))
         for tag, tag_type in [
             (ARTIST_TITLE_ATTR, TPE2),
@@ -39,42 +45,42 @@ class MP3Metadata(Metadata):
             (RCOOK_TRACK_ID_ATTR, "org.rcook/TrackId")
         ]
     ]
-    KEYS = {
+    KEYS: dict[str, Tuple[str, type[TextFrame], TagCtor]] = {
         tag: (key, tag_type, tag_ctor)
         for tag, key, tag_type, tag_ctor in MAPPINGS
     }
-    TAGS = {key: tag for tag, key, _, _ in MAPPINGS}
+    TAGS: dict[str, str] = {key: tag for tag, key, _, _ in MAPPINGS}
 
-    def _get_tag(self, tag, default=MISSING):
+    def _get_tag(self, tag: str, default: Any = MISSING) -> Any:
         key, tag_type, _ = self.__class__.KEYS[tag]
         return self._get_raw(key=key, tag_type=tag_type, default=default)
 
-    def _set_tag(self, tag, value):
+    def _set_tag(self, tag: str, value: Any) -> None:
         key, _, tag_ctor = self.__class__.KEYS[tag]
         self._set_raw(key=key, tag_ctor=tag_ctor, value=str(value))
 
-    def _del_tag(self, tag):
+    def _del_tag(self, tag: str) -> None:
         self._del_raw(self.__class__.KEYS[tag][0])
 
-    def _get_track_disc(self, default=MISSING):
+    def _get_track_disc(self, default: Any = MISSING) -> Any:
         return self._get_pos(tag_type=TPOS, default=default)
 
-    def _set_track_disc(self, value):
+    def _set_track_disc(self, value: Pos) -> None:
         self._set_pos(tag_type=TPOS, value=value)
 
-    def _del_track_disc(self):
+    def _del_track_disc(self) -> None:
         self._del_raw(key=TPOS.__name__)
 
-    def _get_track_number(self, default=MISSING):
+    def _get_track_number(self, default: Any = MISSING) -> Any:
         return self._get_pos(tag_type=TRCK, default=default)
 
-    def _set_track_number(self, value):
+    def _set_track_number(self, value: Pos) -> None:
         self._set_pos(tag_type=TRCK, value=value)
 
-    def _del_track_number(self):
+    def _del_track_number(self) -> None:
         self._del_raw(key=TRCK.__name__)
 
-    def _get_raw(self, key, tag_type, default=MISSING):
+    def _get_raw(self, key: str, tag_type: type[TextFrame], default: Any = MISSING) -> Any:
         if default is MISSING:
             if self._m.tags is None:
                 raise KeyError(key)
@@ -88,7 +94,7 @@ class MP3Metadata(Metadata):
 
         assert isinstance(item, tag_type)
 
-        values = item.text
+        values = item.text  # type: ignore
         assert isinstance(values, list) and len(values) == 1
 
         value = values[0]
@@ -96,19 +102,20 @@ class MP3Metadata(Metadata):
 
         return value
 
-    def _set_raw(self, key, tag_ctor, value):
+    def _set_raw(self, key: str, tag_ctor: TagCtor, value: Any) -> None:
         if self._m.tags is None:
             self._m.add_tags()
+            assert self._m.tags is not None
         self._m.tags[key] = tag_ctor(text=value)
 
-    def _del_raw(self, key):
+    def _del_raw(self, key: str) -> None:
         if self._m.tags is not None:
             try:
                 del self._m.tags[key]
             except KeyError:
                 pass
 
-    def _get_pos(self, tag_type, default=MISSING):
+    def _get_pos(self, tag_type: type[TextFrame], default: Any = MISSING) -> Pos | None:
         value = self._get_raw(
             key=tag_type.__name__,
             tag_type=tag_type,
@@ -118,7 +125,7 @@ class MP3Metadata(Metadata):
             case str(): return Pos.parse(value)
             case _: raise NotImplementedError()
 
-    def _set_pos(self, tag_type, value):
+    def _set_pos(self, tag_type: type[TextFrame], value: Any) -> None:
         self._set_raw(
             key=tag_type.__name__,
             tag_ctor=partial(tag_type, encoding=3),

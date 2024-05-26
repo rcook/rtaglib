@@ -1,10 +1,12 @@
 from abc import ABCMeta, abstractmethod
+from dataclasses import MISSING
 from functools import cached_property, partial
+from pathlib import Path
 from rtaglib.pos import Pos
+from typing import Any, Callable, Sequence, Tuple
 from uuid import UUID
 
 
-MISSING = object()
 ARTIST_TITLE_ATTR = "artist_title"
 ALBUM_TITLE_ATTR = "album_title"
 TRACK_TITLE_ATTR = "track_title"
@@ -19,7 +21,7 @@ RCOOK_TRACK_ID_ATTR = "rcook_track_id"
 
 
 class MetadataMeta(ABCMeta):
-    _TAGS = [
+    _TAGS: Sequence[Tuple[str, type, Callable]] = [
         (ARTIST_TITLE_ATTR, str, str),
         (ALBUM_TITLE_ATTR, str, str),
         (TRACK_TITLE_ATTR, str, str),
@@ -32,7 +34,7 @@ class MetadataMeta(ABCMeta):
         (RCOOK_ALBUM_ID_ATTR, UUID, UUID),
         (RCOOK_TRACK_ID_ATTR, UUID, UUID)
     ]
-    _TO_TAG_INFOS = {
+    _TO_TAG_INFOS: dict[str, Tuple[type, Callable]] = {
         tag: (tag_type, tag_ctor)
         for tag, tag_type, tag_ctor in _TAGS
     }
@@ -58,7 +60,7 @@ class MetadataMeta(ABCMeta):
 
 class Metadata(metaclass=MetadataMeta):
     @staticmethod
-    def load(path):
+    def load(path: Path) -> "Metadata":
         from rtaglib.flac_metadata import FLACMetadata
         from rtaglib.mp3_metadata import MP3Metadata
         from rtaglib.mp4_metadata import MP4Metadata
@@ -77,10 +79,10 @@ class Metadata(metaclass=MetadataMeta):
             case mutagen.asf.ASF(): return WMAMetadata(m=m)
             case _: raise NotImplementedError(f"Unsupported metadata type {type(m)}")
 
-    def __init__(self, m):
+    def __init__(self, m: Any) -> None:
         self._m = m
 
-    def __str__(self):
+    def __str__(self) -> str:
         tags = "; ".join(
             f"{k}={v}"
             for k, v in
@@ -92,20 +94,20 @@ class Metadata(metaclass=MetadataMeta):
         return f"<[{self.__class__.__name__}] {tags}>"
 
     @cached_property
-    def tags(self):
-        return [tag for tag, _ in self.__class__._TAGS]
+    def tags(self) -> Sequence[str]:
+        return [tag for tag, _, _ in self.__class__._TAGS]
 
     @property
-    def raw_tags(self):
+    def raw_tags(self) -> Sequence[str]:
         return self._m.tags.keys()
 
-    def save(self):
+    def save(self) -> None:
         self._m.save()
 
-    def pprint(self):
+    def pprint(self) -> str:
         return self._m.tags.pprint()
 
-    def get_tag(self, tag, default=MISSING):
+    def get_tag(self, tag: str, default: Any = MISSING) -> Any:
         getter = getattr(self, f"_get_{tag}", None)
         if getter is None:
             value = self._get_tag(tag, default=default)
@@ -115,7 +117,7 @@ class Metadata(metaclass=MetadataMeta):
         tag_ctor = self.__class__._TO_TAG_INFOS[tag][1]
         return value if value is None else tag_ctor(value)
 
-    def set_tag(self, tag, value):
+    def set_tag(self, tag: str, value: Any) -> None:
         tag_type = self.__class__._TO_TAG_INFOS[tag][0]
         if not isinstance(value, tag_type):
             raise ValueError(
@@ -128,7 +130,7 @@ class Metadata(metaclass=MetadataMeta):
         else:
             setter(value)
 
-    def del_tag(self, tag):
+    def del_tag(self, tag: str) -> None:
         deleter = getattr(self, f"_del_{tag}", None)
         if deleter is None:
             self._del_tag(tag)
@@ -136,10 +138,13 @@ class Metadata(metaclass=MetadataMeta):
             deleter()
 
     @abstractmethod
-    def _get_tag(self, name, default=MISSING): raise NotImplementedError()
+    def _get_tag(self, name: str, default: Any = MISSING) -> Any:
+        raise NotImplementedError()
 
     @abstractmethod
-    def _set_tag(self, name, value): raise NotImplementedError()
+    def _set_tag(self, name: str, value: Any) -> None:
+        raise NotImplementedError()
 
     @abstractmethod
-    def _del_tag(self, name): raise NotImplementedError()
+    def _del_tag(self, name: str) -> None:
+        raise NotImplementedError()
