@@ -77,7 +77,7 @@ class Metadata(metaclass=MetadataMeta):
             case mutagen.mp3.MP3(): return MP3Metadata(m=m)
             case mutagen.mp4.MP4(): return MP4Metadata(m=m)
             case mutagen.asf.ASF(): return WMAMetadata(m=m)
-            case _: raise NotImplementedError(f"Unsupported metadata type {type(m)}")
+            case _: raise NotImplementedError(f"Unsupported metadata type {type(m)} in file {path}")
 
     def __init__(self, m: Any) -> None:
         self._m = m
