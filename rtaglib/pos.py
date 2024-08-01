@@ -1,12 +1,12 @@
 from dataclasses import dataclass
 from functools import cache
-from typing import Any, Self
+from typing import Any, Optional, Self
 
 
 @dataclass(frozen=True)
 class Pos:
-    index: int
-    total: int | None
+    index: Optional[int]
+    total: Optional[int]
 
     @classmethod
     def check(cls, obj: Any) -> Self:
